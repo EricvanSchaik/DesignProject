@@ -1,38 +1,25 @@
 import sys
-from PyQt5.QtWidgets import QWidget, QGridLayout, QPushButton, QApplication
+from PyQt5.QtCore import QDir, Qt, QUrl
+from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
+from PyQt5.QtMultimediaWidgets import QVideoWidget
+from PyQt5.QtWidgets import QApplication, QFileDialog, QHBoxLayout, QLabel, QPushButton, QSizePolicy, QSlider, \
+    QStyle, QVBoxLayout, QWidget, QMainWindow, QAction
+from PyQt5.QtGui import QIcon
+from VideoPlayer import Ui_MainWindow
 
 
-class Example(QWidget):
+class Example(QMainWindow, Ui_MainWindow):
     def __init__(self):
         super().__init__()
-        self.init_ui()
-
-    def init_ui(self):
-        grid = QGridLayout()
-        self.setLayout(grid)
-
-        names = ['Cls', 'Bck', '', 'Close',
-                 '7', '8', '9', '/',
-                 '4', '5', '6', '*',
-                 '1', '2', '3', '-',
-                 '0', '.', '=', '+']
-
-        positions = [(i, j) for i in range(5) for j in range(4)]
-
-        for position, name in zip(positions, names):
-
-            if name == '':
-                continue
-            button = QPushButton(name)
-            grid.addWidget(button, *position)
-
-        self.move(300, 150)
-
-        self.setWindowTitle('Calculator')
-        self.show()
+        self.setupUi(self)
+        self.mediaPlayer = QMediaPlayer(None, QMediaPlayer.VideoSurface)
+        self.mediaPlayer.setVideoOutput(self.widget)
+        self.mediaPlayer.setMedia(QMediaContent(QUrl.fromLocalFile("D:\Google Drive\Series\Watchlist\Westworld\Westworld.Season.2.S02.1080p.AMZN.WEBRip.5.1.HEVC.x265-GIRAYS\Westworld.S02E08.Kiksuya.1080p.AMZN.WEB-DL.5.1.HEVC.x265-GIRAYS.v2\Westworld.S02E08.Kiksuya.1080p.AMZN.WEB-DL.5.1.HEVC.x265-GIRAYS.v2.mkv")))
+        self.mediaPlayer.play()
 
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     ex = Example()
+    ex.show()
     sys.exit(app.exec_())
