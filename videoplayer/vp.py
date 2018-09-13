@@ -1,14 +1,11 @@
 import sys
-from PyQt5.QtCore import QDir, Qt, QUrl
+from PyQt5.QtCore import QUrl
 from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
-from PyQt5.QtMultimediaWidgets import QVideoWidget
-from PyQt5.QtWidgets import QApplication, QFileDialog, QHBoxLayout, QLabel, QPushButton, QSizePolicy, QSlider, \
-    QStyle, QVBoxLayout, QWidget, QMainWindow, QAction
-from PyQt5.QtGui import QIcon
-from VideoPlayer import Ui_MainWindow
+from PyQt5.QtWidgets import QApplication, QMainWindow
+from videoplayer.vpdesigner import Ui_videoplayer
 
 
-class Example(QMainWindow, Ui_MainWindow):
+class Example(QMainWindow, Ui_videoplayer):
     def __init__(self):
         super().__init__()
         self.setupUi(self)
