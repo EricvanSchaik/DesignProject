@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>videoplayer</class>
- <widget class="QMainWindow" name="videoplayer">
+ <class>VideoPlayer</class>
+ <widget class="QMainWindow" name="VideoPlayer">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>VideoPlayer</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QVideoWidget" name="widget" native="true">
@@ -42,6 +42,19 @@
      <string>Video</string>
     </property>
    </widget>
+   <widget class="QPushButton" name="pushButton">
+    <property name="geometry">
+     <rect>
+      <x>30</x>
+      <y>360</y>
+      <width>31</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>||</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
@@ -61,6 +74,9 @@
    <extends>QWidget</extends>
    <header>PyQt5.QtMultimediaWidgets</header>
    <container>1</container>
+   <slots>
+    <slot>play()</slot>
+   </slots>
   </customwidget>
  </customwidgets>
  <resources/>

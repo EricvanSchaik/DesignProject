@@ -8,11 +8,11 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-class Ui_videoplayer(object):
-    def setupUi(self, videoplayer):
-        videoplayer.setObjectName("videoplayer")
-        videoplayer.resize(800, 600)
-        self.centralwidget = QtWidgets.QWidget(videoplayer)
+class Ui_VideoPlayer(object):
+    def setupUi(self, VideoPlayer):
+        VideoPlayer.setObjectName("VideoPlayer")
+        VideoPlayer.resize(800, 600)
+        self.centralwidget = QtWidgets.QWidget(VideoPlayer)
         self.centralwidget.setObjectName("centralwidget")
         self.widget = QVideoWidget(self.centralwidget)
         self.widget.setGeometry(QtCore.QRect(30, 70, 421, 281))
@@ -23,21 +23,25 @@ class Ui_videoplayer(object):
         font.setPointSize(16)
         self.label.setFont(font)
         self.label.setObjectName("label")
-        videoplayer.setCentralWidget(self.centralwidget)
-        self.menubar = QtWidgets.QMenuBar(videoplayer)
+        self.pushButton = QtWidgets.QPushButton(self.centralwidget)
+        self.pushButton.setGeometry(QtCore.QRect(30, 360, 31, 31))
+        self.pushButton.setObjectName("pushButton")
+        VideoPlayer.setCentralWidget(self.centralwidget)
+        self.menubar = QtWidgets.QMenuBar(VideoPlayer)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 21))
         self.menubar.setObjectName("menubar")
-        videoplayer.setMenuBar(self.menubar)
-        self.statusbar = QtWidgets.QStatusBar(videoplayer)
+        VideoPlayer.setMenuBar(self.menubar)
+        self.statusbar = QtWidgets.QStatusBar(VideoPlayer)
         self.statusbar.setObjectName("statusbar")
-        videoplayer.setStatusBar(self.statusbar)
+        VideoPlayer.setStatusBar(self.statusbar)
 
-        self.retranslateUi(videoplayer)
-        QtCore.QMetaObject.connectSlotsByName(videoplayer)
+        self.retranslateUi(VideoPlayer)
+        QtCore.QMetaObject.connectSlotsByName(VideoPlayer)
 
-    def retranslateUi(self, videoplayer):
+    def retranslateUi(self, VideoPlayer):
         _translate = QtCore.QCoreApplication.translate
-        videoplayer.setWindowTitle(_translate("videoplayer", "MainWindow"))
-        self.label.setText(_translate("videoplayer", "Video"))
+        VideoPlayer.setWindowTitle(_translate("VideoPlayer", "VideoPlayer"))
+        self.label.setText(_translate("VideoPlayer", "Video"))
+        self.pushButton.setText(_translate("VideoPlayer", "||"))
 
 from PyQt5.QtMultimediaWidgets import QVideoWidget

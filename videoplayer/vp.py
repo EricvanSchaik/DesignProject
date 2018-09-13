@@ -2,10 +2,10 @@ import sys
 from PyQt5.QtCore import QUrl
 from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
 from PyQt5.QtWidgets import QApplication, QMainWindow
-from videoplayer.vpdesigner import Ui_videoplayer
+from videoplayer.vpdesigner import Ui_VideoPlayer
 
 
-class Example(QMainWindow, Ui_videoplayer):
+class Example(QMainWindow, Ui_VideoPlayer):
     def __init__(self):
         super().__init__()
         self.setupUi(self)
