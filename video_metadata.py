@@ -11,6 +11,11 @@ class FileNotFoundException(Exception):
 
 
 def parse_frame_rate_from_file(file_path):
+    """Parses the frame rate of video files.
+
+    :param file_path: The path of the video
+    :return: float: The frame rate of the video, rounded to 2 decimals
+    """
     if not os.path.isfile(file_path):
         raise FileNotFoundException(file_path)
 
@@ -29,6 +34,11 @@ def parse_frame_rate_from_file(file_path):
 
 
 def parse_duration_from_file(file_path):
+    """Parses the duration of video files.
+
+    :param file_path: The path of the video
+    :return: float: The duration of the video
+    """
     if not os.path.isfile(file_path):
         raise FileNotFoundException(file_path)
 
@@ -39,6 +49,11 @@ def parse_duration_from_file(file_path):
 
 
 def parse_start_time_from_file(file_path):
+    """Parses the start time of video files.
+
+    :param file_path: The path of the video
+    :return: datetime: The start time of the video
+    """
     if not os.path.isfile(file_path):
         raise FileNotFoundException(file_path)
 
@@ -54,10 +69,21 @@ def parse_start_time_from_file(file_path):
 
 
 def datetime_with_tz_to_string(datetime_string, timezone):
+    """Formats a localized datetime string to another format
+
+    :param datetime_string: A localized datetime string
+    :param timezone: The timezone of the datetime
+    :return: formatted string
+    """
     return timezone.fromutc(datetime_string).strftime('%Y%m%d_%H-%M-%S')
 
 
 def calculate_stop_time_from_file(file_path):
+    """Calculates the stop time of a video file.
+
+    :param file_path: The path of the video
+    :return: float: The stop time of the video
+    """
     start_time = parse_start_time_from_file(file_path)
     duration = parse_duration_from_file(file_path)
     stop_time = start_time + timedelta(seconds=float(duration))
@@ -65,21 +91,28 @@ def calculate_stop_time_from_file(file_path):
     return stop_time
 
 
-def rename_file_to_start_time(directory, file_name, file_extension):
-    file_path = '{}{}.{}'.format(directory, file_name, file_extension)
+def rename_file_to_start_time(file_path):
+    """Renames a file to its start time.
 
+    :param file_path: The path of the video
+    """
     if not os.path.isfile(file_path):
-        raise FileNotFoundException(directory + file_name)
+        raise FileNotFoundException(file_path)
+
+    split_path = file_path.rsplit('/', 1)
+    directory = split_path[0]
+    file = split_path[1]
+    file_extension = file.rsplit('.', 1)[1]
 
     creation_time = parse_start_time_from_file(file_path)
     creation_time_string = datetime_with_tz_to_string(creation_time, pytz.timezone('Europe/Amsterdam'))
 
-    os.rename(file_path, '{}{}.{}'.format(directory, creation_time_string, file_extension))
+    os.rename(file_path, '{}/{}.{}'.format(directory, creation_time_string, file_extension))
 
 
 # test_files = ['C:/Users/denni/Videos/20180515_10-00-59.mp4', 'C:/Users/denni/Videos/20180515_12-21-46.mp4']
 
-# rename_file_to_start_time('C:/Users/denni/Videos/', 'test', 'mp4')
+# rename_file_to_start_time('C:/Users/denni/Videos/test.mp4')
 
 # for f in test_files:
 #     print(parse_frame_rate_from_file(f))
