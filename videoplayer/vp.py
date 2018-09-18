@@ -1,7 +1,7 @@
 import sys
-from PyQt5.QtCore import QUrl
+from PyQt5.QtCore import QUrl, QDir
 from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
-from PyQt5.QtWidgets import QApplication, QMainWindow
+from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog
 from videoplayer.vpdesigner import Ui_VideoPlayer
 
 
@@ -9,8 +9,14 @@ class Example(QMainWindow, Ui_VideoPlayer):
     def __init__(self):
         super().__init__()
         self.setupUi(self)
+        self.actionOpen.triggered.connect(self.openFile)
         self.widget_2.setVideoOutput(self.widget)
-        self.widget_2.setMedia(QMediaContent(QUrl.fromLocalFile("D:\Google Drive\Movies\Watchlist\A Quiet Place (2018) [WEBRip] [1080p] [YTS.AM]\A.Quiet.Place.2018.1080p.WEBRip.x264-[YTS.AM].mp4")))
+
+    def openFile(self):
+        fileName, _ = QFileDialog.getOpenFileName(self, "Open Movie", QDir.homePath())
+
+        if fileName != '':
+            self.widget_2.setMedia(QMediaContent(QUrl.fromLocalFile(fileName)))
 
 
 if __name__ == '__main__':
