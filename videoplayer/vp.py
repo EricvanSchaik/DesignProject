@@ -9,10 +9,8 @@ class Example(QMainWindow, Ui_VideoPlayer):
     def __init__(self):
         super().__init__()
         self.setupUi(self)
-        self.mediaPlayer = QMediaPlayer(None, QMediaPlayer.VideoSurface)
-        self.mediaPlayer.setVideoOutput(self.widget)
-        self.mediaPlayer.setMedia(QMediaContent(QUrl.fromLocalFile("D:\Google Drive\Series\Watchlist\Westworld\Westworld.Season.2.S02.1080p.AMZN.WEBRip.5.1.HEVC.x265-GIRAYS\Westworld.S02E08.Kiksuya.1080p.AMZN.WEB-DL.5.1.HEVC.x265-GIRAYS.v2\Westworld.S02E08.Kiksuya.1080p.AMZN.WEB-DL.5.1.HEVC.x265-GIRAYS.v2.mkv")))
-        self.mediaPlayer.play()
+        self.widget_2.setVideoOutput(self.widget)
+        self.widget_2.setMedia(QMediaContent(QUrl.fromLocalFile("D:\Google Drive\Movies\Watchlist\A Quiet Place (2018) [WEBRip] [1080p] [YTS.AM]\A.Quiet.Place.2018.1080p.WEBRip.x264-[YTS.AM].mp4")))
 
 
 if __name__ == '__main__':
