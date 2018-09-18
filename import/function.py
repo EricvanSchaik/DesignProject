@@ -1,3 +1,14 @@
-def define_function(v):
+def mul(x, y):
+    return x * y
 
-    pass
+
+def div(x, y):
+    return x / y
+
+
+def add(x, y):
+    return x + y
+
+
+def sub(x, y):
+    return x - y
