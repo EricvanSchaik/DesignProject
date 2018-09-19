@@ -23,7 +23,7 @@
       <height>281</height>
      </rect>
     </property>
-    <widget class="QMediaPlayer" name="mediaplayer" native="true"/>
+    <zorder>label_video</zorder>
    </widget>
    <widget class="QLabel" name="label_video">
     <property name="geometry">
@@ -103,6 +103,18 @@
     <property name="text">
      <string>Sensordata</string>
     </property>
+   </widget>
+   <widget class="QMediaPlayer" name="mediaplayer" native="true"/>
+   <widget class="QWidget" name="verticalLayoutWidget">
+    <property name="geometry">
+     <rect>
+      <x>30</x>
+      <y>390</y>
+      <width>421</width>
+      <height>271</height>
+     </rect>
+    </property>
+    <layout class="QVBoxLayout" name="verticalLayout_sensordata"/>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
