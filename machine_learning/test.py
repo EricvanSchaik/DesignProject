@@ -57,6 +57,8 @@ print("Number of mislabeled points out of a total {} points : {}, performance {:
     100 * (1 - (X_test["Survived"] != y_pred).sum() / X_test.shape[0])
 ))
 
+print(gnb.predict_proba(X_test[used_features]))
+
 # mean_survival = np.mean(X_train["Survived"])
 # mean_not_survival = 1 - mean_survival
 #

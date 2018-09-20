@@ -23,9 +23,10 @@ def parse_csv(file_path):
     # Parse data
     data = pd.read_csv(file_path, header=None, names=names, comment=';')
 
-    for h in headers:
-        print(h)
-    print(data)
+    # for h in headers:
+    #     print(h)
+    # print(data)
+    return data
 
 
 def get_header(headers, prefix):
@@ -43,4 +44,4 @@ def get_names(headers):
     return headers[-1]
 
 
-parse_csv("../data/DATA-001.CSV")
+print(parse_csv("../data/DATA-001.CSV"))
