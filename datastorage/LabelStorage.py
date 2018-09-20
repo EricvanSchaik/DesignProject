@@ -16,16 +16,16 @@ class LabelStorage:
 
     def __init__(self):
         # TODO: different location for different user projects?
-        self.conn = sqlite3.connect('database.db')
-        self.cur = self.conn.cursor()
+        self._conn = sqlite3.connect('database.db')
+        self._cur = self._conn.cursor()
 
     def create_tables(self):
         """Method for creating the necessary label tables in the database."""
-        c = self.conn.cursor()
+        c = self._conn.cursor()
         c.execute("CREATE TABLE labelType (Name TEXT PRIMARY KEY, Color INTEGER, Description TEXT)")
         c.execute("CREATE TABLE labelData (Start_time REAL, Label_name TEXT, Sensor_id TEXT, "
                   "PRIMARY KEY(Start_time, Sensor_id))")
-        self.conn.commit()
+        self._conn.commit()
 
     def new_label(self, name, color, desc):
         """
@@ -36,8 +36,8 @@ class LabelStorage:
         :param desc: The description of the label
         """
         try:
-            self.cur.execute(sql_new_label, (name, color, desc))
-            self.conn.commit()
+            self._cur.execute(sql_new_label, (name, color, desc))
+            self._conn.commit()
         except sqlite3.Error as e:
             # TODO: label name exists, give error message
             pass
@@ -48,9 +48,9 @@ class LabelStorage:
 
         :param name: The name of the label type
         """
-        self.cur.execute(sql_del_label_type, name)
-        self.cur.execute(sql_del_label_data_all, name)
-        self.conn.commit()
+        self._cur.execute(sql_del_label_type, name)
+        self._cur.execute(sql_del_label_data_all, name)
+        self._conn.commit()
 
     def add_label(self, time, name, sensor):
         """
@@ -61,8 +61,8 @@ class LabelStorage:
         :param sensor: The sensor ID belonging to the data
         """
         try:
-            self.cur.execute(sql_add_label, (time, name, sensor))
-            self.conn.commit()
+            self._cur.execute(sql_add_label, (time, name, sensor))
+            self._conn.commit()
         except sqlite3.Error as e:
             # TODO: label at this time exists, give error message
             pass
@@ -74,8 +74,8 @@ class LabelStorage:
         :param time: The timestamp at which the label starts
         :param sens_id: The sensor ID for which the label is made
         """
-        self.cur.execute(sql_del_label_data, (time, sens_id))
-        self.conn.commit()
+        self._cur.execute(sql_del_label_data, (time, sens_id))
+        self._conn.commit()
 
     def update_label_name(self, old_name, new_name):
         """
@@ -85,9 +85,9 @@ class LabelStorage:
         :param old_name: The name of the label type that has to be changed
         :param new_name: The name that the label type should get
         """
-        self.cur.execute(sql_upd_name_type, (new_name, old_name))
-        self.cur.execute(sql_upd_name_data, (new_name, old_name))
-        self.conn.commit()
+        self._cur.execute(sql_upd_name_type, (new_name, old_name))
+        self._cur.execute(sql_upd_name_data, (new_name, old_name))
+        self._conn.commit()
 
     def update_label_color(self, name, color):
         """
@@ -96,8 +96,8 @@ class LabelStorage:
         :param name: The name of the label type
         :param color: The new color that the label type should get, represented as an integer
         """
-        self.cur.execute(sql_upd_color, (color, name))
-        self.conn.commit()
+        self._cur.execute(sql_upd_color, (color, name))
+        self._conn.commit()
 
     def update_label_description(self, name, desc):
         """
@@ -106,8 +106,8 @@ class LabelStorage:
         :param name: The name of the label type
         :param desc: The new description that the label type should get
         """
-        self.cur.execute(sql_upd_desc, (desc, name))
-        self.conn.commit()
+        self._cur.execute(sql_upd_desc, (desc, name))
+        self._conn.commit()
 
     def change_label(self, time, name, sens_id):
         """
@@ -117,8 +117,8 @@ class LabelStorage:
         :param name: The name of the label type into which the label should be changed
         :param sens_id: The sensor ID belonging to this label
         """
-        self.cur.execute(sql_change_label, (name, time, sens_id))
-        self.conn.commit()
+        self._cur.execute(sql_change_label, (name, time, sens_id))
+        self._conn.commit()
 
     def get_all_labels(self, sensor_id):
         """
@@ -134,4 +134,4 @@ class LabelStorage:
 if __name__ == '__main__':
     l = LabelStorage()
     l.add_label(0, "label1", "sensor1")
-    l.conn.commit()
+    l._conn.commit()

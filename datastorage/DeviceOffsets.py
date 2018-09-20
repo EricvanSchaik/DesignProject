@@ -10,14 +10,14 @@ sql_updateOffset = "UPDATE Offsets SET Offset = ? WHERE Camera = ? AND Sensor = 
 class DeviceOffset:
 
     def __init__(self):
-        self.conn = sqlite3.connect('database.db')
-        self.cur = self.conn.cursor()
+        self._conn = sqlite3.connect('database.db')
+        self._cur = self._conn.cursor()
 
     def create_table(self):
         """Method for creating the necessary offset table in the database."""
-        self.cur.execute("CREATE TABLE offsets (Camera TEXT, Sensor TEXT, Offset REAL, Date TEXT,"
-                         "PRIMARY KEY (Camera, Sensor, Date))")
-        self.conn.commit()
+        self._cur.execute("CREATE TABLE offsets (Camera TEXT, Sensor TEXT, Offset REAL, Date TEXT,"
+                          "PRIMARY KEY (Camera, Sensor, Date))")
+        self._conn.commit()
 
     def get_offset(self, cam_id, sens_id, date):
         """
@@ -30,7 +30,7 @@ class DeviceOffset:
         :param date: The date of the offset
         :return: float: The offset between camera and sensor
         """
-        c = self.cur
+        c = self._cur
         c.execute(sql_queryDate, (cam_id, sens_id, date))
         results = [x[0] for x in c.fetchall()]
 
@@ -45,13 +45,13 @@ class DeviceOffset:
         if len(results) == 0:
             # Camera-Sensor combination unknown; add to table with offset 0
             c.execute(sql_insertOffset, (cam_id, sens_id, 0, date))
-            self.conn.commit()
+            self._conn.commit()
             return 0
 
         # Camera-Sensor combination unknown; add to table with average offset
         avg = reduce(lambda x, y: x + y, results) / len(results)
         c.execute(sql_insertOffset, (cam_id, sens_id, avg, date))
-        self.conn.commit()
+        self._conn.commit()
         return avg
 
     def set_offset(self, cam_id, sens_id, offset, date):
@@ -63,13 +63,13 @@ class DeviceOffset:
         :param offset: The new offset value
         :param date: The date of the offset
         """
-        self.cur.execute(sql_updateOffset, (offset, cam_id, sens_id, date))
-        self.conn.commit()
+        self._cur.execute(sql_updateOffset, (offset, cam_id, sens_id, date))
+        self._conn.commit()
 
 
 if __name__ == '__main__':
     d = DeviceOffset()
-    c = d.cur
+    c = d._cur
     # print(c.execute("SELECT * FROM offsets").fetchall())
     # c.execute(d.sql_insertOffset, ("camera1", "sensor1", 10, "2018-09-20"))
     # c.execute(d.sql_insertOffset, ("camera1", "sensor1", 20, "2018-09-19"))
