@@ -13,15 +13,23 @@ class DeviceOffset:
         self.conn = sqlite3.connect('database.db')
         self.cur = self.conn.cursor()
 
-    """Method for creating the necessary offset table in the database"""
     def create_table(self):
+        """Method for creating the necessary offset table in the database."""
         self.cur.execute("CREATE TABLE offsets (Camera TEXT, Sensor TEXT, Offset REAL, Date TEXT,"
                          "PRIMARY KEY (Camera, Sensor, Date))")
         self.conn.commit()
-    """Returns the offset between a given camera and sensor on a given date.
-       If there is no known offset for the given date, this returns the average of the offsets of previous dates.
-       If no offset is known at all between the given camera and sensor, this returns a default offset of 0."""
+
     def get_offset(self, cam_id, sens_id, date):
+        """
+        Returns the offset between a camera and sensor on a given date.
+        If there is no known offset for the given date, this returns the average of the offsets of previous dates.
+        If no offset is known at all between the given camera and sensor, this returns a default offset of 0.
+
+        :param cam_id: The name of the camera
+        :param sens_id: The sensor ID of the sensor
+        :param date: The date of the offset
+        :return: float: The offset between camera and sensor
+        """
         c = self.cur
         c.execute(sql_queryDate, (cam_id, sens_id, date))
         results = [x[0] for x in c.fetchall()]
@@ -46,8 +54,15 @@ class DeviceOffset:
         self.conn.commit()
         return avg
 
-    """Changes the offset between a given camera and sensor to the given value on the given date."""
     def set_offset(self, cam_id, sens_id, offset, date):
+        """
+        Changes the offset between a camera and sensor.
+
+        :param cam_id: The name of the camera
+        :param sens_id: The sensor ID of the sensor
+        :param offset: The new offset value
+        :param date: The date of the offset
+        """
         self.cur.execute(sql_updateOffset, (offset, cam_id, sens_id, date))
         self.conn.commit()
 
