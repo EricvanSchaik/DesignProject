@@ -1,6 +1,6 @@
 import sqlite3
 
-sql_add_camera = "INSERT INTO cameras(Name, SN) VALUES (?,?)"
+sql_add_camera = "INSERT INTO cameras(Name) VALUES (?)"
 sql_delete_camera = "DELETE FROM cameras WHERE Name = ?"
 
 
@@ -10,23 +10,32 @@ class CameraInfo:
         self.conn = sqlite3.connect('database.db')
         self.cur = self.conn.cursor()
 
-    """Creates the necessary cameras table in the database"""
     def create_table(self):
-        self.cur.execute("CREATE TABLE cameras (Name TEXT PRIMARY KEY, SN TEXT)")
+        """Creates the necessary cameras table in the database."""
+        self.cur.execute("CREATE TABLE cameras (Name TEXT PRIMARY KEY)")
         self.conn.commit()
 
-    """Adds a camera to the table with the given name and serial number"""
-    def add_camera(self, name, sn):
-        self.cur.execute(sql_add_camera, (name, sn))
+    def add_camera(self, name):
+        """
+        Adds a camera to the table.
+
+        :param name: The name of the new camera
+        """
+        self.cur.execute(sql_add_camera, [name])
         self.conn.commit()
 
-    """Deletes the camera with the given name from the table"""
     def delete_camera(self, name):
+        """
+        Deletes a camera from the table.
+
+        :param name: The name of the camera
+        """
         self.cur.execute(sql_delete_camera, [name])
         self.conn.commit()
 
 
 if __name__ == '__main__':
     c = CameraInfo()
-    # c.add_camera("camera1", "SN1182746")
-    c.delete_camera("camera1")
+    c.create_table()
+    c.add_camera("camera1")
+    # c.delete_camera("camera1")
