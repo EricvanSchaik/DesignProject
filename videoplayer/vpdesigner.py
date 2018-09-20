@@ -102,10 +102,8 @@ class Ui_VideoPlayer(object):
         self.menuFile.setTitle(_translate("VideoPlayer", "File"))
         self.actionOpen_video.setText(_translate("VideoPlayer", "Open Video"))
         self.actionOpen_video.setToolTip(_translate("VideoPlayer", "Open clip"))
-        self.actionOpen_video.setShortcut(_translate("VideoPlayer", "Ctrl+Q"))
         self.actionExit.setText(_translate("VideoPlayer", "Exit"))
         self.actionExit.setToolTip(_translate("VideoPlayer", "Exit application"))
-        self.actionExit.setShortcut(_translate("VideoPlayer", "Ctrl+Q"))
         self.actionOpen_sensordata.setText(_translate("VideoPlayer", "Open Sensordata"))
 
 from PyQt5.QtMultimedia import QMediaPlayer

@@ -8,8 +8,7 @@ from videoplayer.vpdesigner import Ui_VideoPlayer
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT
 import matplotlib.pyplot
-
-import random
+from data_import import import_data
 
 
 def ms_to_time(duration):
@@ -29,6 +28,7 @@ class VideoPlayer(QMainWindow, Ui_VideoPlayer):
         self.setupUi(self)
         self.playButton.clicked.connect(self.play)
         self.actionOpen_video.triggered.connect(self.open_video)
+        self.actionOpen_sensordata.triggered.connect(self.open_sensordata)
         self.mediaplayer.setVideoOutput(self.widget)
         self.mediaplayer.positionChanged.connect(self.position_changed)
         self.horizontalSlider.sliderMoved.connect(self.set_position)
@@ -37,19 +37,8 @@ class VideoPlayer(QMainWindow, Ui_VideoPlayer):
         self.figure = matplotlib.pyplot.figure()
         self.canvas = FigureCanvasQTAgg(self.figure)
         self.toolbar = NavigationToolbar2QT(self.canvas, self)
-        self.button = QPushButton('Plot')
-        self.button.clicked.connect(self.plot)
         self.verticalLayout_sensordata.addWidget(self.toolbar)
         self.verticalLayout_sensordata.addWidget(self.canvas)
-        self.verticalLayout_sensordata.addWidget(self.button)
-
-    def plot(self):
-        data = [random.random() for i in range(10)]
-        self.figure.clear()
-        ax = self.figure.add_subplot(111)
-        ax.plot(data, '*-')
-        self.canvas.draw()
-
 
     def open_video(self):
         filename, _ = QFileDialog.getOpenFileName(self, "Open Movie", QDir.homePath())
@@ -57,6 +46,15 @@ class VideoPlayer(QMainWindow, Ui_VideoPlayer):
             self.mediaplayer.setMedia(QMediaContent(QUrl.fromLocalFile(filename)))
             self.mediaplayer.play()
             self.playButton.setEnabled(True)
+
+    def open_sensordata(self):
+        filename, _ = QFileDialog.getOpenFileName(self, "Open Sensor Data", QDir.homePath())
+        if filename != '':
+            data = import_data.parse_csv(filename)
+            self.figure.clear()
+            dataplot = self.figure.add_subplot(111)
+            dataplot.plot(data, '*-')
+            self.canvas.draw()
 
     def play(self):
         if self.mediaplayer.state() == QMediaPlayer.PlayingState:
