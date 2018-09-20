@@ -3,8 +3,13 @@ import sys
 from PyQt5 import QtGui
 from PyQt5.QtCore import QUrl, QDir
 from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
-from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog
+from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QPushButton
 from videoplayer.vpdesigner import Ui_VideoPlayer
+from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
+from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT
+import matplotlib.pyplot
+
+import random
 
 
 def ms_to_time(duration):
@@ -28,6 +33,23 @@ class VideoPlayer(QMainWindow, Ui_VideoPlayer):
         self.mediaplayer.positionChanged.connect(self.position_changed)
         self.horizontalSlider.sliderMoved.connect(self.set_position)
         self.mediaplayer.durationChanged.connect(self.duration_changed)
+
+        self.figure = matplotlib.pyplot.figure()
+        self.canvas = FigureCanvasQTAgg(self.figure)
+        self.toolbar = NavigationToolbar2QT(self.canvas, self)
+        self.button = QPushButton('Plot')
+        self.button.clicked.connect(self.plot)
+        self.verticalLayout_sensordata.addWidget(self.toolbar)
+        self.verticalLayout_sensordata.addWidget(self.canvas)
+        self.verticalLayout_sensordata.addWidget(self.button)
+
+    def plot(self):
+        data = [random.random() for i in range(10)]
+        self.figure.clear()
+        ax = self.figure.add_subplot(111)
+        ax.plot(data, '*-')
+        self.canvas.draw()
+
 
     def open_video(self):
         filename, _ = QFileDialog.getOpenFileName(self, "Open Movie", QDir.homePath())
