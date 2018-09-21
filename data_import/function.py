@@ -1,14 +1,26 @@
-def mul(x, y):
-    return x * y
+def mul(x, args):
+    # Args is a list of integers to be multiplied by each other and x
+    for a in args:
+        x *= a
+    return x
 
 
-def div(x, y):
-    return x / y
+def div(x, args):
+    # Args is a list of one integer that divides x
+    for a in args:
+        x /= a
+    return x
 
 
-def add(x, y):
-    return x + y
+def add(x, args):
+    # Args is a list of one integer that is subtracted from x
+    for a in args:
+        x += a
+    return x
 
 
-def sub(x, y):
-    return x - y
+def sub(x, args):
+    # Args is a list of integers to be added to each other and x
+    for a in args:
+        x -= a
+    return x
