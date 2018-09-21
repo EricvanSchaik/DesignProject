@@ -111,7 +111,7 @@ class LabelStorage:
 
     def change_label(self, time, name, sens_id):
         """
-        Changes the label type of a made label.
+        Changes the label type of a data-label.
 
         :param time: The timestamp of the label
         :param name: The name of the label type into which the label should be changed
