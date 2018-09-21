@@ -10,9 +10,10 @@ sql_upd_name_data = "UPDATE labelData SET Label_name = ? WHERE Label_name = ?"
 sql_upd_color = "UPDATE labelType SET Color = ? WHERE Name = ?"
 sql_upd_desc = "UPDATE labelType SET Description = ? WHERE Name = ?"
 sql_change_label = "UPDATE labelData SET Label_name = ? WHERE Start_time = ? AND Sensor_id = ?"
+sql_get_labels = "SELECT Start_time, Label_name FROM labelData WHERE Sensor_id = ?"
 
 
-class LabelStorage:
+class LabelManager:
 
     def __init__(self):
         # TODO: different location for different user projects?
@@ -127,11 +128,11 @@ class LabelStorage:
         :param sensor_id: The sensor ID of the sensor for which the labels need to be returned
         :return: List of all labels belonging to the sensor
         """
-        # TODO
-        pass
+        self._cur.execute(sql_get_labels, [sensor_id])
+        return self._cur.fetchall()
 
 
 if __name__ == '__main__':
-    l = LabelStorage()
-    l.add_label(0, "label1", "sensor1")
-    l._conn.commit()
+    l = LabelManager()
+    # l.add_label(0, "label1", "sensor1")
+    print(l.get_all_labels("sensor1"))
