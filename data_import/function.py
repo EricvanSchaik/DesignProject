@@ -24,3 +24,8 @@ def sub(x, args):
     for a in args:
         x -= a
     return x
+
+
+def column_operation(df, col, func, *args):
+    # Applies a function with arguments to a column of the data frame
+    df[col] = df[col].apply(lambda x: func(x, args))

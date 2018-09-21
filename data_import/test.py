@@ -1,5 +1,6 @@
+from timeit import timeit
 import pandas as pd
-from data_import import function as f
+from data_import import sensor_data as sd
 
 
 def column_operation(df, col, func, *args):
@@ -13,12 +14,16 @@ def test_data():
                          'c': pd.Series([7, 8, 9], index=['a', 'b', 'c'])})
 
 
-def test1():
-    df = test_data()
-    print(df)
-    column_operation(df, 'a', f.add, 2)
-    print(df)
-    pass
+def wrapper(func, *args, **kwargs):
+    def wrapped():
+        return func(*args, **kwargs)
+    return wrapped
 
 
-test1()
+def time_test():
+    # about 2.86 seconds
+    wrapped = wrapper(sd.Sensor, "../data/DATA-001.CSV")
+    print(timeit(wrapped, number=5)/5)
+
+
+time_test()
