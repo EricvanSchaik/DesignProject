@@ -11,7 +11,8 @@ class FileNotFoundException(Exception):
 
 
 def parse_frame_rate_from_file(file_path):
-    """Parses the frame rate of video files.
+    """
+    Parses the frame rate of video files.
 
     :param file_path: The path of the video
     :return: float: The frame rate of the video, rounded to 2 decimals
@@ -34,7 +35,8 @@ def parse_frame_rate_from_file(file_path):
 
 
 def parse_duration_from_file(file_path):
-    """Parses the duration of video files.
+    """
+    Parses the duration of video files.
 
     :param file_path: The path of the video
     :return: float: The duration of the video
@@ -49,7 +51,8 @@ def parse_duration_from_file(file_path):
 
 
 def parse_start_time_from_file(file_path):
-    """Parses the start time of video files.
+    """
+    Parses the start time of video files.
 
     :param file_path: The path of the video
     :return: datetime: The start time of the video
@@ -69,7 +72,8 @@ def parse_start_time_from_file(file_path):
 
 
 def datetime_with_tz_to_string(datetime_string, timezone):
-    """Formats a localized datetime string to another format
+    """
+    Formats a localized datetime string to another format
 
     :param datetime_string: A localized datetime string
     :param timezone: The timezone of the datetime
@@ -79,7 +83,8 @@ def datetime_with_tz_to_string(datetime_string, timezone):
 
 
 def calculate_stop_time_from_file(file_path):
-    """Calculates the stop time of a video file.
+    """
+    Calculates the stop time of a video file.
 
     :param file_path: The path of the video
     :return: float: The stop time of the video
@@ -92,7 +97,8 @@ def calculate_stop_time_from_file(file_path):
 
 
 def rename_file_to_start_time(file_path):
-    """Renames a file to its start time.
+    """
+    Renames a file to its start time.
 
     :param file_path: The path of the video
     """

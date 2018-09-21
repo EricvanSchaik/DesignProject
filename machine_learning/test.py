@@ -8,6 +8,8 @@ from sklearn.naive_bayes import GaussianNB, BernoulliNB, MultinomialNB
 # Importing dataset
 data = pd.read_csv("train.csv")
 
+print(len(data))
+
 # Convert categorical variable to numeric
 data["Sex_cleaned"] = np.where(data["Sex"] == "male", 0, 1)
 data["Embarked_cleaned"] = np.where(data["Embarked"] == "S", 0,
@@ -57,46 +59,11 @@ print("Number of mislabeled points out of a total {} points : {}, performance {:
     100 * (1 - (X_test["Survived"] != y_pred).sum() / X_test.shape[0])
 ))
 
-print(gnb.predict_proba(X_test[used_features]))
+y_prob = gnb.predict_proba(X_test[used_features])
 
-# mean_survival = np.mean(X_train["Survived"])
-# mean_not_survival = 1 - mean_survival
-#
-# print("Survival prob = {:03.2f}%, Not survival prob = {:03.2f}%".format(
-#     100 * mean_survival,
-#     100 * mean_not_survival
-# ))
-#
-# mean_fare_survived = np.mean(X_train[X_train["Survived"] == 1]["Fare"])
-# std_fare_survived = np.std(X_train[X_train["Survived"] == 1]["Fare"])
-# mean_fare_not_survived = np.mean(X_train[X_train["Survived"] == 0]["Fare"])
-# std_fare_not_survived = np.std(X_train[X_train["Survived"] == 0]["Fare"])
-#
-# print("mean_fare_survived = {:03.2f}".format(mean_fare_survived))
-# print("std_fare_survived = {:03.2f}".format(std_fare_survived))
-# print("mean_fare_not_survived = {:03.2f}".format(mean_fare_not_survived))
-# print("std_fare_not_survived = {:03.2f}".format(std_fare_not_survived))
+res = []
 
+for i in range(0, len(y_pred)):
+    res.append((y_pred[i], y_prob[i][0]))
 
-# # Gaussian Naive Bayes
-# from sklearn import datasets
-# from sklearn import metrics
-# from sklearn.naive_bayes import GaussianNB
-#
-# # load the iris datasets
-# dataset = datasets.load_iris()
-#
-# # fit a Naive Bayes model to the data
-# model = GaussianNB()
-#
-# model.fit(dataset.data, dataset.target)
-#
-# print(model)
-#
-# # make predictions
-# expected = dataset.target
-# predicted = model.predict(dataset.data)
-#
-# # summarize the fit of the model
-# print(metrics.classification_report(expected, predicted))
-# print(metrics.confusion_matrix(expected, predicted))
+print(res)

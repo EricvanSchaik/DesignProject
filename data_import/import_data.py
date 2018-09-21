@@ -44,4 +44,5 @@ def get_names(headers):
     return headers[-1]
 
 
-print(parse_csv("../data/DATA-001.CSV"))
+if __name__ == "__main__":
+    print(parse_csv("../data/DATA-001.CSV"))
