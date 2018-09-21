@@ -4,7 +4,7 @@ sql_add_camera = "INSERT INTO cameras(Name) VALUES (?)"
 sql_delete_camera = "DELETE FROM cameras WHERE Name = ?"
 
 
-class CameraInfo:
+class CameraManager:
 
     def __init__(self):
         self._conn = sqlite3.connect('database.db')
