@@ -22,7 +22,7 @@ def parse_frame_rate_from_file(file_path):
 
     # https://trac.ffmpeg.org/wiki/FFprobeTips
     args = 'ffprobe -v error -select_streams v:0 -show_entries stream=avg_frame_rate -of ' \
-           'default=noprint_wrappers=1:nokey=1 {}'.format(file_path)
+           'default=noprint_wrappers=1:nokey=1 "{}"'.format(file_path)
 
     ffprobe_output = subprocess.check_output(args).decode('utf-8')
 
@@ -44,7 +44,7 @@ def parse_duration_from_file(file_path):
     if not os.path.isfile(file_path):
         raise FileNotFoundException(file_path)
 
-    args = 'ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 {}'.format(file_path)
+    args = 'ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "{}"'.format(file_path)
     ffprobe_output = subprocess.check_output(args).decode('utf-8')
 
     return float(ffprobe_output)
@@ -61,7 +61,7 @@ def parse_start_time_from_file(file_path):
         raise FileNotFoundException(file_path)
 
     args = 'ffprobe -v error -select_streams v:0 -show_entries stream_tags=creation_time ' \
-           '-of default=noprint_wrappers=1:nokey=1 {}'.format(file_path)
+           '-of default=noprint_wrappers=1:nokey=1 "{}"'.format(file_path)
     ffprobe_output = subprocess.check_output(args).decode('utf-8')
 
     local_tz = pytz.timezone('Europe/Amsterdam')
@@ -116,7 +116,8 @@ def rename_file_to_start_time(file_path):
     os.rename(file_path, '{}/{}.{}'.format(directory, creation_time_string, file_extension))
 
 
-# test_files = ['C:/Users/denni/Videos/20180515_10-00-59.mp4', 'C:/Users/denni/Videos/20180515_12-21-46.mp4']
+# test_files = ["D:/Google Drive/Studie/TI/Module 11/Design Project/Data/Measurements Ede/7-8-2017/Converted "
+#               "Videos/Hero 3/GP040378.mp4"]
 
 # rename_file_to_start_time('C:/Users/denni/Videos/test.mp4')
 
@@ -125,4 +126,3 @@ def rename_file_to_start_time(file_path):
 #     print(parse_start_time_from_file(f))
 #     print(parse_duration_from_file(f))
 #     print(calculate_stop_time_from_file(f))
-#     print()
