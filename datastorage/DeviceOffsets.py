@@ -7,7 +7,7 @@ sql_insertOffset = "INSERT INTO offsets(Camera, Sensor, Offset, Date) VALUES (?,
 sql_updateOffset = "UPDATE Offsets SET Offset = ? WHERE Camera = ? AND Sensor = ? AND Date = ?"
 
 
-class DeviceOffset:
+class OffsetManager:
 
     def __init__(self):
         self._conn = sqlite3.connect('database.db')
@@ -68,7 +68,7 @@ class DeviceOffset:
 
 
 if __name__ == '__main__':
-    d = DeviceOffset()
+    d = OffsetManager()
     c = d._cur
     # print(c.execute("SELECT * FROM offsets").fetchall())
     # c.execute(d.sql_insertOffset, ("camera1", "sensor1", 10, "2018-09-20"))

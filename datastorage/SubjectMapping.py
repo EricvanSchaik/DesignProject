@@ -6,7 +6,7 @@ sql_change_start_date = "UPDATE subject_map SET Start_date = ? WHERE Name = ?"
 sql_change_end_date = "UPDATE subject_map SET End_date = ? WHERE Name = ?"
 
 
-class SubjectMapping:
+class SubjectManager:
 
     def __init__(self):
         self._conn = sqlite3.connect('database.db')
@@ -57,9 +57,4 @@ class SubjectMapping:
         self._conn.commit()
 
     # TODO: allow user to add and manipulate own columns
-
-
-if __name__ == '__main__':
-    s = SubjectMapping()
-    s.create_table()
 
