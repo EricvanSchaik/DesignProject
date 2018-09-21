@@ -11,7 +11,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_VideoPlayer(object):
     def setupUi(self, VideoPlayer):
         VideoPlayer.setObjectName("VideoPlayer")
-        VideoPlayer.resize(859, 703)
+        VideoPlayer.resize(790, 727)
         self.centralwidget = QtWidgets.QWidget(VideoPlayer)
         self.centralwidget.setObjectName("centralwidget")
         self.widget = QVideoWidget(self.centralwidget)
@@ -59,9 +59,15 @@ class Ui_VideoPlayer(object):
         self.verticalLayout_sensordata = QtWidgets.QVBoxLayout(self.verticalLayoutWidget)
         self.verticalLayout_sensordata.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_sensordata.setObjectName("verticalLayout_sensordata")
+        self.verticalLayoutWidget_2 = QtWidgets.QWidget(self.centralwidget)
+        self.verticalLayoutWidget_2.setGeometry(QtCore.QRect(490, 40, 271, 621))
+        self.verticalLayoutWidget_2.setObjectName("verticalLayoutWidget_2")
+        self.verticalLayout_ = QtWidgets.QVBoxLayout(self.verticalLayoutWidget_2)
+        self.verticalLayout_.setContentsMargins(0, 0, 0, 0)
+        self.verticalLayout_.setObjectName("verticalLayout_")
         VideoPlayer.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(VideoPlayer)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 859, 21))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 790, 21))
         self.menubar.setObjectName("menubar")
         self.menuFile = QtWidgets.QMenu(self.menubar)
         self.menuFile.setObjectName("menuFile")
@@ -102,10 +108,8 @@ class Ui_VideoPlayer(object):
         self.menuFile.setTitle(_translate("VideoPlayer", "File"))
         self.actionOpen_video.setText(_translate("VideoPlayer", "Open Video"))
         self.actionOpen_video.setToolTip(_translate("VideoPlayer", "Open clip"))
-        self.actionOpen_video.setShortcut(_translate("VideoPlayer", "Ctrl+Q"))
         self.actionExit.setText(_translate("VideoPlayer", "Exit"))
         self.actionExit.setToolTip(_translate("VideoPlayer", "Exit application"))
-        self.actionExit.setShortcut(_translate("VideoPlayer", "Ctrl+Q"))
         self.actionOpen_sensordata.setText(_translate("VideoPlayer", "Open Sensordata"))
 
 from PyQt5.QtMultimedia import QMediaPlayer
