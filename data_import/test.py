@@ -22,8 +22,8 @@ def wrapper(func, *args, **kwargs):
 
 def time_test():
     # about 2.86 seconds
-    wrapped = wrapper(sd.Sensor, "../data/DATA-001.CSV")
+    wrapped = wrapper(sd.SensorData, "../data/DATA-001.CSV")
     print(timeit(wrapped, number=5)/5)
 
 
-time_test()
+

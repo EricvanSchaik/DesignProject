@@ -1,15 +1,14 @@
 class Sensor:
 
-    def __init__(self, name, sampling_rate, unit):
+    def __init__(self, name, sampling_rate, unit, conversion):
+        # Name of sensor (type)
         self.name = name
+
+        # Sampling rate
         self.sampling_rate = sampling_rate
+
+        # Unit of measurement
         self.unit = unit
 
-    def set_name(self, new_name):
-        self.name = new_name
-
-    def set_sampling_rate(self, new_sampling_rate):
-        self.sampling_rate = new_sampling_rate
-
-    def set_unit(self, new_unit):
-        self.unit = new_unit
+        # Conversion rate to unit of measurement
+        self.conversion = conversion
