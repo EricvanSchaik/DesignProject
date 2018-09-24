@@ -1,5 +1,5 @@
 import sqlite3
-from functools import reduce
+from statistics import mean
 
 sql_queryDate = "SELECT Offset FROM offsets WHERE Camera = ? AND Sensor = ? AND Date = ?"
 sql_queryNoDate = "SELECT Offset FROM offsets WHERE Camera = ? AND Sensor = ?"
@@ -49,7 +49,7 @@ class OffsetManager:
             return 0
 
         # Camera-Sensor combination unknown; add to table with average offset
-        avg = reduce(lambda x, y: x + y, results) / len(results)
+        avg = mean(results)
         c.execute(sql_insertOffset, (cam_id, sens_id, avg, date))
         self._conn.commit()
         return avg
@@ -74,5 +74,5 @@ if __name__ == '__main__':
     # c.execute(d.sql_insertOffset, ("camera1", "sensor1", 10, "2018-09-20"))
     # c.execute(d.sql_insertOffset, ("camera1", "sensor1", 20, "2018-09-19"))
     # d.conn.commit()
-    print(d.get_offset("camera1", "sensor1", "2018-09-21"))
+    print(d.get_offset("camera1", "sensor1", "2018-09-24"))
     # print(c.execute("SELECT Offset FROM offsets WHERE Offset = 0").fetchall())
