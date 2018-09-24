@@ -13,9 +13,6 @@ import video_metadata as vm
 import pytz
 
 
-
-
-
 class VideoPlayer(QMainWindow, Ui_VideoPlayer):
 
     def __init__(self):
@@ -41,8 +38,6 @@ class VideoPlayer(QMainWindow, Ui_VideoPlayer):
         # Initialize the libraries that are needed to plot the sensor data, and add them to the GUI.
         self.figure = matplotlib.pyplot.figure()
         self.canvas = FigureCanvasQTAgg(self.figure)
-        self.toolbar = NavigationToolbar2QT(self.canvas, self)
-        self.verticalLayout_sensordata.addWidget(self.toolbar)
         self.verticalLayout_sensordata.addWidget(self.canvas)
 
         self.seconds = 0
@@ -73,7 +68,10 @@ class VideoPlayer(QMainWindow, Ui_VideoPlayer):
             self.data = import_data.parse_csv(filename)
             self.figure.clear()
             dataplot = self.figure.add_subplot(111)
-            dataplot.plot(self.data.where(self.data['Time'] < 15).dropna(subset=['Time']), '*-')
+            data1 = self.data.where(self.data['Time'] < 15).dropna(subset=['Time'])
+            data2 = data1.drop(['Mx', 'My', 'Mz', 'T', 'Ay', 'Az', 'Gx', 'Gy', 'Gz'], axis=1)
+            dataplot.plot(data2['Time'], data2['Ax'], ',-', linewidth=1.0)
+            dataplot.axis([-10, 10, self.data['Ax'].min(), self.data['Ax'].max()])
             self.canvas.draw()
 
     def play(self):
@@ -103,10 +101,12 @@ class VideoPlayer(QMainWindow, Ui_VideoPlayer):
         self.label_duration.setText(self.ms_to_time(position))
         self.figure.clear()
         dataplot = self.figure.add_subplot(111)
-        data1 = self.data.where((0 + (position // 1000)) < self.data['Time'])
-        data2 = data1.where(data1['Time'] < 15 + (position // 1000))
+        data1 = self.data.where((-10 + (position // 1000)) < self.data['Time'])
+        data2 = data1.where(data1['Time'] < 10 + (position // 1000))
         data3 = data2.dropna(subset=['Time'])
-        dataplot.plot(data3.drop(['Time', 'Mx', 'My', 'Mz', 'T', 'Ay', 'Az', 'Gx', 'Gy', 'Gz'], axis=1), '*-')
+        data4 = data3.drop(['Mx', 'My', 'Mz', 'T', 'Ay', 'Az', 'Gx', 'Gy', 'Gz'], axis=1)
+        dataplot.plot(data4['Time'], data4['Ax'], ',-', linewidth=1.0)
+        dataplot.axis([-10 + (position // 1000), 10 + (position // 1000), self.data['Ax'].min(), self.data['Ax'].max()])
         self.canvas.draw()
 
     def set_position(self, position):

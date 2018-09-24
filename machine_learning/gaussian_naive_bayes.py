@@ -6,6 +6,7 @@ from sklearn.model_selection import train_test_split
 import pandas as pd
 from pandas import Series
 from sklearn.naive_bayes import GaussianNB
+from sklearn.tree import DecisionTreeClassifier
 
 from data_import.import_data import parse_csv
 
@@ -31,7 +32,8 @@ def classify(data, used_features, ground_truth, tags):
     # Clean the dataset of entries that have not been classified yet to use as training set
     train_set = data[pd.notnull(data['ground_truth'])]
 
-    gnb = GaussianNB()
+    # gnb = GaussianNB()
+    gnb = DecisionTreeClassifier()
 
     gnb.fit(
         train_set[used_features],

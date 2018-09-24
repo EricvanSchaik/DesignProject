@@ -26,4 +26,9 @@ def time_test():
     print(timeit(wrapped, number=5)/5)
 
 
-
+random = dict()
+random['bier'] = 'bier'
+print(random['bier'])
+if 'geenbier' not in random:
+    random['geenbier'] = None
+print(random['geenbier'])
