@@ -1,14 +1,17 @@
 import re
 import pandas as pd
 from data_import import function as f
+from data_import import sensor as sens
+from data_import import column_metadata as cm
 
 
-class Sensor:
+class SensorData:
 
     def __init__(self, file_path):
         self.file_path = file_path
         self.headers = self.parse_headers()
         self.data = self.parse_data()
+        self.metadata = []
 
     def parse_headers(self):
         """
@@ -42,6 +45,7 @@ class Sensor:
         # Parse data
         data = pd.read_csv(self.file_path, header=None, names=names, comment=';')
 
+        # TODO: generalise using column metadata:
         # Convert sensor data to correct unit
         # Accelerometer to m/s
         f.column_operation(data, names[1], f.mul, 9.807 / 4096)
@@ -63,6 +67,32 @@ class Sensor:
 
         # Return data
         return data
+
+    def set_metadata(self):
+        """
+        Sets the metadata for every column
+        """
+        for name in self.get_names():
+            # TODO: parse data_type, sensor, and conversion from headers automatically
+            # parse data_type
+            data_type = None
+
+            # parse sensor
+            # parse conversion rate (part of sensor)
+            conversion = None
+            if name.startswith("A"):  # Accelerometer
+                conversion = 9.807 / 4096
+            elif name.startswith("G"):  # Gyroscope
+                conversion = 16.384
+            elif name.startswith("M"):  # Magnetometer
+                conversion = 3.413
+            elif name == "T":  # Temperature
+                conversion = 1000
+
+            sensor = sens.Sensor(name, None, None, conversion)
+
+            # create new column metadata and add it to list with metadata
+            self.metadata.append(cm.ColumnMetadata(name, data_type, sensor))
 
     def get_names(self):
         """
