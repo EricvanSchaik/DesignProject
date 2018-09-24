@@ -71,15 +71,16 @@ def parse_start_time_from_file(file_path):
     return datetime_with_tz
 
 
-def datetime_with_tz_to_string(datetime_string, timezone):
+def datetime_with_tz_to_string(datetime_string, timezone, format_string):
     """
     Formats a localized datetime string to another format
 
     :param datetime_string: A localized datetime string
     :param timezone: The timezone of the datetime
+    :param format_string: The string to format the datetime with
     :return: formatted string
     """
-    return timezone.fromutc(datetime_string).strftime('%Y%m%d_%H-%M-%S')
+    return timezone.fromutc(datetime_string).strftime(format_string)
 
 
 def calculate_stop_time_from_file(file_path):
@@ -111,7 +112,8 @@ def rename_file_to_start_time(file_path):
     file_extension = file.rsplit('.', 1)[1]
 
     creation_time = parse_start_time_from_file(file_path)
-    creation_time_string = datetime_with_tz_to_string(creation_time, pytz.timezone('Europe/Amsterdam'))
+    creation_time_string = datetime_with_tz_to_string(creation_time, pytz.timezone('Europe/Amsterdam'),
+                                                      '%Y%m%d_%H-%M-%S')
 
     os.rename(file_path, '{}/{}.{}'.format(directory, creation_time_string, file_extension))
 

@@ -3,7 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time
 from sklearn.model_selection import train_test_split
-from sklearn.naive_bayes import GaussianNB, BernoulliNB, MultinomialNB
+from sklearn.naive_bayes import GaussianNB
+from sklearn.tree import DecisionTreeClassifier
 
 # Importing dataset
 data = pd.read_csv("train.csv")
@@ -33,7 +34,8 @@ data = data[[
 # Split dataset in training and test datasets
 X_train, X_test = train_test_split(data, test_size=0.5, random_state=int(time.time()))
 
-gnb = GaussianNB()
+# gnb = GaussianNB()
+gnb = DecisionTreeClassifier()
 used_features = [
     "Pclass",
     "Sex_cleaned",
