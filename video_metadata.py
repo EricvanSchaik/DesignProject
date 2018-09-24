@@ -50,11 +50,12 @@ def parse_duration_from_file(file_path):
     return float(ffprobe_output)
 
 
-def parse_start_time_from_file(file_path):
+def parse_start_time_from_file(file_path, timezone=pytz.timezone('Europe/Amsterdam')):
     """
     Parses the start time of video files.
 
     :param file_path: The path of the video
+    :param timezone: The timezone that should be used
     :return: datetime: The start time of the video
     """
     if not os.path.isfile(file_path):
@@ -64,22 +65,22 @@ def parse_start_time_from_file(file_path):
            '-of default=noprint_wrappers=1:nokey=1 "{}"'.format(file_path)
     ffprobe_output = subprocess.check_output(args).decode('utf-8')
 
-    local_tz = pytz.timezone('Europe/Amsterdam')
     datetime_without_tz = datetime.datetime.strptime(ffprobe_output, '%Y-%m-%dT%H:%M:%S.000000Z\n')
-    datetime_with_tz = local_tz.localize(datetime_without_tz)
+    datetime_with_tz = timezone.localize(datetime_without_tz)
 
     return datetime_with_tz
 
 
-def datetime_with_tz_to_string(datetime_string, timezone):
+def datetime_with_tz_to_string(datetime_string, format_string, timezone=pytz.timezone('Europe/Amsterdam')):
     """
     Formats a localized datetime string to another format
 
     :param datetime_string: A localized datetime string
     :param timezone: The timezone of the datetime
+    :param format_string: The string to format the datetime with
     :return: formatted string
     """
-    return timezone.fromutc(datetime_string).strftime('%Y%m%d_%H-%M-%S')
+    return timezone.fromutc(datetime_string).strftime(format_string)
 
 
 def calculate_stop_time_from_file(file_path):
@@ -111,7 +112,7 @@ def rename_file_to_start_time(file_path):
     file_extension = file.rsplit('.', 1)[1]
 
     creation_time = parse_start_time_from_file(file_path)
-    creation_time_string = datetime_with_tz_to_string(creation_time, pytz.timezone('Europe/Amsterdam'))
+    creation_time_string = datetime_with_tz_to_string(creation_time, '%Y%m%d_%H-%M-%S')
 
     os.rename(file_path, '{}/{}.{}'.format(directory, creation_time_string, file_extension))
 
