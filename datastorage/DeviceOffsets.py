@@ -9,8 +9,11 @@ sql_updateOffset = "UPDATE Offsets SET Offset = ? WHERE Camera = ? AND Sensor = 
 
 class OffsetManager:
 
-    def __init__(self):
-        self._conn = sqlite3.connect('database.db')
+    def __init__(self, is_test=False):
+        if is_test:
+            self._conn = sqlite3.connect('test.db')
+        else:
+            self._conn = sqlite3.connect('data.db')
         self._cur = self._conn.cursor()
 
     def create_table(self):
@@ -65,14 +68,3 @@ class OffsetManager:
         """
         self._cur.execute(sql_updateOffset, (offset, cam_id, sens_id, date))
         self._conn.commit()
-
-
-if __name__ == '__main__':
-    d = OffsetManager()
-    c = d._cur
-    # print(c.execute("SELECT * FROM offsets").fetchall())
-    # c.execute(d.sql_insertOffset, ("camera1", "sensor1", 10, "2018-09-20"))
-    # c.execute(d.sql_insertOffset, ("camera1", "sensor1", 20, "2018-09-19"))
-    # d.conn.commit()
-    print(d.get_offset("camera1", "sensor1", "2018-09-24"))
-    # print(c.execute("SELECT Offset FROM offsets WHERE Offset = 0").fetchall())

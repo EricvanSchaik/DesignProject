@@ -15,9 +15,8 @@ sql_get_labels = "SELECT Start_time, Label_name FROM labelData WHERE Sensor_id =
 
 class LabelManager:
 
-    def __init__(self):
-        # TODO: different location for different user projects?
-        self._conn = sqlite3.connect('database.db')
+    def __init__(self, project_name):
+        self._conn = sqlite3.connect('projects/' + project_name + '/project_data.db')
         self._cur = self._conn.cursor()
 
     def create_tables(self):
@@ -130,9 +129,3 @@ class LabelManager:
         """
         self._cur.execute(sql_get_labels, [sensor_id])
         return self._cur.fetchall()
-
-
-if __name__ == '__main__':
-    l = LabelManager()
-    # l.add_label(0, "label1", "sensor1")
-    print(l.get_all_labels("sensor1"))

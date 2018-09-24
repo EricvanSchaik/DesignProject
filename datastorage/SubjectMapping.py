@@ -8,8 +8,8 @@ sql_change_end_date = "UPDATE subject_map SET End_date = ? WHERE Name = ?"
 
 class SubjectManager:
 
-    def __init__(self):
-        self._conn = sqlite3.connect('database.db')
+    def __init__(self, project_name):
+        self._conn = sqlite3.connect('projects/' + project_name + '/project_data.db')
         self._cur = self._conn.cursor()
 
     def create_table(self):
@@ -57,4 +57,3 @@ class SubjectManager:
         self._conn.commit()
 
     # TODO: allow user to add and manipulate own columns
-

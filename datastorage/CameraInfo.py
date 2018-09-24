@@ -7,7 +7,7 @@ sql_delete_camera = "DELETE FROM cameras WHERE Name = ?"
 class CameraManager:
 
     def __init__(self):
-        self._conn = sqlite3.connect('database.db')
+        self._conn = sqlite3.connect('data.db')
         self._cur = self._conn.cursor()
 
     def create_table(self):
@@ -32,10 +32,3 @@ class CameraManager:
         """
         self._cur.execute(sql_delete_camera, [name])
         self._conn.commit()
-
-
-if __name__ == '__main__':
-    c = CameraInfo()
-    c.create_table()
-    c.add_camera("camera1")
-    # c.delete_camera("camera1")
