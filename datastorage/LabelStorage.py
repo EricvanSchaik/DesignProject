@@ -31,7 +31,7 @@ class LabelManager:
                   "PRIMARY KEY(Start_time, Sensor_id))")
         self._conn.commit()
 
-    def new_label(self, name: str, color: int, desc: str) -> None:
+    def add_label_type(self, name: str, color: int, desc: str) -> None:
         """
         Creates a new label type.
 
@@ -52,8 +52,8 @@ class LabelManager:
 
         :param name: The name of the label type
         """
-        self._cur.execute(sql_del_label_type, name)
-        self._cur.execute(sql_del_label_data_all, name)
+        self._cur.execute(sql_del_label_type, [name])
+        self._cur.execute(sql_del_label_data_all, [name])
         self._conn.commit()
 
     def add_label(self, time: float, name: str, sensor: str) -> None:
