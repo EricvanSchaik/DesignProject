@@ -63,9 +63,9 @@ class Settings:
         Returns the value of a given setting.
 
         :param setting_name: The name of the setting
-        :return: The value of the setting
+        :return: The value of the setting, or None if the setting is unknown
         """
-        return self.settings_dict[setting_name]
+        return self.settings_dict.get(setting_name, None)
 
     def _get_path(self) -> str:
         """
