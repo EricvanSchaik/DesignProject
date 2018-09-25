@@ -9,20 +9,17 @@ sql_updateOffset = "UPDATE Offsets SET Offset = ? WHERE Camera = ? AND Sensor = 
 
 class OffsetManager:
 
-    def __init__(self, is_test=False):
-        if is_test:
-            self._conn = sqlite3.connect('test.db')
-        else:
-            self._conn = sqlite3.connect('data.db')
+    def __init__(self):
+        self._conn = sqlite3.connect('data.db')
         self._cur = self._conn.cursor()
 
-    def create_table(self):
+    def create_table(self) -> None:
         """Method for creating the necessary offset table in the database."""
         self._cur.execute("CREATE TABLE offsets (Camera TEXT, Sensor TEXT, Offset REAL, Date TEXT,"
                           "PRIMARY KEY (Camera, Sensor, Date))")
         self._conn.commit()
 
-    def get_offset(self, cam_id, sens_id, date):
+    def get_offset(self, cam_id: str, sens_id: str, date: str) -> float:
         """
         Returns the offset between a camera and sensor on a given date.
         If there is no known offset for the given date, this returns the average of the offsets of previous dates.
@@ -57,7 +54,7 @@ class OffsetManager:
         self._conn.commit()
         return avg
 
-    def set_offset(self, cam_id, sens_id, offset, date):
+    def set_offset(self, cam_id: str, sens_id: str, offset: float, date: str) -> None:
         """
         Changes the offset between a camera and sensor.
 
