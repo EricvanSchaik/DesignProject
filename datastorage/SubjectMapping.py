@@ -8,16 +8,19 @@ sql_change_end_date = "UPDATE subject_map SET End_date = ? WHERE Name = ?"
 
 class SubjectManager:
 
-    def __init__(self):
-        self._conn = sqlite3.connect('database.db')
+    def __init__(self, project_name: str):
+        """
+        :param project_name: The name of the current project
+        """
+        self._conn = sqlite3.connect('projects/' + project_name + '/project_data.db')
         self._cur = self._conn.cursor()
 
-    def create_table(self):
+    def create_table(self) -> None:
         """Method for creating the necessary subject mapping table."""
         self._cur.execute("CREATE TABLE subject_map (Name TEXT, Sensor TEXT, Start_date TEXT, End_date TEXT)")
         self._conn.commit()
 
-    def add_subject(self, name):
+    def add_subject(self, name: str) -> None:
         """
         Adds a new subject.
 
@@ -26,7 +29,7 @@ class SubjectManager:
         self._cur.execute(sql_add_subject, [name])
         self._conn.commit()
 
-    def change_sensor(self, name, sens_id):
+    def change_sensor(self, name: str, sens_id: str) -> None:
         """
         Changes the sensor mapped to a subject.
 
@@ -36,7 +39,7 @@ class SubjectManager:
         self._cur.execute(sql_change_sensor, (sens_id, name))
         self._conn.commit()
 
-    def change_start_date(self, name, date):
+    def change_start_date(self, name: str, date: str) -> None:
         """
         Changes the start date for a subject.
 
@@ -46,7 +49,7 @@ class SubjectManager:
         self._cur.execute(sql_change_start_date, (date, name))
         self._conn.commit()
 
-    def change_end_date(self, name, date):
+    def change_end_date(self, name: str, date: str) -> None:
         """
         Changes the end date for a subject.
 
@@ -57,4 +60,3 @@ class SubjectManager:
         self._conn.commit()
 
     # TODO: allow user to add and manipulate own columns
-
