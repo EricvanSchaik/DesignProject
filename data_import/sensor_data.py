@@ -43,6 +43,26 @@ def parse_names(file, row_nr):
 class SensorData:
 
     def __init__(self, file_path, settings):
+        """
+        The SensorData starts parsing as soon as it's constructed. Only SensorData.data needs to
+        be called in order to get the parsed data. SensorData.metadata contains the metadata.
+        :param file_path: path to the file to be parsed
+        :param settings: The settings dictionary contains information on where metadata can
+        be found in the parsed file. It should have the following keys in order for it to work:
+
+            - time_row, time_col   (row and column where 'time' attribute is located)
+            - date_row, date_col   (row and column where 'date' attribute is located)
+            - sr_row, sr_col       (row and column where 'sampling rate' attribute is located)
+            - sn_row, sn_col       (row and column where 'serial number' attribute is located)
+            - names_row            (row where the names of the columns are located)
+
+        The next keys are variable depending on the name of the column (these are not locations, but values!):
+
+            - <name>_data_type     (data type of the column)
+            - <name>_sensor_name   (name of the sensor used)
+            - <name>_sampling_rate (sampling rate of the sensor)
+            - <name>_unit          (unit of measurement of the sensor)
+        """
         # Initiate primitives
         self.file_path = file_path
         self.metadata = dict()
@@ -53,6 +73,11 @@ class SensorData:
         self.data = self.parse(settings)
 
     def parse(self, settings):
+        """
+        Parses a csv file to get metadata and data.
+        :param settings: contains the metadata
+        :return: the data
+        """
         # Parse metadata from headers
         with open(self.file_path) as file:
             self.metadata['time'] = parse_header_option(file, settings['time_row'], settings['time_col'])
@@ -60,6 +85,9 @@ class SensorData:
             self.metadata['sr'] = parse_header_option(file, settings['sr_row'], settings['sr_col'])
             self.metadata['sn'] = parse_header_option(file, settings['sn_row'], settings['sn_col'])
             self.names = parse_names(file, settings['names_row'])
+
+        # set column metadata
+        self.set_column_metadata(settings)
 
         # Parse data from file
         data = pd.read_csv(self.file_path, header=None, names=self.names, comment=settings.comment)
@@ -89,7 +117,7 @@ class SensorData:
 
     def set_column_metadata(self, settings):
         """
-        Sets the metadata for every column
+        Sets the metadata for every column using the settings
         """
         for name in self.names:
             # parse data_type
