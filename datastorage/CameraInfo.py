@@ -7,15 +7,15 @@ sql_delete_camera = "DELETE FROM cameras WHERE Name = ?"
 class CameraManager:
 
     def __init__(self):
-        self._conn = sqlite3.connect('database.db')
+        self._conn = sqlite3.connect('data.db')
         self._cur = self._conn.cursor()
 
-    def create_table(self):
+    def create_table(self) -> None:
         """Creates the necessary cameras table in the database."""
         self._cur.execute("CREATE TABLE cameras (Name TEXT PRIMARY KEY)")
         self._conn.commit()
 
-    def add_camera(self, name):
+    def add_camera(self, name: str) -> None:
         """
         Adds a camera to the table.
 
@@ -24,7 +24,7 @@ class CameraManager:
         self._cur.execute(sql_add_camera, [name])
         self._conn.commit()
 
-    def delete_camera(self, name):
+    def delete_camera(self, name: str) -> None:
         """
         Deletes a camera from the table.
 
@@ -32,10 +32,3 @@ class CameraManager:
         """
         self._cur.execute(sql_delete_camera, [name])
         self._conn.commit()
-
-
-if __name__ == '__main__':
-    c = CameraInfo()
-    c.create_table()
-    c.add_camera("camera1")
-    # c.delete_camera("camera1")

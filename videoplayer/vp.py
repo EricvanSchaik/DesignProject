@@ -11,6 +11,15 @@ import matplotlib.pyplot
 from data_import import import_data
 import video_metadata as vm
 import pytz
+from datetime import timedelta
+import matplotlib.animation
+import numpy as np
+
+
+def add_time_strings(time1, time2):
+    return timedelta(hours=int(time1[0] + time1[1]), minutes=int(time1[3] + time1[4]), seconds=int(time1[6] + time1[
+        7])) + timedelta(hours=int(time2[0] + time2[1]), minutes=int(time2[3] + time2[4]), seconds=int(time2[6] +
+                                                                                                       time2[7]))
 
 
 class VideoPlayer(QMainWindow, Ui_VideoPlayer):
@@ -49,14 +58,15 @@ class VideoPlayer(QMainWindow, Ui_VideoPlayer):
         A helper function that allows a user to open a video in the QMediaPlayer via the menu bar.
         :return:
         """
-        filename, _ = QFileDialog.getOpenFileName(self, "Open Video", QDir.homePath())
-        if filename != '':
-            self.mediaplayer.setMedia(QMediaContent(QUrl.fromLocalFile(filename)))
+        self.video_filename, _ = QFileDialog.getOpenFileName(self, "Open Video", QDir.homePath())
+        if self.video_filename != '':
+            self.mediaplayer.setMedia(QMediaContent(QUrl.fromLocalFile(self.video_filename)))
             self.mediaplayer.play()
             self.playButton.setEnabled(True)
-            # print(vm.datetime_with_tz_to_string(vm.parse_start_time_from_file(filename), pytz.timezone(
-            #     'Europe/Amsterdam')))
-            # print(vm.parse_start_time_from_file(filename))
+            self.label_date.setText(vm.datetime_with_tz_to_string(vm.parse_start_time_from_file(self.video_filename),
+                                                                  '%d-%B-%Y'))
+            self.label_time.setText(vm.datetime_with_tz_to_string(vm.parse_start_time_from_file(self.video_filename),
+                                                                  '%H:%M:%S'))
 
     def open_sensordata(self):
         """
@@ -99,15 +109,25 @@ class VideoPlayer(QMainWindow, Ui_VideoPlayer):
         """
         self.horizontalSlider.setValue(position)
         self.label_duration.setText(self.ms_to_time(position))
+        self.label_time.setText(str(add_time_strings(self.ms_to_time(position), vm.datetime_with_tz_to_string(
+            vm.parse_start_time_from_file(self.video_filename), '%H:%M:%S'))))
         self.figure.clear()
-        dataplot = self.figure.add_subplot(111)
-        data1 = self.data.where((-10 + (position // 1000)) < self.data['Time'])
-        data2 = data1.where(data1['Time'] < 10 + (position // 1000))
+        self.dataplot = self.figure.add_subplot(111)
+        data1 = self.data.where((-15 + (position // 1000)) < self.data['Time'])
+        data2 = data1.where(data1['Time'] < 15 + (position // 1000))
         data3 = data2.dropna(subset=['Time'])
         data4 = data3.drop(['Mx', 'My', 'Mz', 'T', 'Ay', 'Az', 'Gx', 'Gy', 'Gz'], axis=1)
-        dataplot.plot(data4['Time'], data4['Ax'], ',-', linewidth=1.0)
-        dataplot.axis([-10 + (position // 1000), 10 + (position // 1000), self.data['Ax'].min(), self.data['Ax'].max()])
+        self.dataplot.plot(data4['Time'], data4['Ax'], ',-', linewidth=1.0)
+        self.dataplot.axis([-10 + (position // 1000), 10 + (position // 1000), self.data['Ax'].min(), self.data[
+            'Ax'].max()])
         self.canvas.draw()
+        matplotlib.animation.FuncAnimation(self.figure, self.update_plot, np.arange(0, 1, 0.01), interval=10)
+
+    def update_plot(self, i):
+        self.dataplot.axis([-10 + (self.mediaplayer.position() // 1000) + i, 10 + (self.mediaplayer.position() //
+                                                                                   1000) + i, self.data['Ax'].min(),
+                            self.data['Ax'].max()])
+        print(i)
 
     def set_position(self, position):
         """

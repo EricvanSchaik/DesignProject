@@ -1,6 +1,7 @@
 from timeit import timeit
 import pandas as pd
 from data_import import sensor_data as sd
+import math
 
 
 def column_operation(df, col, func, *args):
@@ -26,4 +27,30 @@ def time_test():
     print(timeit(wrapped, number=5)/5)
 
 
+def test_settings():
+    settings = dict()
+    settings['time_row'], settings['time_col'] = 3, 3
+    settings['date_row'], settings['date_col'] = 3, 2
+    settings['sr_row'], settings['sr_col'] = 5, 2
+    settings['sn_row'], settings['sn_col'] = 2, 5
+    settings['names_row'] = 8
+    settings['comment'] = ';'
 
+    names = ["Time", "Ax", "Ay", "Az", "Gx", "Gy", "Gz", "Mx", "My", "Mz", "T"]
+    for name in names:
+        settings[name + "_data_type"] = "-"
+        settings[name + "_sensor_name"] = "-"
+        settings[name + "_sampling_rate"] = "-"
+        settings[name + "_unit"] = "-"
+
+    return settings
+
+
+def vector(row):
+    return math.sqrt(row['Ax']**2 + row['Ay']**2 + row['Az']**2)
+
+
+sett = test_settings()
+sensor_data = sd.SensorData("../data/DATA-001.CSV", sett)
+print(sensor_data.metadata)
+print(sensor_data.data)
