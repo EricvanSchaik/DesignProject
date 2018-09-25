@@ -28,10 +28,10 @@ class LabelManager:
         c = self._conn.cursor()
         c.execute("CREATE TABLE labelType (Name TEXT PRIMARY KEY, Color INTEGER, Description TEXT)")
         c.execute("CREATE TABLE labelData (Start_time REAL, Label_name TEXT, Sensor_id TEXT, "
-                  "PRIMARY KEY(Start_time, Sensor_id))")
+                  "PRIMARY KEY(Start_time, Sensor_id), FOREIGN KEY (Label_name) REFERENCES labelType(Name))")
         self._conn.commit()
 
-    def new_label(self, name: str, color: int, desc: str) -> None:
+    def add_label_type(self, name: str, color: int, desc: str) -> None:
         """
         Creates a new label type.
 
@@ -52,8 +52,8 @@ class LabelManager:
 
         :param name: The name of the label type
         """
-        self._cur.execute(sql_del_label_type, name)
-        self._cur.execute(sql_del_label_data_all, name)
+        self._cur.execute(sql_del_label_data_all, [name])
+        self._cur.execute(sql_del_label_type, [name])
         self._conn.commit()
 
     def add_label(self, time: float, name: str, sensor: str) -> None:
@@ -89,8 +89,8 @@ class LabelManager:
         :param old_name: The name of the label type that has to be changed
         :param new_name: The name that the label type should get
         """
-        self._cur.execute(sql_upd_name_type, (new_name, old_name))
         self._cur.execute(sql_upd_name_data, (new_name, old_name))
+        self._cur.execute(sql_upd_name_type, (new_name, old_name))
         self._conn.commit()
 
     def update_label_color(self, name: str, color: int) -> None:

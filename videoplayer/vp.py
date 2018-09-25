@@ -12,6 +12,8 @@ from data_import import import_data
 import video_metadata as vm
 import pytz
 from datetime import timedelta
+import matplotlib.animation
+import numpy as np
 
 
 def add_time_strings(time1, time2):
@@ -110,14 +112,22 @@ class VideoPlayer(QMainWindow, Ui_VideoPlayer):
         self.label_time.setText(str(add_time_strings(self.ms_to_time(position), vm.datetime_with_tz_to_string(
             vm.parse_start_time_from_file(self.video_filename), '%H:%M:%S'))))
         self.figure.clear()
-        dataplot = self.figure.add_subplot(111)
-        data1 = self.data.where((-10 + (position // 1000)) < self.data['Time'])
-        data2 = data1.where(data1['Time'] < 10 + (position // 1000))
+        self.dataplot = self.figure.add_subplot(111)
+        data1 = self.data.where((-15 + (position // 1000)) < self.data['Time'])
+        data2 = data1.where(data1['Time'] < 15 + (position // 1000))
         data3 = data2.dropna(subset=['Time'])
         data4 = data3.drop(['Mx', 'My', 'Mz', 'T', 'Ay', 'Az', 'Gx', 'Gy', 'Gz'], axis=1)
-        dataplot.plot(data4['Time'], data4['Ax'], ',-', linewidth=1.0)
-        dataplot.axis([-10 + (position // 1000), 10 + (position // 1000), self.data['Ax'].min(), self.data['Ax'].max()])
+        self.dataplot.plot(data4['Time'], data4['Ax'], ',-', linewidth=1.0)
+        self.dataplot.axis([-10 + (position // 1000), 10 + (position // 1000), self.data['Ax'].min(), self.data[
+            'Ax'].max()])
         self.canvas.draw()
+        matplotlib.animation.FuncAnimation(self.figure, self.update_plot, np.arange(0, 1, 0.01), interval=10)
+
+    def update_plot(self, i):
+        self.dataplot.axis([-10 + (self.mediaplayer.position() // 1000) + i, 10 + (self.mediaplayer.position() //
+                                                                                   1000) + i, self.data['Ax'].min(),
+                            self.data['Ax'].max()])
+        print(i)
 
     def set_position(self, position):
         """
