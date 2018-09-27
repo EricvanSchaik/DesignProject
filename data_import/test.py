@@ -1,7 +1,6 @@
 from timeit import timeit
 import pandas as pd
 from data_import import sensor_data as sd
-import math
 
 
 def column_operation(df, col, func, *args):
@@ -21,9 +20,18 @@ def wrapper(func, *args, **kwargs):
     return wrapped
 
 
-def time_test():
+def parse_time_test():
+    # Time test for creating a SensorData object and parsing a file
     # about 2.86 seconds
-    wrapped = wrapper(sd.SensorData, "../data/DATA-001.CSV")
+    wrapped = wrapper(sd.SensorData, "../data/DATA-001.CSV", test_settings())
+    print(timeit(wrapped, number=5)/5)
+
+
+def add_column_time_test():
+    # Time test for adding a vector column to the data
+    # about 9.26 seconds
+    sensor_data = sd.SensorData("../data/DATA-001.CSV", test_settings())
+    wrapped = wrapper(sensor_data.add_column, "Vector", sd.vector)
     print(timeit(wrapped, number=5)/5)
 
 
@@ -43,14 +51,23 @@ def test_settings():
         settings[name + "_sampling_rate"] = "-"
         settings[name + "_unit"] = "-"
 
+    settings["Ax_conversion"] = 9.807 / 4096
+    settings["Ay_conversion"] = 9.807 / 4096
+    settings["Az_conversion"] = 9.807 / 4096
+
+    settings["Gx_conversion"] = 1 / 16.384
+    settings["Gy_conversion"] = 1 / 16.384
+    settings["Gz_conversion"] = 1 / 16.384
+
+    settings["Mx_conversion"] = 1 / 3.413
+    settings["My_conversion"] = 1 / 3.413
+    settings["Mz_conversion"] = 1 / 3.413
+
+    settings["T_conversion"] = 1 / 1000
+
     return settings
 
 
-def vector(row):
-    return math.sqrt(row['Ax']**2 + row['Ay']**2 + row['Az']**2)
-
-
-sett = test_settings()
-sensor_data = sd.SensorData("../data/DATA-001.CSV", sett)
-print(sensor_data.metadata)
-print(sensor_data.data)
+sens_data = sd.SensorData("../data/DATA-001.CSV", test_settings())
+sens_data.add_column("Vector", sd.vector)
+print(sens_data.data)
