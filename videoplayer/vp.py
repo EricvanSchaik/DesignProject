@@ -13,7 +13,7 @@ from datetime import timedelta
 import matplotlib.animation
 import numpy as np
 from PyQt5 import QtCore
-from videoplayer import labelspecs
+from videoplayer.labelspecs import Ui_LabelSpecs
 
 
 def add_time_strings(time1, time2):
@@ -161,11 +161,17 @@ class VideoPlayer(QMainWindow, Ui_VideoPlayer):
         return hours_str + ":" + minutes_str + ":" + seconds_str
 
     def open_dialog(self):
-        dialog = QtWidgets.QDialog()
-        dialog.ui = labelspecs.Ui_LabelSpecs()
-        dialog.ui.setupUi(dialog)
+        dialog = LabelSpecs()
         dialog.exec_()
         dialog.show()
+
+
+class LabelSpecs(QtWidgets.QDialog, Ui_LabelSpecs):
+
+    def __init__(self):
+        super().__init__()
+        # Initialize the generated UI from vpdesigner.py.
+        self.setupUi(self)
 
 
 if __name__ == '__main__':
