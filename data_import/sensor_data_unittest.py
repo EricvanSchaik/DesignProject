@@ -40,6 +40,32 @@ class SensorDataTestCase(unittest.TestCase):
     def setUp(self):
         self.sensor_data = sd.SensorData("../data/DATA-001.CSV", create_settings())
 
+    def test_data(self):
+        # Due to the way pandas parses the file 0.006042 turns to 0.0060420000000000005
+        self.assertEqual(self.sensor_data.data['Time'][0], 0.0060420000000000005,
+                         "First value of Time is incorrect")
+        self.assertEqual(self.sensor_data.data['Ax'][0], 2056 * 9.807 / 4096,
+                         "First value of Ax is incorrect")
+        self.assertEqual(self.sensor_data.data['Ay'][0], -486 * 9.807 / 4096,
+                         "First value of Ay is incorrect")
+        self.assertEqual(self.sensor_data.data['Az'][0], -2872 * 9.807 / 4096,
+                         "First value of Az is incorrect")
+        self.assertEqual(self.sensor_data.data['Gx'][0], 988 / 16.384,
+                         "First value of Gx is incorrect")
+        self.assertEqual(self.sensor_data.data['Gy'][0], -1097 / 16.384,
+                         "First value of Gy is incorrect")
+        self.assertEqual(self.sensor_data.data['Gz'][0], -839 / 16.384,
+                         "First value of Gz is incorrect")
+        self.assertEqual(self.sensor_data.data['Mx'][0], -287 / 3.413,
+                         "First value of Mx is incorrect")
+        self.assertEqual(self.sensor_data.data['My'][0], -141 / 3.413,
+                         "First value of My is incorrect")
+        self.assertEqual(self.sensor_data.data['Mz'][0], -148 / 3.413,
+                         "First value of Mz is incorrect")
+        # Same issue as with the 'Time' column
+        self.assertEqual(self.sensor_data.data['T'][0], 25.560000000000002,
+                         "First value of T is incorrect")
+
     def test_add_column(self):
         self.sensor_data.add_column("Vector", sd.vector)
         self.assertEqual(self.sensor_data.data["Vector"][0], 8.536469993305431,
