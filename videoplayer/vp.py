@@ -1,19 +1,19 @@
 import sys
 
-from PyQt5 import QtGui
+from PyQt5 import QtGui, QtWidgets
 from PyQt5.QtCore import QUrl, QDir
 from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
-from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QPushButton
+from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog
 from videoplayer.vpdesigner import Ui_VideoPlayer
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
-from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT
 import matplotlib.pyplot
 from data_import import import_data
 import video_metadata as vm
-import pytz
 from datetime import timedelta
 import matplotlib.animation
 import numpy as np
+from PyQt5 import QtCore
+from videoplayer.labelspecs import Ui_LabelSpecs
 
 
 def add_time_strings(time1, time2):
@@ -53,6 +53,12 @@ class VideoPlayer(QMainWindow, Ui_VideoPlayer):
         self.minutes = 0
         self.hours = 0
 
+        self.i = 0
+        self.timer = QtCore.QTimer(self)
+        self.prev_position = self.mediaplayer.position()
+
+        self.pushButton_label.clicked.connect(self.open_dialog)
+
     def open_video(self):
         """
         A helper function that allows a user to open a video in the QMediaPlayer via the menu bar.
@@ -77,11 +83,13 @@ class VideoPlayer(QMainWindow, Ui_VideoPlayer):
         if filename != '':
             self.data = import_data.parse_csv(filename)
             self.figure.clear()
-            dataplot = self.figure.add_subplot(111)
-            data1 = self.data.where(self.data['Time'] < 15).dropna(subset=['Time'])
-            data2 = data1.drop(['Mx', 'My', 'Mz', 'T', 'Ay', 'Az', 'Gx', 'Gy', 'Gz'], axis=1)
-            dataplot.plot(data2['Time'], data2['Ax'], ',-', linewidth=1.0)
-            dataplot.axis([-10, 10, self.data['Ax'].min(), self.data['Ax'].max()])
+            self.dataplot = self.figure.add_subplot(111)
+            data1 = self.data.where(self.data['Time'] < 30).dropna(subset=['Time'])
+            data2 = self.data.drop(['Mx', 'My', 'Mz', 'T', 'Ay', 'Az', 'Gx', 'Gy', 'Gz'], axis=1)
+            self.dataplot.plot(data2['Time'], data2['Ax'], ',-', linewidth=1.0)
+            self.dataplot.axis([-10, 10, self.data['Ax'].min(), self.data['Ax'].max()])
+            self.timer.timeout.connect(self.update_plot)
+            self.timer.start(1)
             self.canvas.draw()
 
     def play(self):
@@ -111,23 +119,14 @@ class VideoPlayer(QMainWindow, Ui_VideoPlayer):
         self.label_duration.setText(self.ms_to_time(position))
         self.label_time.setText(str(add_time_strings(self.ms_to_time(position), vm.datetime_with_tz_to_string(
             vm.parse_start_time_from_file(self.video_filename), '%H:%M:%S'))))
-        self.figure.clear()
-        self.dataplot = self.figure.add_subplot(111)
-        data1 = self.data.where((-15 + (position // 1000)) < self.data['Time'])
-        data2 = data1.where(data1['Time'] < 15 + (position // 1000))
-        data3 = data2.dropna(subset=['Time'])
-        data4 = data3.drop(['Mx', 'My', 'Mz', 'T', 'Ay', 'Az', 'Gx', 'Gy', 'Gz'], axis=1)
-        self.dataplot.plot(data4['Time'], data4['Ax'], ',-', linewidth=1.0)
-        self.dataplot.axis([-10 + (position // 1000), 10 + (position // 1000), self.data['Ax'].min(), self.data[
-            'Ax'].max()])
-        self.canvas.draw()
-        matplotlib.animation.FuncAnimation(self.figure, self.update_plot, np.arange(0, 1, 0.01), interval=10)
 
-    def update_plot(self, i):
-        self.dataplot.axis([-10 + (self.mediaplayer.position() // 1000) + i, 10 + (self.mediaplayer.position() //
-                                                                                   1000) + i, self.data['Ax'].min(),
-                            self.data['Ax'].max()])
-        print(i)
+    def update_plot(self):
+        if self.mediaplayer.state() == QMediaPlayer.PlayingState:
+            self.dataplot.axis([-10 + (self.mediaplayer.position() / 1000),
+                                10 + (self.mediaplayer.position() / 1000), self.data['Ax'].min(),
+                                self.data['Ax'].max()])
+            self.canvas.draw()
+            self.i += 0.01
 
     def set_position(self, position):
         """
@@ -160,6 +159,19 @@ class VideoPlayer(QMainWindow, Ui_VideoPlayer):
         hours_str = "0" + str(self.hours) if self.hours < 10 else str(self.hours)
 
         return hours_str + ":" + minutes_str + ":" + seconds_str
+
+    def open_dialog(self):
+        dialog = LabelSpecs()
+        dialog.exec_()
+        dialog.show()
+
+
+class LabelSpecs(QtWidgets.QDialog, Ui_LabelSpecs):
+
+    def __init__(self):
+        super().__init__()
+        # Initialize the generated UI from vpdesigner.py.
+        self.setupUi(self)
 
 
 if __name__ == '__main__':
