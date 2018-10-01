@@ -70,4 +70,4 @@ def test_settings():
 
 sens_data = sd.SensorData("../data/DATA-001.CSV", test_settings())
 sens_data.add_column("Vector", sd.vector)
-print(sens_data.data)
+print(sens_data.data[['Mz', 'T']])
