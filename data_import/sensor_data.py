@@ -2,6 +2,7 @@ import math
 import re
 import pandas as pd
 from data_import import sensor as sens, column_metadata as cm
+from parse_string.custom_function_parser import CustomFunctionParser
 
 
 def parse_header_option(file, row_nr, col_nr):
@@ -118,8 +119,15 @@ class SensorData:
             if conversion is None:
                 continue
 
+            # Create function parser to evaluate custom function
+            # !IMPORTANT! Parser takes a list of names to determine what variables
+            # can be used in the expression. Only the name of this column is given
+            # in this case, so only this name can be used in the expression as
+            # variable. !IMPORTANT!
+            parser = CustomFunctionParser(settings[name + "_conversion"], [name])
+
             # Apply conversion to the data
-            data[name] = data[name].apply(lambda x: x * conversion)
+            data[name] = data[name].apply(lambda x: parser.evaluate_single(x))
 
         return data
 
@@ -145,7 +153,7 @@ class SensorData:
             unit = (settings[name + "_unit"]
                     if name + "unit" in settings.keys() else None)
 
-            # TODO: parse conversion rate automatically with a given function
+            # conversion rate
             conversion = (settings[name + "_conversion"]
                           if name + "_conversion" in settings.keys() else None)
 
@@ -155,10 +163,11 @@ class SensorData:
             # create new column metadata and add it to list with metadata
             self.col_metadata[name] = cm.ColumnMetadata(name, data_type, sensor)
 
-    def add_column(self, name, func):
+    def add_column(self, name: str, func: str):
         """
         Constructs a new column in the data frame using a given function
         :param name: The name of the new column
-        :param func: The function to calculate the values of the new column
+        :param func: The function to calculate the values of the new column as a string
         """
-        self.data[name] = self.data.apply(lambda row: func(row), axis=1)
+        parser = CustomFunctionParser(func, self.metadata['names'])
+        self.data[name] = self.data.apply(lambda row: parser.evaluate_row(row), axis=1)
