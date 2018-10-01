@@ -41,9 +41,9 @@ def parse_string(string):
 
         # Return result string from visitor
         return visitor.string
-    except ParseException as e:
-        # Catch parse exception and handle it
-        return e.args
+    except ParseException:
+        # Pass parse exception
+        raise
 
 
 def evaluate_parsed_string(row, string):
