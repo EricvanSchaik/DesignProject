@@ -1,7 +1,7 @@
 import os
 import pickle
-from datastorage.LabelStorage import LabelManager
-from datastorage.SubjectMapping import SubjectManager
+from datastorage.labelstorage import LabelManager
+from datastorage.subjectmapping import SubjectManager
 from typing import Any
 
 
