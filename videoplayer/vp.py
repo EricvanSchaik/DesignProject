@@ -4,6 +4,8 @@ from PyQt5 import QtGui, QtWidgets
 from PyQt5.QtCore import QUrl, QDir
 from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
 from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog
+
+from videoplayer.newproject import Ui_NewProject
 from videoplayer.vpdesigner import Ui_VideoPlayer
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
 import matplotlib.pyplot
@@ -11,9 +13,10 @@ from data_import import import_data
 import video_metadata as vm
 from datetime import timedelta
 import matplotlib.animation
-from datastorage import LabelStorage
+from datastorage.LabelStorage import LabelManager
 from PyQt5 import QtCore
 from videoplayer.labelspecs import Ui_LabelSpecs
+import os
 
 
 def add_time_strings(time1, time2):
@@ -58,6 +61,12 @@ class VideoPlayer(QMainWindow, Ui_VideoPlayer):
         self.prev_position = self.mediaplayer.position()
 
         self.pushButton_label.clicked.connect(self.open_dialog)
+
+        self.project_dialog = NewProject()
+        self.project_dialog.exec_()
+
+    # def close_vp(self):
+    #     print("hoi")
 
     def open_video(self):
         """
@@ -121,12 +130,11 @@ class VideoPlayer(QMainWindow, Ui_VideoPlayer):
             vm.parse_start_time_from_file(self.video_filename), '%H:%M:%S'))))
 
     def update_plot(self):
-        if self.mediaplayer.state() == QMediaPlayer.PlayingState:
-            self.dataplot.axis([-10 + (self.mediaplayer.position() / 1000),
-                                10 + (self.mediaplayer.position() / 1000), self.data['Ax'].min(),
-                                self.data['Ax'].max()])
-            self.canvas.draw()
-            self.i += 0.01
+        self.dataplot.axis([-10 + (self.mediaplayer.position() / 1000),
+                            10 + (self.mediaplayer.position() / 1000), self.data['Ax'].min(),
+                            self.data['Ax'].max()])
+        self.canvas.draw()
+        self.i += 0.01
 
     def set_position(self, position):
         """
@@ -175,9 +183,9 @@ class LabelSpecs(QtWidgets.QDialog, Ui_LabelSpecs):
         self.label = Label()
         self.doubleSpinBox_start.valueChanged.connect(self.start_changed)
         self.doubleSpinBox_end.valueChanged.connect(self.stop_changed)
-        # self.accepted.connect(self.send_label)
-        # self.comboBox_labels.activated.connect(self.label_changed)
-        # self.label_storage = LabelStorage.LabelManager("stub")
+        self.label_storage = LabelManager("test_project")
+        self.accepted.connect(self.send_label)
+        self.comboBox_labels.activated.connect(self.label_changed)
 
     def start_changed(self, value: float):
         self.label.start = value
@@ -188,11 +196,11 @@ class LabelSpecs(QtWidgets.QDialog, Ui_LabelSpecs):
     def label_changed(self, label: str):
         self.label.label = label
 
-    # def send_label(self):
-    #     self.label_storage.add_label(self.label.start, self.label.end, self.label.label, "")
+    def send_label(self):
+        self.label_storage.add_label(self.label.start, self.label.end, self.label.label, "")
 
-    # def get_label(self, number: int):
-    #     pass
+    def get_label(self, number: int):
+        pass
 
 
 class Label:
@@ -212,8 +220,25 @@ class Label:
         self.end = end
 
 
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    vp = VideoPlayer()
-    vp.show()
-    sys.exit(app.exec_())
+class NewProject(QtWidgets.QDialog, Ui_NewProject):
+
+    def __init__(self):
+        super().__init__()
+        self.setupUi(self)
+        self.accepted.connect(self.open_project)
+        self.rejected.connect(self.exit_project)
+        for folder in os.listdir("projects"):
+            self.comboBox.addItem(folder)
+        self.lineEdit.textChanged.connect(self.text_changed)
+
+    def open_project(self):
+        pass
+
+    def exit_project(self):
+        sys.exit(0)
+
+    def text_changed(self):
+        if self.lineEdit.text() != "":
+            self.comboBox.setEnabled(False)
+        else:
+            self.comboBox.setEnabled(True)
