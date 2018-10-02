@@ -2,7 +2,7 @@ import math
 import re
 import pandas as pd
 from data_import import sensor as sens, column_metadata as cm
-from parse_string.custom_function_parser import CustomFunctionParser
+import parse_string.custom_function_parser as parser
 
 
 def parse_header_option(file, row_nr, col_nr):
@@ -113,22 +113,18 @@ class SensorData:
 
         # Convert sensor data to correct unit
         for name in self.metadata['names']:
+            # Retrieve conversion rate from column metadata
             conversion = self.col_metadata[name].sensor.conversion
 
             # If column doesn't have a conversion, continue to next column
             if conversion is None:
                 continue
 
-            # Create function parser to evaluate custom function
-            # !IMPORTANT! Parser takes a list of names to determine what variables
-            # can be used in the expression. Only the name of this column is given
-            # in this case, so only this name can be used in the expression as
-            # variable. !IMPORTANT!
-            parser = CustomFunctionParser(settings[name + "_conversion"], [name])
+            # Parse conversion to python readable expression
+            parsed_expr = parser.parse(conversion)
 
-            # Apply conversion to the data
-            data[name] = data[name].apply(lambda x: parser.evaluate_single(x))
-
+            # Apply parsed expression to the data
+            data.eval(name + " = " + parsed_expr, inplace=True)
         return data
 
     def set_column_metadata(self, settings):
@@ -169,5 +165,8 @@ class SensorData:
         :param name: The name of the new column
         :param func: The function to calculate the values of the new column as a string
         """
-        parser = CustomFunctionParser(func, self.metadata['names'])
-        self.data[name] = self.data.apply(lambda row: parser.evaluate_row(row), axis=1)
+        # Parses a function into a python readable expression
+        parsed_expr = parser.parse(func)
+
+        # Apply parsed expression to data to create new column
+        self.data.eval(name + " = " + parsed_expr, inplace=True)
