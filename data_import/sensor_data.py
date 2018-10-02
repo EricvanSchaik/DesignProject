@@ -1,8 +1,8 @@
-import math
 import re
 import pandas as pd
 from data_import import sensor as sens, column_metadata as cm
 import parse_string.custom_function_parser as parser
+from parse_string.parse_exception import ParseException
 
 
 def parse_header_option(file, row_nr, col_nr):
@@ -44,16 +44,6 @@ def parse_names(file, row_nr):
             i += 1
     # error
     return -1
-
-
-def vector(row):
-    """
-    Takes accelerometer data from a row and uses the l2-norm to create a single value.
-    x = sqrt(Ax^2 + Ay^2 + Az^2)
-    :param row: row in a data frame
-    :return: l2-norm of accelerometer data
-    """
-    return math.sqrt(row['Ax'] ** 2 + row['Ay'] ** 2 + row['Az'] ** 2)
 
 
 class SensorData:
@@ -111,20 +101,25 @@ class SensorData:
         data = pd.read_csv(self.file_path, header=None, names=self.metadata['names'],
                            comment=settings['comment'])
 
-        # Convert sensor data to correct unit
-        for name in self.metadata['names']:
-            # Retrieve conversion rate from column metadata
-            conversion = self.col_metadata[name].sensor.conversion
+        # Pass parse exceptions on
+        try:
+            # Convert sensor data to correct unit
+            for name in self.metadata['names']:
+                # Retrieve conversion rate from column metadata
+                conversion = self.col_metadata[name].sensor.conversion
 
-            # If column doesn't have a conversion, continue to next column
-            if conversion is None:
-                continue
+                # If column doesn't have a conversion, continue to next column
+                if conversion is None:
+                    continue
 
-            # Parse conversion to python readable expression
-            parsed_expr = parser.parse(conversion)
+                # Parse conversion to python readable expression
+                parsed_expr = parser.parse(conversion)
 
-            # Apply parsed expression to the data
-            data.eval(name + " = " + parsed_expr, inplace=True)
+                # Apply parsed expression to the data
+                data.eval(name + " = " + parsed_expr, inplace=True)
+        except ParseException:
+            # Pass parse exception
+            raise
         return data
 
     def set_column_metadata(self, settings):
@@ -165,8 +160,13 @@ class SensorData:
         :param name: The name of the new column
         :param func: The function to calculate the values of the new column as a string
         """
-        # Parses a function into a python readable expression
-        parsed_expr = parser.parse(func)
+        # Pass parse exception on
+        try:
+            # Parses a function into a python readable expression
+            parsed_expr = parser.parse(func)
 
-        # Apply parsed expression to data to create new column
-        self.data.eval(name + " = " + parsed_expr, inplace=True)
+            # Apply parsed expression to data to create new column
+            self.data.eval(name + " = " + parsed_expr, inplace=True)
+        except ParseException:
+            # Pass parse exception
+            raise

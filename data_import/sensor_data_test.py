@@ -1,33 +1,5 @@
 from timeit import timeit
-import pandas as pd
 from data_import import sensor_data as sd
-
-
-def test_data():
-    return pd.DataFrame({'a': pd.Series([1, 2, 3], index=['a', 'b', 'c']),
-                         'b': pd.Series([4, 5, 6], index=['a', 'b', 'c']),
-                         'c': pd.Series([7, 8, 9], index=['a', 'b', 'c'])})
-
-
-def wrapper(func, *args, **kwargs):
-    def wrapped():
-        return func(*args, **kwargs)
-    return wrapped
-
-
-def parse_time_test():
-    # Time test for creating a SensorData object and parsing a file
-    # about 2.86 seconds
-    wrapped = wrapper(sd.SensorData, "../data/DATA-001.CSV", test_settings())
-    print("parse_time_test():", timeit(wrapped, number=1))
-
-
-def add_column_time_test():
-    # Time test for adding a vector column to the data
-    # about 9.26 seconds
-    sensor_data = sd.SensorData("../data/DATA-001.CSV", test_settings())
-    wrapped = wrapper(sensor_data.add_column, "Vector", "sqrt(Ax^2 + Ay^2 + Az^2)")
-    print("add_column_time_test():", timeit(wrapped, number=1))
 
 
 def test_settings():
@@ -63,13 +35,32 @@ def test_settings():
     return settings
 
 
+def wrapper(func, *args, **kwargs):
+    def wrapped():
+        return func(*args, **kwargs)
+    return wrapped
+
+
+def parse_time_test():
+    # Time test for creating a SensorData object and parsing a file (including metadata)
+    # about 1.3472 seconds
+    wrapped = wrapper(sd.SensorData, "../data/DATA-001.CSV", test_settings())
+    print("parse_time_test() average of 5:", timeit(wrapped, number=5) / 5)
+
+
+def add_column_time_test():
+    # Time test for adding a vector column to the data
+    # about 0.0129 seconds
+    sensor_data = sd.SensorData("../data/DATA-001.CSV", test_settings())
+    wrapped = wrapper(sensor_data.add_column, "Vector", "sqrt(Ax^2 + Ay^2 + Az^2)")
+    print("add_column_time_test() average of 5:", timeit(wrapped, number=5) / 5)
+
+
 def add_column_test():
     sens_data = sd.SensorData("../data/DATA-001.CSV", test_settings())
     sens_data.add_column("Vector", "sqrt(Ax^2 + Ay^2 + Az^2)")
     print(sens_data.data[['Ax', 'Ay', 'Az', 'Vector']])
 
 
-# parse_time_test()
-# add_column_time_test()
-
-print("add_column_test():", timeit(add_column_test, number=1))
+parse_time_test()
+add_column_time_test()
