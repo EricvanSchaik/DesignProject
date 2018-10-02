@@ -312,3 +312,30 @@ class NewProject(QtWidgets.QDialog, Ui_NewProject):
 
     def set_timerow(self, new):
         self.time_row = new
+
+    def set_timecol(self, new):
+        self.time_col = new
+
+    def set_daterow(self, new):
+        self.date_row = new
+
+    def set_datecol(self, new):
+        self.date_col = new
+
+    def set_srrow(self, new):
+        self.sr_row = new
+
+    def set_srcol(self, new):
+        self.sr_col = new
+
+    def set_snrow(self, new):
+        self.sn_row = new
+
+    def set_sncol(self, new):
+        self.sn_col = new
+
+    def set_namesrow(self, new):
+        self.names_row = new
+
+    def set_comment(self, new):
+        self.comment = new
