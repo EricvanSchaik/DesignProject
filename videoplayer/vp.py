@@ -16,6 +16,7 @@ import matplotlib.animation
 from datastorage.LabelStorage import LabelManager
 from PyQt5 import QtCore
 from videoplayer.labelspecs import Ui_LabelSpecs
+import os
 
 
 def add_time_strings(time1, time2):
@@ -226,6 +227,9 @@ class NewProject(QtWidgets.QDialog, Ui_NewProject):
         self.setupUi(self)
         self.accepted.connect(self.open_project)
         self.rejected.connect(self.exit_project)
+        for folder in os.listdir("projects"):
+            self.comboBox.addItem(folder)
+        self.lineEdit.textChanged.connect(self.text_changed)
 
     def open_project(self):
         pass
@@ -233,3 +237,8 @@ class NewProject(QtWidgets.QDialog, Ui_NewProject):
     def exit_project(self):
         sys.exit(0)
 
+    def text_changed(self):
+        if self.lineEdit.text() != "":
+            self.comboBox.setEnabled(False)
+        else:
+            self.comboBox.setEnabled(True)
