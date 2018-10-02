@@ -5,6 +5,7 @@ from PyQt5.QtCore import QUrl, QDir
 from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
 from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog
 
+from datastorage import settings
 from videoplayer.newproject import Ui_NewProject
 from videoplayer.vpdesigner import Ui_VideoPlayer
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
@@ -13,7 +14,7 @@ from data_import import import_data
 import video_metadata as vm
 from datetime import timedelta
 import matplotlib.animation
-from datastorage.LabelStorage import LabelManager
+from datastorage.labelstorage import LabelManager
 from PyQt5 import QtCore
 from videoplayer.labelspecs import Ui_LabelSpecs
 import os
@@ -65,9 +66,6 @@ class VideoPlayer(QMainWindow, Ui_VideoPlayer):
         self.project_dialog = NewProject()
         self.project_dialog.exec_()
 
-    # def close_vp(self):
-    #     print("hoi")
-
     def open_video(self):
         """
         A helper function that allows a user to open a video in the QMediaPlayer via the menu bar.
@@ -100,6 +98,7 @@ class VideoPlayer(QMainWindow, Ui_VideoPlayer):
             self.timer.timeout.connect(self.update_plot)
             self.timer.start(1)
             self.canvas.draw()
+        print(self.project_dialog.project_name)
 
     def play(self):
         """
@@ -220,25 +219,96 @@ class Label:
         self.end = end
 
 
+def exit_project():
+    sys.exit(0)
+
+
 class NewProject(QtWidgets.QDialog, Ui_NewProject):
 
     def __init__(self):
         super().__init__()
         self.setupUi(self)
         self.accepted.connect(self.open_project)
-        self.rejected.connect(self.exit_project)
+        self.rejected.connect(exit_project)
         for folder in os.listdir("projects"):
-            self.comboBox.addItem(folder)
-        self.lineEdit.textChanged.connect(self.text_changed)
+            self.comboBox_existing.addItem(folder)
+        self.lineEdit_new.textChanged.connect(self.text_changed)
+        self.project_name = ""
+        if os.listdir("projects"):
+            self.project_name = os.listdir("projects")[0]
+            self.spinBox_timerow.setEnabled(False)
+            self.spinBox_timecol.setEnabled(False)
+            self.spinBox_daterow.setEnabled(False)
+            self.spinBox_datecol.setEnabled(False)
+            self.spinBox_srrow.setEnabled(False)
+            self.spinBox_srcol.setEnabled(False)
+            self.spinBox_snrow.setEnabled(False)
+            self.spinBox_sncol.setEnabled(False)
+            self.spinBox_namesrow.setEnabled(False)
+            self.lineEdit_comment.setEnabled(False)
+        self.time_row = 3
+        self.spinBox_timerow.valueChanged.connect(self.set_timerow)
+        self.time_col = 3
+        self.date_row = 3
+        self.date_col = 2
+        self.sr_row = 5
+        self.sr_col = 2
+        self.sn_row = 2
+        self.sn_col = 5
+        self.names_row = 8
+        self.comment = ";"
 
     def open_project(self):
-        pass
-
-    def exit_project(self):
-        sys.exit(0)
+        if self.lineEdit_new.text():
+            settings.new_project(self.project_name)
+        self.new_settings = settings.Settings(self.project_name)
+        self.new_settings.set_setting("time_row", self.time_row)
+        self.new_settings.set_setting("time_col", self.time_col)
+        self.new_settings.set_setting("date_row", self.date_row)
+        self.new_settings.set_setting("date_col", self.date_col)
+        self.new_settings.set_setting("sr_row", self.sr_row)
+        self.new_settings.set_setting("sr_col", self.sr_col)
+        self.new_settings.set_setting("sn_row", self.sn_row)
+        self.new_settings.set_setting("sn_col", self.sn_col)
+        self.new_settings.set_setting("names_row", self.names_row)
+        self.new_settings.set_setting("comment", self.comment)
 
     def text_changed(self):
-        if self.lineEdit.text() != "":
-            self.comboBox.setEnabled(False)
+        if self.lineEdit_new.text():
+            self.comboBox_existing.setEnabled(False)
+            self.spinBox_timerow.setEnabled(True)
+            self.spinBox_timecol.setEnabled(True)
+            self.spinBox_daterow.setEnabled(True)
+            self.spinBox_datecol.setEnabled(True)
+            self.spinBox_srrow.setEnabled(True)
+            self.spinBox_srcol.setEnabled(True)
+            self.spinBox_snrow.setEnabled(True)
+            self.spinBox_sncol.setEnabled(True)
+            self.spinBox_namesrow.setEnabled(True)
+            self.lineEdit_comment.setEnabled(True)
+
+            self.spinBox_timerow.setValue(3)
+            self.spinBox_timecol.setValue(3)
+            self.spinBox_daterow.setValue(3)
+            self.spinBox_datecol.setValue(2)
+            self.spinBox_srrow.setValue(5)
+            self.spinBox_srcol.setValue(2)
+            self.spinBox_snrow.setValue(2)
+            self.spinBox_sncol.setValue(5)
+            self.spinBox_namesrow.setValue(8)
+            self.lineEdit_comment.setText(";")
         else:
-            self.comboBox.setEnabled(True)
+            self.comboBox_existing.setEnabled(True)
+            self.spinBox_timerow.setEnabled(False)
+            self.spinBox_timecol.setEnabled(False)
+            self.spinBox_daterow.setEnabled(False)
+            self.spinBox_datecol.setEnabled(False)
+            self.spinBox_srrow.setEnabled(False)
+            self.spinBox_srcol.setEnabled(False)
+            self.spinBox_snrow.setEnabled(False)
+            self.spinBox_sncol.setEnabled(False)
+            self.spinBox_namesrow.setEnabled(False)
+            self.lineEdit_comment.setEnabled(False)
+
+    def set_timerow(self, new):
+        self.time_row = new
