@@ -64,6 +64,9 @@ class VideoPlayer(QMainWindow, Ui_VideoPlayer):
         self.project_dialog = NewProject()
         self.project_dialog.exec_()
 
+    # def close_vp(self):
+    #     print("hoi")
+
     def open_video(self):
         """
         A helper function that allows a user to open a video in the QMediaPlayer via the menu bar.
@@ -222,6 +225,11 @@ class NewProject(QtWidgets.QDialog, Ui_NewProject):
         super().__init__()
         self.setupUi(self)
         self.accepted.connect(self.open_project)
+        self.rejected.connect(self.exit_project)
 
     def open_project(self):
         pass
+
+    def exit_project(self):
+        sys.exit(0)
+
