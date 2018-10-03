@@ -101,7 +101,6 @@ class VideoPlayer(QMainWindow, Ui_VideoPlayer):
             self.timer.timeout.connect(self.update_plot)
             self.timer.start(1)
             self.canvas.draw()
-        print(self.project_dialog.project_name)
 
     def play(self):
         """
