@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>790</width>
-    <height>727</height>
+    <width>716</width>
+    <height>713</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -120,50 +120,71 @@
      <rect>
       <x>490</x>
       <y>40</y>
-      <width>271</width>
+      <width>181</width>
       <height>621</height>
      </rect>
     </property>
     <layout class="QVBoxLayout" name="verticalLayout_">
      <item>
-      <widget class="QLabel" name="label_date">
-       <property name="maximumSize">
-        <size>
-         <width>16777215</width>
-         <height>25</height>
-        </size>
-       </property>
-       <property name="font">
-        <font>
-         <pointsize>14</pointsize>
-         <weight>75</weight>
-         <bold>true</bold>
-        </font>
-       </property>
-       <property name="text">
-        <string/>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignHCenter|Qt::AlignTop</set>
-       </property>
-      </widget>
+      <layout class="QVBoxLayout" name="verticalLayout_info">
+       <item>
+        <widget class="QLabel" name="label_date">
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>25</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>14</pointsize>
+           <weight>75</weight>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignHCenter|Qt::AlignTop</set>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_time">
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>14</pointsize>
+           <weight>75</weight>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignHCenter|Qt::AlignTop</set>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </item>
      <item>
-      <widget class="QLabel" name="label_time">
-       <property name="font">
-        <font>
-         <pointsize>14</pointsize>
-         <weight>75</weight>
-         <bold>true</bold>
-        </font>
-       </property>
-       <property name="text">
-        <string/>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignHCenter|Qt::AlignTop</set>
-       </property>
-      </widget>
+      <layout class="QVBoxLayout" name="verticalLayout_controls">
+       <item>
+        <widget class="QPushButton" name="pushButton_label">
+         <property name="text">
+          <string>Label</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </item>
     </layout>
    </widget>
@@ -173,7 +194,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>790</width>
+     <width>716</width>
      <height>21</height>
     </rect>
    </property>
@@ -183,6 +204,7 @@
     </property>
     <addaction name="actionOpen_video"/>
     <addaction name="actionOpen_sensordata"/>
+    <addaction name="actionSettings"/>
     <addaction name="actionExit"/>
    </widget>
    <addaction name="menuFile"/>
@@ -219,6 +241,11 @@
    </property>
    <property name="text">
     <string>Open Sensordata</string>
+   </property>
+  </action>
+  <action name="actionSettings">
+   <property name="text">
+    <string>Settings</string>
    </property>
   </action>
  </widget>
