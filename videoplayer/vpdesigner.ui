@@ -204,6 +204,7 @@
     </property>
     <addaction name="actionOpen_video"/>
     <addaction name="actionOpen_sensordata"/>
+    <addaction name="actionSettings"/>
     <addaction name="actionExit"/>
    </widget>
    <addaction name="menuFile"/>
@@ -240,6 +241,11 @@
    </property>
    <property name="text">
     <string>Open Sensordata</string>
+   </property>
+  </action>
+  <action name="actionSettings">
+   <property name="text">
+    <string>Settings</string>
    </property>
   </action>
  </widget>
