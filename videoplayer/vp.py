@@ -170,7 +170,7 @@ class VideoPlayer(QMainWindow, Ui_VideoPlayer):
         return hours_str + ":" + minutes_str + ":" + seconds_str
 
     def open_dialog(self):
-        dialog = LabelSpecs()
+        dialog = LabelSpecs(self.project_dialog.project_name)
         dialog.exec_()
         dialog.show()
 
@@ -182,14 +182,14 @@ class VideoPlayer(QMainWindow, Ui_VideoPlayer):
 
 class LabelSpecs(QtWidgets.QDialog, Ui_LabelSpecs):
 
-    def __init__(self):
+    def __init__(self, project_name):
         super().__init__()
         # Initialize the generated UI from vpdesigner.py.
         self.setupUi(self)
         self.label = Label()
         self.doubleSpinBox_start.valueChanged.connect(self.start_changed)
         self.doubleSpinBox_end.valueChanged.connect(self.stop_changed)
-        self.label_storage = LabelManager("test_project")
+        self.label_storage = LabelManager(project_name)
         self.accepted.connect(self.send_label)
         self.comboBox_labels.activated.connect(self.label_changed)
 
@@ -204,9 +204,6 @@ class LabelSpecs(QtWidgets.QDialog, Ui_LabelSpecs):
 
     def send_label(self):
         self.label_storage.add_label(self.label.start, self.label.end, self.label.label, "")
-
-    def get_label(self, number: int):
-        pass
 
 
 class Label:
@@ -256,32 +253,43 @@ class NewProject(QtWidgets.QDialog, Ui_NewProject):
         self.time_row = 3
         self.spinBox_timerow.valueChanged.connect(self.set_timerow)
         self.time_col = 3
+        self.spinBox_timecol.valueChanged.connect(self.set_timecol)
         self.date_row = 3
+        self.spinBox_daterow.valueChanged.connect(self.set_daterow)
         self.date_col = 2
+        self.spinBox_datecol.valueChanged.connect(self.set_datecol)
         self.sr_row = 5
+        self.spinBox_srrow.valueChanged.connect(self.set_srrow)
         self.sr_col = 2
+        self.spinBox_srcol.valueChanged.connect(self.set_srcol)
         self.sn_row = 2
+        self.spinBox_snrow.valueChanged.connect(self.set_snrow)
         self.sn_col = 5
+        self.spinBox_sncol.valueChanged.connect(self.set_sncol)
         self.names_row = 8
+        self.spinBox_namesrow.valueChanged.connect(self.set_namesrow)
         self.comment = ";"
+        self.lineEdit_comment.textChanged.connect(self.set_comment)
 
     def open_project(self):
+        self.new_settings = settings.Settings(self.project_name)
         if self.lineEdit_new.text():
             settings.new_project(self.project_name)
-        self.new_settings = settings.Settings(self.project_name)
-        self.new_settings.set_setting("time_row", self.time_row)
-        self.new_settings.set_setting("time_col", self.time_col)
-        self.new_settings.set_setting("date_row", self.date_row)
-        self.new_settings.set_setting("date_col", self.date_col)
-        self.new_settings.set_setting("sr_row", self.sr_row)
-        self.new_settings.set_setting("sr_col", self.sr_col)
-        self.new_settings.set_setting("sn_row", self.sn_row)
-        self.new_settings.set_setting("sn_col", self.sn_col)
-        self.new_settings.set_setting("names_row", self.names_row)
-        self.new_settings.set_setting("comment", self.comment)
+            self.new_settings.set_setting("time_row", self.time_row)
+            self.new_settings.set_setting("time_col", self.time_col)
+            self.new_settings.set_setting("date_row", self.date_row)
+            self.new_settings.set_setting("date_col", self.date_col)
+            self.new_settings.set_setting("sr_row", self.sr_row)
+            self.new_settings.set_setting("sr_col", self.sr_col)
+            self.new_settings.set_setting("sn_row", self.sn_row)
+            self.new_settings.set_setting("sn_col", self.sn_col)
+            self.new_settings.set_setting("names_row", self.names_row)
+            self.new_settings.set_setting("comment", self.comment)
 
-    def text_changed(self):
+    def text_changed(self, new):
         if self.lineEdit_new.text():
+            self.project_name = new
+
             self.comboBox_existing.setEnabled(False)
             self.spinBox_timerow.setEnabled(True)
             self.spinBox_timecol.setEnabled(True)
