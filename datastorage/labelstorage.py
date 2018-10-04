@@ -2,7 +2,8 @@ import sqlite3
 import csv
 from typing import List, Tuple
 
-sql_new_label = "INSERT INTO labelType(Name, Color, Description) VALUES (?,?,?)"
+sql_add_label_type = "INSERT INTO labelType(Name, Color, Description) VALUES (?,?,?)"
+sql_get_label_types = "SELECT * FROM labelType"
 sql_del_label_type = "DELETE FROM labelType WHERE Name = ?"
 sql_del_label_data_all = "DELETE FROM labelData WHERE Label_name = ?"
 sql_del_label_data = "DELETE FROM labelData WHERE Start_time = ? AND Sensor_id = ?"
@@ -41,9 +42,10 @@ class LabelManager:
         :param name: The name of the new label type
         :param color: The color of the new label represented as an integer
         :param desc: The description of the label
+        :return: boolean indication if the label type was added successfully
         """
         try:
-            self._cur.execute(sql_new_label, (name, color, desc))
+            self._cur.execute(sql_add_label_type, (name, color, desc))
             self._conn.commit()
             return True
         except sqlite3.Error as e:
@@ -67,6 +69,7 @@ class LabelManager:
         :param end_time: The The timestamp in the sensor-data at which the label ends
         :param name: The name of the label type that is used
         :param sensor: The sensor ID belonging to the data
+        :return: boolean indication if the label was added successfully
         """
         try:
             self._cur.execute(sql_add_label, (start_time, end_time, name, sensor))
@@ -127,6 +130,15 @@ class LabelManager:
         """
         self._cur.execute(sql_change_label, (name, time, sens_id))
         self._conn.commit()
+
+    def get_label_types(self) -> List[Tuple[str, int, str]]:
+        """
+        Returns all label types
+
+        :return: List of tuples (label name, label color, label description) of all label types
+        """
+        self._cur.execute(sql_get_label_types)
+        return self._cur.fetchall()
 
     def get_all_labels(self, sensor_id: str) -> List[Tuple[float, float, str]]:
         """
