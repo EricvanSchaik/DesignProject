@@ -11,13 +11,13 @@ def parse(expr):
     Parses the expression string and turns it into a python readable string (with variables).
     Passes a parse exception when the expression string is invalid.
     :param expr: The expression in string format. Syntax:
-        Plus:           '+'
-        Minus:          '-'
-        Multiply:       '*'
-        Divide:         '/'
-        Power:          '^'
-        Square Root:    'sqrt()'
-        Brackets:       '(', ')'
+        Addition:               '+'
+        Subtraction:            '-'
+        Multiplication:         '*'
+        Division:               '/'
+        Exponentiation:         '^'
+        Square Root Extraction: 'sqrt()'
+        Brackets:               '(', ')'
     :return: Readable python string with variables.
     """
     # Build parser from string
