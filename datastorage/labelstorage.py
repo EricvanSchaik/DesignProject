@@ -1,4 +1,5 @@
 import sqlite3
+import csv
 from typing import List, Tuple
 
 sql_new_label = "INSERT INTO labelType(Name, Color, Description) VALUES (?,?,?)"
@@ -12,6 +13,7 @@ sql_upd_color = "UPDATE labelType SET Color = ? WHERE Name = ?"
 sql_upd_desc = "UPDATE labelType SET Description = ? WHERE Name = ?"
 sql_change_label = "UPDATE labelData SET Label_name = ? WHERE Start_time = ? AND Sensor_id = ?"
 sql_get_labels = "SELECT Start_time, End_time, Label_name FROM labelData WHERE Sensor_id = ?"
+sql_get_all_labels = "SELECT * FROM labelData"
 
 
 class LabelManager:
@@ -20,6 +22,7 @@ class LabelManager:
         """
         :param project_name: The name of the current project
         """
+        self.project_name = project_name
         self._conn = sqlite3.connect('projects/' + project_name + '/project_data.db')
         self._cur = self._conn.cursor()
 
@@ -31,7 +34,7 @@ class LabelManager:
                   "PRIMARY KEY(Start_time, Sensor_id), FOREIGN KEY (Label_name) REFERENCES labelType(Name))")
         self._conn.commit()
 
-    def add_label_type(self, name: str, color: int, desc: str) -> None:
+    def add_label_type(self, name: str, color: int, desc: str) -> bool:
         """
         Creates a new label type.
 
@@ -42,9 +45,9 @@ class LabelManager:
         try:
             self._cur.execute(sql_new_label, (name, color, desc))
             self._conn.commit()
+            return True
         except sqlite3.Error as e:
-            # TODO: label name exists, give error message
-            pass
+            return False
 
     def delete_label_type(self, name: str) -> None:
         """
@@ -56,7 +59,7 @@ class LabelManager:
         self._cur.execute(sql_del_label_type, [name])
         self._conn.commit()
 
-    def add_label(self, start_time: float, end_time: float, name: str, sensor: str) -> None:
+    def add_label(self, start_time: float, end_time: float, name: str, sensor: str) -> bool:
         """
         Adds a label to the data of a sensor.
 
@@ -68,9 +71,9 @@ class LabelManager:
         try:
             self._cur.execute(sql_add_label, (start_time, end_time, name, sensor))
             self._conn.commit()
+            return True
         except sqlite3.Error as e:
-            # TODO: label at this time exists, give error message
-            pass
+            return False
 
     def delete_label(self, time: float, sens_id: str) -> None:
         """
@@ -134,3 +137,10 @@ class LabelManager:
         """
         self._cur.execute(sql_get_labels, [sensor_id])
         return self._cur.fetchall()
+
+    def export_labels(self):
+        with open('projects/' + self.project_name + '/exported_labels.csv', 'w', newline='') as csvfile:
+            filewriter = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+            filewriter.writerow(['Start_time', 'End_time', 'label', 'sensorID'])
+            for row in self._cur.execute(sql_get_all_labels).fetchall():
+                filewriter.writerow([row[0], row[1], row[2], row[3]])
