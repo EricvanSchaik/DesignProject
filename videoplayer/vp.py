@@ -272,9 +272,9 @@ class NewProject(QtWidgets.QDialog, Ui_NewProject):
         self.lineEdit_comment.textChanged.connect(self.set_comment)
 
     def open_project(self):
-        self.new_settings = settings.Settings(self.project_name)
         if self.lineEdit_new.text():
             settings.new_project(self.project_name)
+            self.new_settings = settings.Settings(self.project_name)
             self.new_settings.set_setting("time_row", self.time_row)
             self.new_settings.set_setting("time_col", self.time_col)
             self.new_settings.set_setting("date_row", self.date_row)
@@ -285,6 +285,7 @@ class NewProject(QtWidgets.QDialog, Ui_NewProject):
             self.new_settings.set_setting("sn_col", self.sn_col)
             self.new_settings.set_setting("names_row", self.names_row)
             self.new_settings.set_setting("comment", self.comment)
+        self.new_settings = settings.Settings(self.project_name)
 
     def text_changed(self, new):
         if self.lineEdit_new.text():
