@@ -1,23 +1,25 @@
+import os
 import sys
+from datetime import timedelta
 
+import matplotlib.animation
+import matplotlib.pyplot
+from PyQt5 import QtCore
 from PyQt5 import QtGui, QtWidgets
 from PyQt5.QtCore import QUrl, QDir
 from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
-from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QLayout
-
-from datastorage import settings
-from gui.designer_new import Ui_NewProject
-from gui.designer_gui import Ui_VideoPlayer
+from PyQt5.QtWidgets import QMainWindow, QFileDialog
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
-import matplotlib.pyplot
-from data_import import import_data
+
 import video_metadata as vm
-from datetime import timedelta
-import matplotlib.animation
+from data_import import import_data
+from datastorage import settings
 from datastorage.labelstorage import LabelManager
-from PyQt5 import QtCore
+from gui.designer_gui import Ui_VideoPlayer
 from gui.designer_labelspecs import Ui_LabelSpecs
-import os
+from gui.designer_new import Ui_NewProject
+from gui.new_dialog import NewProject
+from gui.settings_dialog import SettingsDialog
 
 
 def add_time_strings(time1, time2):
@@ -221,187 +223,3 @@ class Label:
 
     def setEnd(self, end: float):
         self.end = end
-
-
-def exit_project():
-    sys.exit(0)
-
-
-class NewProject(QtWidgets.QDialog, Ui_NewProject):
-
-    def __init__(self):
-        super().__init__()
-        self.setupUi(self)
-        self.accepted.connect(self.open_project)
-        self.rejected.connect(exit_project)
-        for folder in os.listdir("projects"):
-            self.comboBox_existing.addItem(folder)
-        self.lineEdit_new.textChanged.connect(self.text_changed)
-        self.project_name = ""
-        if os.listdir("projects"):
-            self.project_name = os.listdir("projects")[0]
-            self.spinBox_timerow.setEnabled(False)
-            self.spinBox_timecol.setEnabled(False)
-            self.spinBox_daterow.setEnabled(False)
-            self.spinBox_datecol.setEnabled(False)
-            self.spinBox_srrow.setEnabled(False)
-            self.spinBox_srcol.setEnabled(False)
-            self.spinBox_snrow.setEnabled(False)
-            self.spinBox_sncol.setEnabled(False)
-            self.spinBox_namesrow.setEnabled(False)
-            self.lineEdit_comment.setEnabled(False)
-        self.time_row = 3
-        self.spinBox_timerow.valueChanged.connect(self.set_timerow)
-        self.time_col = 3
-        self.spinBox_timecol.valueChanged.connect(self.set_timecol)
-        self.date_row = 3
-        self.spinBox_daterow.valueChanged.connect(self.set_daterow)
-        self.date_col = 2
-        self.spinBox_datecol.valueChanged.connect(self.set_datecol)
-        self.sr_row = 5
-        self.spinBox_srrow.valueChanged.connect(self.set_srrow)
-        self.sr_col = 2
-        self.spinBox_srcol.valueChanged.connect(self.set_srcol)
-        self.sn_row = 2
-        self.spinBox_snrow.valueChanged.connect(self.set_snrow)
-        self.sn_col = 5
-        self.spinBox_sncol.valueChanged.connect(self.set_sncol)
-        self.names_row = 8
-        self.spinBox_namesrow.valueChanged.connect(self.set_namesrow)
-        self.comment = ";"
-        self.lineEdit_comment.textChanged.connect(self.set_comment)
-
-    def open_project(self):
-        if self.lineEdit_new.text():
-            settings.new_project(self.project_name)
-            self.new_settings = settings.Settings(self.project_name)
-            self.new_settings.set_setting("time_row", self.time_row)
-            self.new_settings.set_setting("time_col", self.time_col)
-            self.new_settings.set_setting("date_row", self.date_row)
-            self.new_settings.set_setting("date_col", self.date_col)
-            self.new_settings.set_setting("sr_row", self.sr_row)
-            self.new_settings.set_setting("sr_col", self.sr_col)
-            self.new_settings.set_setting("sn_row", self.sn_row)
-            self.new_settings.set_setting("sn_col", self.sn_col)
-            self.new_settings.set_setting("names_row", self.names_row)
-            self.new_settings.set_setting("comment", self.comment)
-        self.new_settings = settings.Settings(self.project_name)
-
-    def text_changed(self, new):
-        if self.lineEdit_new.text():
-            self.project_name = new
-
-            self.comboBox_existing.setEnabled(False)
-            self.spinBox_timerow.setEnabled(True)
-            self.spinBox_timecol.setEnabled(True)
-            self.spinBox_daterow.setEnabled(True)
-            self.spinBox_datecol.setEnabled(True)
-            self.spinBox_srrow.setEnabled(True)
-            self.spinBox_srcol.setEnabled(True)
-            self.spinBox_snrow.setEnabled(True)
-            self.spinBox_sncol.setEnabled(True)
-            self.spinBox_namesrow.setEnabled(True)
-            self.lineEdit_comment.setEnabled(True)
-
-            self.spinBox_timerow.setValue(3)
-            self.spinBox_timecol.setValue(3)
-            self.spinBox_daterow.setValue(3)
-            self.spinBox_datecol.setValue(2)
-            self.spinBox_srrow.setValue(5)
-            self.spinBox_srcol.setValue(2)
-            self.spinBox_snrow.setValue(2)
-            self.spinBox_sncol.setValue(5)
-            self.spinBox_namesrow.setValue(8)
-            self.lineEdit_comment.setText(";")
-        else:
-            self.comboBox_existing.setEnabled(True)
-            self.spinBox_timerow.setEnabled(False)
-            self.spinBox_timecol.setEnabled(False)
-            self.spinBox_daterow.setEnabled(False)
-            self.spinBox_datecol.setEnabled(False)
-            self.spinBox_srrow.setEnabled(False)
-            self.spinBox_srcol.setEnabled(False)
-            self.spinBox_snrow.setEnabled(False)
-            self.spinBox_sncol.setEnabled(False)
-            self.spinBox_namesrow.setEnabled(False)
-            self.lineEdit_comment.setEnabled(False)
-
-    def set_timerow(self, new):
-        self.time_row = new
-
-    def set_timecol(self, new):
-        self.time_col = new
-
-    def set_daterow(self, new):
-        self.date_row = new
-
-    def set_datecol(self, new):
-        self.date_col = new
-
-    def set_srrow(self, new):
-        self.sr_row = new
-
-    def set_srcol(self, new):
-        self.sr_col = new
-
-    def set_snrow(self, new):
-        self.sn_row = new
-
-    def set_sncol(self, new):
-        self.sn_col = new
-
-    def set_namesrow(self, new):
-        self.names_row = new
-
-    def set_comment(self, new):
-        self.comment = new
-
-
-class SettingsDialog(NewProject):
-
-    def __init__(self, settings: settings.Settings):
-        super().__init__()
-        self.settings = settings
-        self.rejected.disconnect()
-        self.comboBox_existing.setParent(None)
-        self.comboBox_existing.deleteLater()
-        self.lineEdit_new.setParent(None)
-        self.lineEdit_new.deleteLater()
-        self.label.setParent(None)
-        self.label.deleteLater()
-        self.label_2.setParent(None)
-        self.label_2.deleteLater()
-        self.verticalLayout_7.removeItem(self.verticalLayout)
-        self.spinBox_timerow.setEnabled(True)
-        self.spinBox_timecol.setEnabled(True)
-        self.spinBox_daterow.setEnabled(True)
-        self.spinBox_datecol.setEnabled(True)
-        self.spinBox_srrow.setEnabled(True)
-        self.spinBox_srcol.setEnabled(True)
-        self.spinBox_snrow.setEnabled(True)
-        self.spinBox_sncol.setEnabled(True)
-        self.spinBox_namesrow.setEnabled(True)
-        self.lineEdit_comment.setEnabled(True)
-
-        self.spinBox_timerow.setValue(settings.get_setting("time_row"))
-        self.spinBox_timecol.setValue(settings.get_setting("time_col"))
-        self.spinBox_daterow.setValue(settings.get_setting("date_row"))
-        self.spinBox_datecol.setValue(settings.get_setting("date_col"))
-        self.spinBox_srrow.setValue(settings.get_setting("sr_row"))
-        self.spinBox_srcol.setValue(settings.get_setting("sr_col"))
-        self.spinBox_snrow.setValue(settings.get_setting("sn_row"))
-        self.spinBox_sncol.setValue(settings.get_setting("sn_col"))
-        self.spinBox_namesrow.setValue(settings.get_setting("names_row"))
-        self.lineEdit_comment.setText(settings.get_setting("comment"))
-
-    def open_project(self):
-        self.settings.set_setting("time_row", self.time_row)
-        self.settings.set_setting("time_col", self.time_col)
-        self.settings.set_setting("date_row", self.date_row)
-        self.settings.set_setting("date_col", self.date_col)
-        self.settings.set_setting("sr_row", self.sr_row)
-        self.settings.set_setting("sr_col", self.sr_col)
-        self.settings.set_setting("sn_row", self.sn_row)
-        self.settings.set_setting("sn_col", self.sn_col)
-        self.settings.set_setting("names_row", self.names_row)
-        self.settings.set_setting("comment", self.comment)
