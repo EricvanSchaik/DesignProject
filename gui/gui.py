@@ -1,23 +1,17 @@
-import os
-import sys
 from datetime import timedelta
 
 import matplotlib.animation
 import matplotlib.pyplot
 from PyQt5 import QtCore
-from PyQt5 import QtGui, QtWidgets
+from PyQt5 import QtGui
 from PyQt5.QtCore import QUrl, QDir
 from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
 from PyQt5.QtWidgets import QMainWindow, QFileDialog
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
 
 import video_metadata as vm
-from data_import import import_data
-from datastorage import settings
-from datastorage.labelstorage import LabelManager
+from data_import import import_data, sensor_data
 from gui.designer_gui import Ui_VideoPlayer
-from gui.designer_labelspecs import Ui_LabelSpecs
-from gui.designer_new import Ui_NewProject
 from gui.label_dialog import LabelSpecs
 from gui.new_dialog import NewProject
 from gui.settings_dialog import SettingsDialog
@@ -29,7 +23,7 @@ def add_time_strings(time1, time2):
                                                                                                        time2[7]))
 
 
-class VideoPlayer(QMainWindow, Ui_VideoPlayer):
+class GUI(QMainWindow, Ui_VideoPlayer):
 
     def __init__(self):
         super().__init__()
@@ -94,16 +88,17 @@ class VideoPlayer(QMainWindow, Ui_VideoPlayer):
         """
         filename, _ = QFileDialog.getOpenFileName(self, "Open Sensor Data", QDir.homePath())
         if filename != '':
-            self.data = import_data.parse_csv(filename)
-            self.figure.clear()
-            self.dataplot = self.figure.add_subplot(111)
-            data1 = self.data.where(self.data['Time'] < 30).dropna(subset=['Time'])
-            data2 = self.data.drop(['Mx', 'My', 'Mz', 'T', 'Ay', 'Az', 'Gx', 'Gy', 'Gz'], axis=1)
-            self.dataplot.plot(data2['Time'], data2['Ax'], ',-', linewidth=1.0)
-            self.dataplot.axis([-10, 10, self.data['Ax'].min(), self.data['Ax'].max()])
-            self.timer.timeout.connect(self.update_plot)
-            self.timer.start(1)
-            self.canvas.draw()
+            self.sensordata = sensor_data.SensorData(filename, self.settings.settings_dict)
+            # self.data = self.sensordata.data
+            # self.figure.clear()
+            # self.dataplot = self.figure.add_subplot(111)
+            # data1 = self.data.where(self.data['Time'] < 30).dropna(subset=['Time'])
+            # data2 = self.data.drop(['Mx', 'My', 'Mz', 'T', 'Ay', 'Az', 'Gx', 'Gy', 'Gz'], axis=1)
+            # self.dataplot.plot(data2['Time'], data2['Ax'], ',-', linewidth=1.0)
+            # self.dataplot.axis([-10, 10, self.data['Ax'].min(), self.data['Ax'].max()])
+            # self.timer.timeout.connect(self.update_plot)
+            # self.timer.start(1)
+            # self.canvas.draw()
 
     def play(self):
         """
