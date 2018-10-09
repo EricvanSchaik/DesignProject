@@ -6,8 +6,8 @@ from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
 from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QLayout
 
 from datastorage import settings
-from videoplayer.newproject import Ui_NewProject
-from videoplayer.vpdesigner import Ui_VideoPlayer
+from gui.designer_new import Ui_NewProject
+from gui.designer_gui import Ui_VideoPlayer
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
 import matplotlib.pyplot
 from data_import import import_data
@@ -16,7 +16,7 @@ from datetime import timedelta
 import matplotlib.animation
 from datastorage.labelstorage import LabelManager
 from PyQt5 import QtCore
-from videoplayer.labelspecs import Ui_LabelSpecs
+from gui.designer_labelspecs import Ui_LabelSpecs
 import os
 
 
@@ -30,7 +30,7 @@ class VideoPlayer(QMainWindow, Ui_VideoPlayer):
 
     def __init__(self):
         super().__init__()
-        # Initialize the generated UI from vpdesigner.py.
+        # Initialize the generated UI from designer_gui.py.
         self.setupUi(self)
 
         # Connect all the buttons to their appropriate helper functions.
@@ -184,7 +184,7 @@ class LabelSpecs(QtWidgets.QDialog, Ui_LabelSpecs):
 
     def __init__(self, project_name):
         super().__init__()
-        # Initialize the generated UI from vpdesigner.py.
+        # Initialize the generated UI from designer_gui.py.
         self.setupUi(self)
         self.label = Label()
         self.doubleSpinBox_start.valueChanged.connect(self.start_changed)
