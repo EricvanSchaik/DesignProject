@@ -60,17 +60,15 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         self.canvas = FigureCanvasQTAgg(self.figure)
         self.verticalLayout_sensordata.addWidget(self.canvas)
 
-        self.seconds = 0
-        self.minutes = 0
-        self.hours = 0
-
-        self.i = 0
+        # Initialize a timer that makes sure that the sensor data plays smoothly.
         self.timer = QtCore.QTimer(self)
-        self.prev_position = self.mediaplayer.position()
 
+        # Before showing the full GUI, a dialog window needs to be prompted where the user can choose between an
+        # existing project and a new project, in which case the settings need to be specified.
         self.project_dialog = NewProject()
         self.project_dialog.exec_()
 
+        # Save the settings from the new project dialog window.
         self.settings = self.project_dialog.new_settings
 
     def open_video(self):
@@ -99,7 +97,6 @@ class GUI(QMainWindow, Ui_VideoPlayer):
             self.data = self.sensordata.data
             self.figure.clear()
             self.dataplot = self.figure.add_subplot(111)
-            data1 = self.data.where(self.data['Time'] < 30).dropna(subset=['Time'])
             data2 = self.data.drop(['Mx', 'My', 'Mz', 'T', 'Ay', 'Az', 'Gx', 'Gy', 'Gz'], axis=1)
             self.dataplot.plot(data2['Time'], data2['Ax'], ',-', linewidth=1.0)
             self.dataplot.axis([-10, 10, self.data['Ax'].min(), self.data['Ax'].max()])
@@ -140,7 +137,6 @@ class GUI(QMainWindow, Ui_VideoPlayer):
                             10 + (self.mediaplayer.position() / 1000), self.data['Ax'].min(),
                             self.data['Ax'].max()])
         self.canvas.draw()
-        self.i += 0.01
 
     def set_position(self, position):
         """
@@ -165,12 +161,12 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         :param duration: The number of milliseconds that corresponds to the position of the video.
         :return: A readable string that corresponds to duration in the format HH:MM:SS.
         """
-        self.seconds = (duration // 1000) % 60
-        seconds_str = "0" + str(self.seconds) if self.seconds < 10 else str(self.seconds)
-        self.minutes = (duration // (1000 * 60)) % 60
-        minutes_str = "0" + str(self.minutes) if self.minutes < 10 else str(self.minutes)
-        self.hours = duration // (1000 * 60 * 60)
-        hours_str = "0" + str(self.hours) if self.hours < 10 else str(self.hours)
+        seconds = (duration // 1000) % 60
+        seconds_str = "0" + str(seconds) if seconds < 10 else str(seconds)
+        minutes = (duration // (1000 * 60)) % 60
+        minutes_str = "0" + str(minutes) if minutes < 10 else str(minutes)
+        hours = duration // (1000 * 60 * 60)
+        hours_str = "0" + str(hours) if hours < 10 else str(hours)
 
         return hours_str + ":" + minutes_str + ":" + seconds_str
 
