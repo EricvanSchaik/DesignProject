@@ -1,6 +1,5 @@
 import csv
 from datetime import datetime
-from enum import Enum
 
 import numpy as np
 import pandas as pd
@@ -8,28 +7,42 @@ import pandas as pd
 from data_import.import_data import parse_csv, parse_header
 
 
-class Label(Enum):
-    lying: 1
-    standing: 2
-    walking_rider: 3
-    walking_natural: 4
-    trotting_rider: 5
-    trotting_natural: 6
-    running_rider: 7
-    running_natural: 8
-    grazing: 9
-    eating: 10
-    fighting: 11
-    shaking: 12
-    scratch_biting: 13
-    breast_feeding: 14
-    rubbing: 15
-    unknown: 16
-    food_fight: 17
-    head_shake: 18
-    rolling: 19
-    scared: 20
-    jumping: 21
+label_dict = {
+    "lying": 1,
+    "standing": 2,
+    "walking-rider": 3,
+    "walking-natural": 4,
+    "trotting-rider": 5,
+    "trotting-natural": 6,
+    "running-rider": 7,
+    "running-natural": 8,
+    "grazing": 9,
+    "eating": 10,
+    "fighting": 11,
+    "shaking": 12,
+    "scratch-biting": 13,
+    "breast-feeding": 14,
+    "rubbing": 15,
+    "unknown": 16,
+    "food-fight": 17,
+    "head-shake": 18,
+    "rolling": 19,
+    "scared": 20,
+    "jumping": 21
+}
+
+
+def add_labels_to_data(sensor_data: pd.DataFrame, label_data: pd.DataFrame, time_unit='s'):
+    """
+    Add a 'Label' column to a DataFrame and fill it with current labels.
+    
+    :param sensor_data: the sensor data
+    :param label_data: the label data
+    :param time_unit: the time unit that is used in the dataset
+    :return: 
+    """
+    # Add 'Label' column to the DataFrame and initialize it to NaN
+    sensor_data['Label'] = np.nan
 
 
 def get_data():
@@ -53,7 +66,7 @@ def get_data():
 
     for label_point in sorted_labels:
         timestamp = datetime.strptime(label_point[0], '%Y%m%d %H:%M:%S.%f')
-        label = label_point[1]
+        label = label_dict[label_point[1]]
 
         if prev_label:
             sensor_data.loc[
@@ -68,14 +81,6 @@ def get_data():
     res = sensor_data.dropna(subset=['Label'])
 
     # Drop rows where the label is 'unknown'
-    res = res[res.Label != 'unknown']
+    res = res[res.Label != label_dict['unknown']]
 
     return res
-
-
-def sliding_window(sensor_data: pd.DataFrame):
-    sensor_data = sensor_data.drop(['Mx', 'My', 'Mz', 'T', 'Label', 'Timestamp'], axis=1)
-    return sensor_data.rolling(100).mean()
-
-
-print(sliding_window(get_data()))
