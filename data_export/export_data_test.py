@@ -10,6 +10,14 @@ def test_df():
 
 
 df = test_df()
+# df = df.drop('C', axis=1)
+# print(df)
+# new_df = ed.windowing(df, 3)
+# print(new_df)
+
 result = ed.split_df(df, 'C', 'D')
 for r in result:
+    print('Label:', r['C'].tolist()[0], 'with length:', len(r))
     print(r)
+    r2 = r.drop('C', axis=1)
+    print(ed.windowing(r2, 2))
