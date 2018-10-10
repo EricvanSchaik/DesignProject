@@ -133,6 +133,10 @@ class GUI(QMainWindow, Ui_VideoPlayer):
             vm.parse_start_time_from_file(self.video_filename), '%H:%M:%S'))))
 
     def update_plot(self):
+        """
+        Every millisecond the timer triggers this function, which should update the plot to the current time.
+        :return:
+        """
         self.dataplot.axis([-10 + (self.mediaplayer.position() / 1000),
                             10 + (self.mediaplayer.position() / 1000), self.data['Ax'].min(),
                             self.data['Ax'].max()])
@@ -171,6 +175,10 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         return hours_str + ":" + minutes_str + ":" + seconds_str
 
     def open_label(self):
+        """
+        Helper function that opens the label dialog window.
+        :return:
+        """
         self.label_storage = LabelManager(self.project_dialog.project_name)
         dialog = LabelSpecs(self.project_dialog.project_name, self.sensordata.metadata['sn'])
         dialog.exec_()
@@ -178,6 +186,10 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         print(self.label_storage.get_all_labels(self.sensordata.metadata['sn']))
 
     def open_settings(self):
+        """
+        Helper function that opens the settings dialog window.
+        :return:
+        """
         settings = SettingsDialog(self.settings)
         settings.exec_()
         settings.show()
