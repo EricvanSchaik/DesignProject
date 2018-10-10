@@ -11,7 +11,7 @@ def test_df():
 
 df = test_df()
 # df = df.drop('C', axis=1)
-# print(df)
+print(df)
 # new_df = ed.windowing(df, 3)
 # print(new_df)
 

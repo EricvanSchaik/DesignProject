@@ -1,9 +1,9 @@
 from antlr4 import *
 from gen.FunctionLexer import FunctionLexer
 from gen.FunctionParser import FunctionParser
-from parse_string.basic_function_visitor import BasicFunctionVisitor
-from parse_string.error_listener import FunctionErrorListener
-from parse_string.parse_exception import ParseException
+from parse_function.basic_function_visitor import BasicFunctionVisitor
+from parse_function.error_listener import FunctionErrorListener
+from parse_function.parse_exception import ParseException
 
 
 def parse(expr):
