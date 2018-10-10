@@ -10,7 +10,8 @@ from PyQt5.QtWidgets import QMainWindow, QFileDialog
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
 
 import video_metadata as vm
-from data_import import import_data, sensor_data
+from data_import import sensor_data
+from datastorage.labelstorage import LabelManager
 from gui.designer_gui import Ui_VideoPlayer
 from gui.label_dialog import LabelSpecs
 from gui.new_dialog import NewProject
@@ -18,6 +19,13 @@ from gui.settings_dialog import SettingsDialog
 
 
 def add_time_strings(time1, time2):
+    """
+    Helper function that takes the strings of two times in the HH:MM:SS format, and returns a string with of the
+    result of addition of the two times.
+    :param time1: The string of the first time of the addition.
+    :param time2: The string of the second time of the addition.
+    :return: The result of the addition of the two times, again as a string in the HH:MM:SS format.
+    """
     return timedelta(hours=int(time1[0] + time1[1]), minutes=int(time1[3] + time1[4]), seconds=int(time1[6] + time1[
         7])) + timedelta(hours=int(time2[0] + time2[1]), minutes=int(time2[3] + time2[4]), seconds=int(time2[6] +
                                                                                                        time2[7]))
@@ -34,6 +42,8 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         self.playButton.clicked.connect(self.play)
         self.actionOpen_video.triggered.connect(self.open_video)
         self.actionOpen_sensordata.triggered.connect(self.open_sensordata)
+        self.pushButton_label.clicked.connect(self.open_label)
+        self.actionSettings.triggered.connect(self.open_settings)
 
         # Connect the QMediaPlayer to the right widget.
         self.mediaplayer.setVideoOutput(self.widget)
@@ -58,12 +68,9 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         self.timer = QtCore.QTimer(self)
         self.prev_position = self.mediaplayer.position()
 
-        self.pushButton_label.clicked.connect(self.open_dialog)
-
         self.project_dialog = NewProject()
         self.project_dialog.exec_()
 
-        self.actionSettings.triggered.connect(self.open_settings)
         self.settings = self.project_dialog.new_settings
 
     def open_video(self):
@@ -89,16 +96,16 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         filename, _ = QFileDialog.getOpenFileName(self, "Open Sensor Data", QDir.homePath())
         if filename != '':
             self.sensordata = sensor_data.SensorData(filename, self.settings.settings_dict)
-            # self.data = self.sensordata.data
-            # self.figure.clear()
-            # self.dataplot = self.figure.add_subplot(111)
-            # data1 = self.data.where(self.data['Time'] < 30).dropna(subset=['Time'])
-            # data2 = self.data.drop(['Mx', 'My', 'Mz', 'T', 'Ay', 'Az', 'Gx', 'Gy', 'Gz'], axis=1)
-            # self.dataplot.plot(data2['Time'], data2['Ax'], ',-', linewidth=1.0)
-            # self.dataplot.axis([-10, 10, self.data['Ax'].min(), self.data['Ax'].max()])
-            # self.timer.timeout.connect(self.update_plot)
-            # self.timer.start(1)
-            # self.canvas.draw()
+            self.data = self.sensordata.data
+            self.figure.clear()
+            self.dataplot = self.figure.add_subplot(111)
+            data1 = self.data.where(self.data['Time'] < 30).dropna(subset=['Time'])
+            data2 = self.data.drop(['Mx', 'My', 'Mz', 'T', 'Ay', 'Az', 'Gx', 'Gy', 'Gz'], axis=1)
+            self.dataplot.plot(data2['Time'], data2['Ax'], ',-', linewidth=1.0)
+            self.dataplot.axis([-10, 10, self.data['Ax'].min(), self.data['Ax'].max()])
+            self.timer.timeout.connect(self.update_plot)
+            self.timer.start(1)
+            self.canvas.draw()
 
     def play(self):
         """
@@ -167,10 +174,12 @@ class GUI(QMainWindow, Ui_VideoPlayer):
 
         return hours_str + ":" + minutes_str + ":" + seconds_str
 
-    def open_dialog(self):
-        dialog = LabelSpecs(self.project_dialog.project_name)
+    def open_label(self):
+        self.label_storage = LabelManager(self.project_dialog.project_name)
+        dialog = LabelSpecs(self.project_dialog.project_name, self.sensordata.metadata['sn'])
         dialog.exec_()
         dialog.show()
+        print(self.label_storage.get_all_labels(self.sensordata.metadata['sn']))
 
     def open_settings(self):
         settings = SettingsDialog(self.settings)

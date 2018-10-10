@@ -6,10 +6,12 @@ from gui.designer_labelspecs import Ui_LabelSpecs
 
 class LabelSpecs(QtWidgets.QDialog, Ui_LabelSpecs):
 
-    def __init__(self, project_name):
+    def __init__(self, project_name, serial_number):
         super().__init__()
         # Initialize the generated UI from designer_gui.py.
         self.setupUi(self)
+
+        self.serial_number = serial_number
         self.label = Label()
         self.doubleSpinBox_start.valueChanged.connect(self.start_changed)
         self.doubleSpinBox_end.valueChanged.connect(self.stop_changed)
@@ -27,7 +29,7 @@ class LabelSpecs(QtWidgets.QDialog, Ui_LabelSpecs):
         self.label.label = label
 
     def send_label(self):
-        self.label_storage.add_label(self.label.start, self.label.end, self.label.label, "")
+        self.label_storage.add_label(self.label.start, self.label.end, self.label.label, self.serial_number)
 
 
 class Label:
