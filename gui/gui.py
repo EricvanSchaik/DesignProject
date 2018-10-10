@@ -1,4 +1,5 @@
 from datetime import timedelta
+from datetime import datetime
 
 import matplotlib.animation
 import matplotlib.pyplot
@@ -26,9 +27,8 @@ def add_time_strings(time1, time2):
     :param time2: The string of the second time of the addition.
     :return: The result of the addition of the two times, again as a string in the HH:MM:SS format.
     """
-    return timedelta(hours=int(time1[0] + time1[1]), minutes=int(time1[3] + time1[4]), seconds=int(time1[6] + time1[
-        7])) + timedelta(hours=int(time2[0] + time2[1]), minutes=int(time2[3] + time2[4]), seconds=int(time2[6] +
-                                                                                                       time2[7]))
+    return timedelta(hours=int(time1[0:2]), minutes=int(time1[3:5]), seconds=int(time1[6:8])) + timedelta(hours=int(
+        time2[0:2]), minutes=int(time2[3:5]), seconds=int(time2[6:8]))
 
 
 class GUI(QMainWindow, Ui_VideoPlayer):
@@ -71,6 +71,8 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         # Save the settings from the new project dialog window.
         self.settings = self.project_dialog.new_settings
 
+        self.combidt = datetime(year=1970, month=1, day=1)
+
     def open_video(self):
         """
         A helper function that allows a user to open a video in the QMediaPlayer via the menu bar.
@@ -95,6 +97,11 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         if filename != '':
             self.sensordata = sensor_data.SensorData(filename, self.settings.settings_dict)
             self.data = self.sensordata.data
+            timestring = self.sensordata.metadata['time']
+            timetd = timedelta(hours=int(timestring[0:2]), minutes=int(timestring[3:5]),
+                               seconds=int(timestring[6:8]), milliseconds=int(timestring[9:12]))
+            datedt = datetime.strptime(self.sensordata.metadata['date'], '%Y-%m-%d')
+            self.combidt = datedt + timetd
             self.figure.clear()
             self.dataplot = self.figure.add_subplot(111)
             data2 = self.data.drop(['Mx', 'My', 'Mz', 'T', 'Ay', 'Az', 'Gx', 'Gy', 'Gz'], axis=1)
@@ -179,11 +186,11 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         Helper function that opens the label dialog window.
         :return:
         """
-        self.label_storage = LabelManager(self.project_dialog.project_name)
-        dialog = LabelSpecs(self.project_dialog.project_name, self.sensordata.metadata['sn'])
+        label_storage = LabelManager(self.project_dialog.project_name)
+        dialog = LabelSpecs(self.project_dialog.project_name, self.sensordata.metadata['sn'], self.combidt.timestamp())
         dialog.exec_()
         dialog.show()
-        print(self.label_storage.get_all_labels(self.sensordata.metadata['sn']))
+        print(label_storage.get_all_labels(self.sensordata.metadata['sn']))
 
     def open_settings(self):
         """
