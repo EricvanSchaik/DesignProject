@@ -1,9 +1,9 @@
 import re
 import pandas as pd
 from data_import import sensor as sens, column_metadata as cm
-import parse_string.custom_function_parser as parser
+import parse_function.custom_function_parser as parser
 from data_import.import_exception import ImportException
-from parse_string.parse_exception import ParseException
+from parse_function.parse_exception import ParseException
 
 
 def parse_header_option(file, row_nr, col_nr):
@@ -82,7 +82,8 @@ class SensorData:
             - <name>_sensor_name   (name of the sensor used)
             - <name>_sampling_rate (sampling rate of the sensor)
             - <name>_unit          (unit of measurement of the sensor)
-            - <name>_conversion    (conversion function for the data)
+            - <name>_conversion    (conversion function for the data,
+                                    for more information on the function see parse_function.custom_function_parser)
         """
         # Initiate primitives
         self.file_path = file_path
