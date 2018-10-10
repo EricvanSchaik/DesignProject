@@ -32,7 +32,7 @@ label_dict = {
 }
 
 
-def add_labels_to_data(sensor_data: pd.DataFrame, label_data: [], label_col: str, timestamp_col: str, label_dict: {}):
+def add_labels_to_data(sensor_data: pd.DataFrame, label_data: [], label_col: str, timestamp_col: str):
     """
     Add a label column to a DataFrame and fill it with provided labels.
     
@@ -41,7 +41,6 @@ def add_labels_to_data(sensor_data: pd.DataFrame, label_data: [], label_col: str
         at index <i>1</i>. The list should be sorted by timestamp.
     :param label_col: The name of the label column.
     :param timestamp_col: The name of the timestamp column.
-    :param label_dict: A dictionary mapping label strings to their corresponding integer values.
     :return: Sensor data DataFrame where a label column has been added.
     """
     TIME_INDEX = 0
@@ -57,10 +56,7 @@ def add_labels_to_data(sensor_data: pd.DataFrame, label_data: [], label_col: str
 
     for label_entry in label_data:
         timestamp = label_entry[TIME_INDEX]
-        label_str = label_entry[LABEL_INDEX]
-
-        # Convert label string to corresponding integer
-        label = label_dict[label_str]
+        label = label_entry[LABEL_INDEX]
 
         if prev_label:
             # Add label to the corresponding rows in the sensor data
