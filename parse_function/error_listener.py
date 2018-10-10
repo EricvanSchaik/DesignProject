@@ -1,6 +1,6 @@
 from antlr4.error.ErrorListener import ErrorListener
 
-from parse_string.parse_exception import ParseException
+from parse_function.parse_exception import ParseException
 
 
 class FunctionErrorListener(ErrorListener):

@@ -1,7 +1,7 @@
 import unittest
 import pandas as pd
-from parse_string import custom_function_parser as cfp
-from parse_string.parse_exception import ParseException
+from parse_function import custom_function_parser as cfp
+from parse_function.parse_exception import ParseException
 
 
 class FunctionParseTestCase(unittest.TestCase):
