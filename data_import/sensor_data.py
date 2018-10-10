@@ -2,16 +2,18 @@ import re
 import pandas as pd
 from data_import import sensor as sens, column_metadata as cm
 import parse_string.custom_function_parser as parser
+from data_import.import_exception import ImportException
 from parse_string.parse_exception import ParseException
 
 
 def parse_header_option(file, row_nr, col_nr):
     """
-    Parses a specific part of the header with a line number and a column number
+    Parses a specific part of the header with a line number and a column number. Raises an ImportException if the file
+    is smaller than the given row number or if the line is smaller than the given column number.
     :param file: file to be parsed
     :param row_nr: row number of header
     :param col_nr: column number of header data
-    :return: data on row and column number or -1 if the file is smaller than the row number
+    :return: data on row and column number
     """
     # return to start of file
     file.seek(0)
@@ -19,19 +21,28 @@ def parse_header_option(file, row_nr, col_nr):
     i = 1  # row numbers start at 1
     for line in file:
         if i == row_nr:
-            return re.split(', *', line)[col_nr - 1]  # column numbers start at 1
+            # Turn line into list of columns
+            line_list = re.split(', *', line)
+
+            # If col_nr is larger than number of columns, raise ImportException
+            if col_nr - 1 >= len(line_list):
+                raise ImportException("Given column number exceeds number of columns in line - given column number: "
+                                      + str(col_nr) + ", number of columns: " + str(len(line_list)))
+            return line_list[col_nr - 1]  # column numbers start at 1
         else:
             i += 1
-    # error
-    return -1
+    # row_nr is higher than number of rows in file
+    raise ImportException("Given row number exceeds numbers of rows in file - given row number: "
+                          + str(row_nr) + ", number of rows: " + str(i))
 
 
 def parse_names(file, row_nr):
     """
-    Parses the names of the data columns using a row number
+    Parses the names of the data columns using a row number. Raises an ImportException if the file is smaller than
+    the given row number.
     :param file: file to be parsed
     :param row_nr: row number of names
-    :return: list of column names or -1 if the file is smaller than the row number
+    :return: list of column names
     """
     # return to start of file
     file.seek(0)
@@ -42,8 +53,9 @@ def parse_names(file, row_nr):
             return re.split(', *', line[1:-1])
         else:
             i += 1
-    # error
-    return -1
+    # row_nr is higher than number of rows in file
+    raise ImportException("Given row number exceeds numbers of rows in file - given row number: "
+                          + str(row_nr) + ", number of rows: " + str(i))
 
 
 class SensorData:
@@ -88,11 +100,15 @@ class SensorData:
         """
         # Parse metadata from headers
         with open(self.file_path) as file:
-            self.metadata['time'] = parse_header_option(file, settings['time_row'], settings['time_col'])
-            self.metadata['date'] = parse_header_option(file, settings['date_row'], settings['date_col'])
-            self.metadata['sr'] = parse_header_option(file, settings['sr_row'], settings['sr_col'])
-            self.metadata['sn'] = parse_header_option(file, settings['sn_row'], settings['sn_col'])
-            self.metadata['names'] = parse_names(file, settings['names_row'])
+            try:
+                self.metadata['time'] = parse_header_option(file, settings['time_row'], settings['time_col'])
+                self.metadata['date'] = parse_header_option(file, settings['date_row'], settings['date_col'])
+                self.metadata['sr'] = parse_header_option(file, settings['sr_row'], settings['sr_col'])
+                self.metadata['sn'] = parse_header_option(file, settings['sn_row'], settings['sn_col'])
+                self.metadata['names'] = parse_names(file, settings['names_row'])
+            except ImportException:
+                # Pass ImportException
+                raise
 
         # set column metadata
         self.set_column_metadata(settings)
@@ -105,6 +121,7 @@ class SensorData:
         try:
             # Convert sensor data to correct unit
             for name in self.metadata['names']:
+
                 # Retrieve conversion rate from column metadata
                 conversion = self.col_metadata[name].sensor.conversion
 
@@ -118,7 +135,7 @@ class SensorData:
                 # Apply parsed expression to the data
                 data.eval(name + " = " + parsed_expr, inplace=True)
         except ParseException:
-            # Pass parse exception
+            # Pass ParseException
             raise
         return data
 
@@ -168,5 +185,5 @@ class SensorData:
             # Apply parsed expression to data to create new column
             self.data.eval(name + " = " + parsed_expr, inplace=True)
         except ParseException:
-            # Pass parse exception
+            # Pass ParseException
             raise

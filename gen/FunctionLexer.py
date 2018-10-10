@@ -1,4 +1,4 @@
-# Generated from C:/Users/Martijn/PycharmProjects/DesignProject/parse_string\Function.g4 by ANTLR 4.7
+# Generated from C:/Users/Eric/PycharmProjects/DesignProject/parse_string\Function.g4 by ANTLR 4.7
 from antlr4 import *
 from io import StringIO
 from typing.io import TextIO

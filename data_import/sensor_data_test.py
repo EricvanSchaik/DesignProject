@@ -62,5 +62,7 @@ def add_column_test():
     print(sens_data.data[['Ax', 'Ay', 'Az', 'Vector']])
 
 
-parse_time_test()
-add_column_time_test()
+# parse_time_test()
+# add_column_time_test()
+
+add_column_test()
