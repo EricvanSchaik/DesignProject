@@ -1,10 +1,5 @@
-import csv
-from datetime import datetime
-
 import numpy as np
 import pandas as pd
-
-from data_import.import_data import parse_csv, parse_header
 
 
 label_dict = {
