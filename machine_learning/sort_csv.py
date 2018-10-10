@@ -32,55 +32,47 @@ label_dict = {
 }
 
 
-def add_labels_to_data(sensor_data: pd.DataFrame, label_data: pd.DataFrame, time_unit='s'):
+def add_labels_to_data(sensor_data: pd.DataFrame, label_data: [], label_col: str, timestamp_col: str, label_dict: {}):
     """
-    Add a 'Label' column to a DataFrame and fill it with current labels.
+    Add a label column to a DataFrame and fill it with provided labels.
     
-    :param sensor_data: the sensor data
-    :param label_data: the label data
-    :param time_unit: the time unit that is used in the dataset
-    :return: 
+    :param sensor_data: The sensor data.
+    :param label_data: A list consisting of labels and timestamps, with the label at index <i>0</i> and the timestamp
+        at index <i>1</i>. The list should be sorted by timestamp.
+    :param label_col: The name of the label column.
+    :param timestamp_col: The name of the timestamp column.
+    :param label_dict: A dictionary mapping label strings to their corresponding integer values.
+    :return: Sensor data DataFrame where a label column has been added.
     """
-    # Add 'Label' column to the DataFrame and initialize it to NaN
-    sensor_data['Label'] = np.nan
+    TIME_INDEX = 0
+    LABEL_INDEX = 1
 
+    df = sensor_data.copy()
 
-def get_data():
-    labels = csv.reader(open('../data/20180515_09-58_CCDC301661B33D7_labels.csv'), delimiter=',')
-    next(labels)  # Skip header
-    sorted_labels = sorted(labels, key=lambda row: row[0])
+    # Add Label column to the DataFrame and initialize it to NaN
+    df[label_col] = np.nan
 
-    sensor_data = parse_csv('../data/20180515_09-58_CCDC301661B33D7_sensor.csv')
-    headers = parse_header('../data/20180515_09-58_CCDC301661B33D7_sensor.csv')
-    sensor_data['Label'] = np.nan
-    sensor_start_time = datetime.strptime(headers[2][1] + headers[2][2], '%Y-%m-%d%H:%M:%S.%f')
-
-    # Add timestamp column to sensor data
-    sensor_data['Time'] = pd.to_timedelta(sensor_data['Time'], unit='s')
-    sensor_data['Timestamp'] = sensor_data['Time'] + sensor_start_time
-    sensor_data = sensor_data.set_index('Time')
-
-    # Add ground truth labels to the sensor data
-    prev_time = datetime.strptime(sorted_labels[0][0], '%Y%m%d %H:%M:%S.%f')
+    prev_timestamp = label_data[0][TIME_INDEX]
     prev_label = None
 
-    for label_point in sorted_labels:
-        timestamp = datetime.strptime(label_point[0], '%Y%m%d %H:%M:%S.%f')
-        label = label_dict[label_point[1]]
+    for label_entry in label_data:
+        timestamp = label_entry[TIME_INDEX]
+        label_str = label_entry[LABEL_INDEX]
+
+        # Convert label string to corresponding integer
+        label = label_dict[label_str]
 
         if prev_label:
-            sensor_data.loc[
-                (sensor_data['Timestamp'] >= prev_time) & (sensor_data['Timestamp'] < timestamp),
-                'Label'
+            # Add label to the corresponding rows in the sensor data
+            df.loc[
+                (df[timestamp_col] >= prev_timestamp) & (sensor_data[timestamp_col] < timestamp),
+                label_col
             ] = prev_label
 
-        prev_time = timestamp
+        prev_timestamp = timestamp
         prev_label = label
 
-    # Drop rows where the label is NaN
-    res = sensor_data.dropna(subset=['Label'])
-
-    # Drop rows where the label is 'unknown'
-    res = res[res.Label != label_dict['unknown']]
+    # Drop rows where the label is NaN (no label data available)
+    res = df.dropna(subset=[label_col])
 
     return res
