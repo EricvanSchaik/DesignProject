@@ -93,8 +93,6 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         """
         filename, _ = QFileDialog.getOpenFileName(self, "Open Sensor Data", QDir.homePath())
         if filename != '':
-            print(filename)
-            print(self.settings.settings_dict)
             self.sensordata = sensor_data.SensorData(filename, self.settings.settings_dict)
             self.data = self.sensordata.data
             self.figure.clear()
