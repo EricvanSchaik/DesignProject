@@ -1,22 +1,20 @@
-import sys
+from datetime import timedelta
 
-from PyQt5 import QtGui, QtWidgets
+import matplotlib.animation
+import matplotlib.pyplot
+from PyQt5 import QtCore
+from PyQt5 import QtGui
 from PyQt5.QtCore import QUrl, QDir
 from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
-from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog
-
-from videoplayer.newproject import Ui_NewProject
-from videoplayer.vpdesigner import Ui_VideoPlayer
+from PyQt5.QtWidgets import QMainWindow, QFileDialog
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
-import matplotlib.pyplot
-from data_import import import_data
+
 import video_metadata as vm
-from datetime import timedelta
-import matplotlib.animation
-from datastorage.LabelStorage import LabelManager
-from PyQt5 import QtCore
-from videoplayer.labelspecs import Ui_LabelSpecs
-import os
+from data_import import import_data, sensor_data
+from gui.designer_gui import Ui_VideoPlayer
+from gui.label_dialog import LabelSpecs
+from gui.new_dialog import NewProject
+from gui.settings_dialog import SettingsDialog
 
 
 def add_time_strings(time1, time2):
@@ -25,11 +23,11 @@ def add_time_strings(time1, time2):
                                                                                                        time2[7]))
 
 
-class VideoPlayer(QMainWindow, Ui_VideoPlayer):
+class GUI(QMainWindow, Ui_VideoPlayer):
 
     def __init__(self):
         super().__init__()
-        # Initialize the generated UI from vpdesigner.py.
+        # Initialize the generated UI from designer_gui.py.
         self.setupUi(self)
 
         # Connect all the buttons to their appropriate helper functions.
@@ -65,8 +63,8 @@ class VideoPlayer(QMainWindow, Ui_VideoPlayer):
         self.project_dialog = NewProject()
         self.project_dialog.exec_()
 
-    # def close_vp(self):
-    #     print("hoi")
+        self.actionSettings.triggered.connect(self.open_settings)
+        self.settings = self.project_dialog.new_settings
 
     def open_video(self):
         """
@@ -90,16 +88,17 @@ class VideoPlayer(QMainWindow, Ui_VideoPlayer):
         """
         filename, _ = QFileDialog.getOpenFileName(self, "Open Sensor Data", QDir.homePath())
         if filename != '':
-            self.data = import_data.parse_csv(filename)
-            self.figure.clear()
-            self.dataplot = self.figure.add_subplot(111)
-            data1 = self.data.where(self.data['Time'] < 30).dropna(subset=['Time'])
-            data2 = self.data.drop(['Mx', 'My', 'Mz', 'T', 'Ay', 'Az', 'Gx', 'Gy', 'Gz'], axis=1)
-            self.dataplot.plot(data2['Time'], data2['Ax'], ',-', linewidth=1.0)
-            self.dataplot.axis([-10, 10, self.data['Ax'].min(), self.data['Ax'].max()])
-            self.timer.timeout.connect(self.update_plot)
-            self.timer.start(1)
-            self.canvas.draw()
+            self.sensordata = sensor_data.SensorData(filename, self.settings.settings_dict)
+            # self.data = self.sensordata.data
+            # self.figure.clear()
+            # self.dataplot = self.figure.add_subplot(111)
+            # data1 = self.data.where(self.data['Time'] < 30).dropna(subset=['Time'])
+            # data2 = self.data.drop(['Mx', 'My', 'Mz', 'T', 'Ay', 'Az', 'Gx', 'Gy', 'Gz'], axis=1)
+            # self.dataplot.plot(data2['Time'], data2['Ax'], ',-', linewidth=1.0)
+            # self.dataplot.axis([-10, 10, self.data['Ax'].min(), self.data['Ax'].max()])
+            # self.timer.timeout.connect(self.update_plot)
+            # self.timer.start(1)
+            # self.canvas.draw()
 
     def play(self):
         """
@@ -169,76 +168,11 @@ class VideoPlayer(QMainWindow, Ui_VideoPlayer):
         return hours_str + ":" + minutes_str + ":" + seconds_str
 
     def open_dialog(self):
-        dialog = LabelSpecs()
+        dialog = LabelSpecs(self.project_dialog.project_name)
         dialog.exec_()
         dialog.show()
 
-
-class LabelSpecs(QtWidgets.QDialog, Ui_LabelSpecs):
-
-    def __init__(self):
-        super().__init__()
-        # Initialize the generated UI from vpdesigner.py.
-        self.setupUi(self)
-        self.label = Label()
-        self.doubleSpinBox_start.valueChanged.connect(self.start_changed)
-        self.doubleSpinBox_end.valueChanged.connect(self.stop_changed)
-        self.label_storage = LabelManager("test_project")
-        self.accepted.connect(self.send_label)
-        self.comboBox_labels.activated.connect(self.label_changed)
-
-    def start_changed(self, value: float):
-        self.label.start = value
-
-    def stop_changed(self, value: float):
-        self.label.stop = value
-
-    def label_changed(self, label: str):
-        self.label.label = label
-
-    def send_label(self):
-        self.label_storage.add_label(self.label.start, self.label.end, self.label.label, "")
-
-    def get_label(self, number: int):
-        pass
-
-
-class Label:
-
-    def __init__(self):
-        self.label = 0
-        self.start = 0.00
-        self.end = 0.00
-
-    def setLabel(self, name: str):
-        self.label = name
-
-    def setStart(self, start: float):
-        self.start = start
-
-    def setEnd(self, end: float):
-        self.end = end
-
-
-class NewProject(QtWidgets.QDialog, Ui_NewProject):
-
-    def __init__(self):
-        super().__init__()
-        self.setupUi(self)
-        self.accepted.connect(self.open_project)
-        self.rejected.connect(self.exit_project)
-        for folder in os.listdir("projects"):
-            self.comboBox.addItem(folder)
-        self.lineEdit.textChanged.connect(self.text_changed)
-
-    def open_project(self):
-        pass
-
-    def exit_project(self):
-        sys.exit(0)
-
-    def text_changed(self):
-        if self.lineEdit.text() != "":
-            self.comboBox.setEnabled(False)
-        else:
-            self.comboBox.setEnabled(True)
+    def open_settings(self):
+        settings = SettingsDialog(self.settings)
+        settings.exec_()
+        settings.show()

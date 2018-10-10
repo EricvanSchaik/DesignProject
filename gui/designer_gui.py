@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'vpdesigner.ui'
+# Form implementation generated from reading ui file 'designer_gui.ui'
 #
 # Created by: PyQt5 UI code generator 5.11.2
 #
@@ -121,8 +121,11 @@ class Ui_VideoPlayer(object):
         icon3.addPixmap(QtGui.QPixmap("resources/Open-Folder-512.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.actionOpen_sensordata.setIcon(icon3)
         self.actionOpen_sensordata.setObjectName("actionOpen_sensordata")
+        self.actionSettings = QtWidgets.QAction(VideoPlayer)
+        self.actionSettings.setObjectName("actionSettings")
         self.menuFile.addAction(self.actionOpen_video)
         self.menuFile.addAction(self.actionOpen_sensordata)
+        self.menuFile.addAction(self.actionSettings)
         self.menuFile.addAction(self.actionExit)
         self.menubar.addAction(self.menuFile.menuAction())
 
@@ -143,6 +146,7 @@ class Ui_VideoPlayer(object):
         self.actionExit.setText(_translate("VideoPlayer", "Exit"))
         self.actionExit.setToolTip(_translate("VideoPlayer", "Exit application"))
         self.actionOpen_sensordata.setText(_translate("VideoPlayer", "Open Sensordata"))
+        self.actionSettings.setText(_translate("VideoPlayer", "Settings"))
 
 from PyQt5.QtMultimedia import QMediaPlayer
 from PyQt5.QtMultimediaWidgets import QVideoWidget
