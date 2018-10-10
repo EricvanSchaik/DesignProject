@@ -23,7 +23,7 @@ class LabelSpecs(QtWidgets.QDialog, Ui_LabelSpecs):
         self.label.start = value
 
     def stop_changed(self, value: float):
-        self.label.stop = value
+        self.label.end = value
 
     def label_changed(self, label: str):
         self.label.label = label
