@@ -43,30 +43,25 @@ def add_labels_to_data(sensor_data: pd.DataFrame, label_data: [], label_col: str
     :param timestamp_col: The name of the timestamp column.
     :return: Sensor data DataFrame where a label column has been added.
     """
-    TIME_INDEX = 0
-    LABEL_INDEX = 1
+    START_TIME_INDEX = 0
+    STOP_TIME_INDEX = 1
+    LABEL_INDEX = 2
 
     df = sensor_data.copy()
 
     # Add Label column to the DataFrame and initialize it to NaN
     df[label_col] = np.nan
 
-    prev_timestamp = label_data[0][TIME_INDEX]
-    prev_label = None
-
     for label_entry in label_data:
-        timestamp = label_entry[TIME_INDEX]
+        start_time = label_entry[START_TIME_INDEX]
+        stop_time = label_entry[STOP_TIME_INDEX]
         label = label_entry[LABEL_INDEX]
 
-        if prev_label:
-            # Add label to the corresponding rows in the sensor data
-            df.loc[
-                (df[timestamp_col] >= prev_timestamp) & (sensor_data[timestamp_col] < timestamp),
-                label_col
-            ] = prev_label
-
-        prev_timestamp = timestamp
-        prev_label = label
+        # Add label to the corresponding rows in the sensor data
+        df.loc[
+            (df[timestamp_col] >= start_time) & (sensor_data[timestamp_col] < stop_time),
+            label_col
+        ] = label
 
     # Drop rows where the label is NaN (no label data available)
     res = df.dropna(subset=[label_col])
