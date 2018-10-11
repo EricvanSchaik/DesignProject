@@ -116,10 +116,6 @@ class SensorData:
                 # Pass ImportException
                 raise
 
-        # If no 'Time' column exists, raise ImportException
-        if 'Time' not in self.metadata['names']:
-            raise ImportException("Sensor data needs a 'Time' column")
-
         # set column metadata
         self.set_column_metadata(settings)
 
@@ -147,10 +143,6 @@ class SensorData:
         except ParseException:
             # Pass ParseException
             raise
-
-        # Turn 'Time' column into datetime objects
-        data['Time'] = data['Time'].map(lambda x: self.metadata['datetime'] + timedelta(seconds=x))
-
         return data
 
     def set_column_metadata(self, settings):
