@@ -75,6 +75,3 @@ def datetime_test():
     print(date + time)
     dt = datetime.strptime(date + time, '%Y-%m-%d%H:%M:%S.%f')
     return dt + timedelta(seconds=timestamp)
-
-
-time_conversion_test()
