@@ -12,7 +12,7 @@ SENSOR_FILE = 'data/20180515_09-58_CCDC301661B33D7_sensor.csv'
 LABELS_FILE = 'data/20180515_09-58_CCDC301661B33D7_labels.csv'
 PROJECT_DIR = 'test_project'
 
-sensor_data = sd.SensorData(SENSOR_FILE, sdt.test_settings()).data
+sensor_data = sd.SensorData(SENSOR_FILE, sdt.test_settings())
 label_manager = ls.LabelManager(PROJECT_DIR)
 
 labels = csv.reader(open(LABELS_FILE))
@@ -33,13 +33,11 @@ def add_timestamp_column(sensor_data: pd.DataFrame, base_datetime: dt.datetime, 
     return res
 
 
-base_date = sd.parse_header_option(open(SENSOR_FILE), 3, 2)
-base_time = sd.parse_header_option(open(SENSOR_FILE), 3, 3)
-base_datetime = dt.datetime.strptime(base_date + base_time, '%Y-%m-%d%H:%M:%S.%f')
+base_datetime = sensor_data.metadata['datetime']
 
-sensor_data = add_timestamp_column(sensor_data, base_datetime, 'Time', 'Timestamp')
+sensor_data = add_timestamp_column(sensor_data.data, base_datetime, 'Time', 'Timestamp')
 preprocessed = pp.add_labels_to_data(sensor_data, res, 'Label', 'Timestamp')
 
-print(preprocessed)
+print(preprocessed['Timestamp'])
 
 # print(label_manager.get_all_labels('SN:CCDC3016AE9D6B4'))
