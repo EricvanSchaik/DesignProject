@@ -1,6 +1,6 @@
 import sqlite3
 import csv
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import List, Tuple
 
 sql_add_label_type = "INSERT INTO labelType(Name, Color, Description) VALUES (?,?,?)"
