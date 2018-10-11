@@ -6,7 +6,7 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.tree import DecisionTreeClassifier
 
 from data_import.import_data import parse_csv
-from machine_learning.sort_csv import get_data
+from machine_learning.preprocessor import get_data
 from sklearn.model_selection import train_test_split
 
 
@@ -20,12 +20,12 @@ class Classifier:
         """
         Makes class predictions for datasets.
 
-        :param data: the dataset to classify
-        :param used_features: the features that should be used by the classifier
-        :param ground_truth: current classifications that have been provided by the user. If a row has not been
-            classified yet, then the row contains None
-        :return: list of tuples: first element of tuple is predicted class, second element is a list of probabilities
-            for each class
+        :param data: The dataset to classify
+        :param used_features: The features that should be used by the classifier
+        :param ground_truth: Current classifications that have been provided by the user. If a row has not been
+            classified yet, then the row contains None.
+        :return: list of tuples: First element of tuple is predicted class, second element is a list of probabilities
+            for each class.
         """
 
         if len(self.data) != len(ground_truth):

@@ -2,7 +2,7 @@ from datetime import timedelta
 from datetime import datetime
 
 import matplotlib.animation
-import matplotlib.pyplot
+import matplotlib.pyplot as plt
 from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5.QtCore import QUrl, QDir
@@ -13,6 +13,8 @@ from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
 import video_metadata as vm
 from data_import import sensor_data
 from datastorage.labelstorage import LabelManager
+from datastorage.camerainfo import CameraManager
+from datastorage.deviceoffsets import OffsetManager
 from gui.designer_gui import Ui_VideoPlayer
 from gui.label_dialog import LabelSpecs
 from gui.new_dialog import NewProject
@@ -44,6 +46,10 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         self.actionOpen_sensordata.triggered.connect(self.open_sensordata)
         self.pushButton_label.clicked.connect(self.open_label)
         self.actionSettings.triggered.connect(self.open_settings)
+        self.lineEdit_camera.returnPressed.connect(self.add_camera)
+        self.doubleSpinBox_offset.valueChanged.connect(self.change_offset)
+        self.pushButton_camera_ok.clicked.connect(self.add_camera)
+        # self.pushButton_camera_del.clicked.connect()
 
         # Connect the QMediaPlayer to the right widget.
         self.mediaplayer.setVideoOutput(self.widget)
@@ -73,6 +79,11 @@ class GUI(QMainWindow, Ui_VideoPlayer):
 
         self.combidt = datetime(year=1970, month=1, day=1)
 
+        self.camera_manager = CameraManager()
+        self.offset_manager = OffsetManager()
+        for camera in self.camera_manager.get_all_cameras():
+            self.comboBox_camera.addItem(camera)
+
     def open_video(self):
         """
         A helper function that allows a user to open a video in the QMediaPlayer via the menu bar.
@@ -98,15 +109,17 @@ class GUI(QMainWindow, Ui_VideoPlayer):
             self.sensordata = sensor_data.SensorData(filename, self.settings.settings_dict)
             self.data = self.sensordata.data
             self.combidt = self.sensordata.metadata['datetime']
-
             self.figure.clear()
             self.dataplot = self.figure.add_subplot(111)
-            data2 = self.data.drop(['Mx', 'My', 'Mz', 'T', 'Ay', 'Az', 'Gx', 'Gy', 'Gz'], axis=1)
-            self.dataplot.plot(data2['Time'], data2['Ax'], ',-', linewidth=1.0)
-            self.dataplot.axis([-10, 10, self.data['Ax'].min(), self.data['Ax'].max()])
+            self.dataplot.plot(self.data['Time'], self.data['Ax'], ',-', linewidth=1.0)
+            self.dataplot.axis([0, 10, self.data['Ax'].min(), self.data['Ax'].max()])
             self.timer.timeout.connect(self.update_plot)
             self.timer.start(1)
             self.canvas.draw()
+            if self.comboBox_camera.currentText():
+                self.doubleSpinBox_offset.setValue(self.offset_manager.get_offset(self.comboBox_camera.currentText(),
+                                                                            self.sensordata.metadata['sn'],
+                                                                            self.sensordata.metadata['date']))
 
     def play(self):
         """
@@ -197,3 +210,14 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         settings = SettingsDialog(self.settings)
         settings.exec_()
         settings.show()
+
+    def add_camera(self):
+        self.camera_manager.add_camera(self.lineEdit_camera.text())
+        self.comboBox_camera.addItem(self.lineEdit_camera.text())
+        self.comboBox_camera.setCurrentText(self.lineEdit_camera.text())
+        self.lineEdit_camera.clear()
+
+    def change_offset(self):
+        if self.comboBox_camera.currentText():
+            self.offset_manager.set_offset(self.comboBox_camera.currentText(), self.sensordata.metadata['sn'],
+                                           self.doubleSpinBox_offset.value(), self.sensordata.metadata['date'])
