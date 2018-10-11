@@ -1,7 +1,9 @@
 import sqlite3
+from typing import List, Tuple
 
 sql_add_camera = "INSERT INTO cameras(Name) VALUES (?)"
 sql_delete_camera = "DELETE FROM cameras WHERE Name = ?"
+sql_get_all_cameras = "SELECT Name FROM cameras"
 
 
 class CameraManager:
@@ -32,3 +34,12 @@ class CameraManager:
         """
         self._cur.execute(sql_delete_camera, [name])
         self._conn.commit()
+
+    def get_all_cameras(self) -> List[str]:
+        """
+        Returns all cameras
+
+        :return: list of all known cameras
+        """
+        self._cur.execute(sql_get_all_cameras)
+        return [x[0] for x in self._cur.fetchall()]

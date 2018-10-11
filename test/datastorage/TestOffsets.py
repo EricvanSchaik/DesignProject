@@ -1,5 +1,5 @@
 import unittest
-from datastorage.DeviceOffsets import *
+from datastorage.deviceoffsets import *
 
 
 class TestOffsets(unittest.TestCase):

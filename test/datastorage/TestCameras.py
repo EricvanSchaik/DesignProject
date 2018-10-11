@@ -1,5 +1,5 @@
 import unittest
-from datastorage.CameraInfo import *
+from datastorage.camerainfo import *
 
 
 class TestCameras(unittest.TestCase):

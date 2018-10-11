@@ -1,5 +1,5 @@
 import unittest
-from datastorage.Settings import *
+from datastorage.settings import *
 
 
 class TestSettings(unittest.TestCase):
