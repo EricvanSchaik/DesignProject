@@ -1,9 +1,14 @@
 import sqlite3
+from datastorage import settings
+from typing import Any, List, Tuple
 
 sql_add_subject = "INSERT INTO subject_map (Name) VALUES (?)"
-sql_change_sensor = "UPDATE subject_map SET Sensor = ? WHERE Name = ?"
-sql_change_start_date = "UPDATE subject_map SET Start_date = ? WHERE Name = ?"
-sql_change_end_date = "UPDATE subject_map SET End_date = ? WHERE Name = ?"
+sql_update_sensor = "UPDATE subject_map SET Sensor = ? WHERE Name = ?"
+sql_update_start_date = "UPDATE subject_map SET Start_date = ? WHERE Name = ?"
+sql_update_end_date = "UPDATE subject_map SET End_date = ? WHERE Name = ?"
+sql_add_column = "ALTER TABLE subject_map ADD COLUMN {} TEXT"
+sql_update_user_column = "UPDATE subject_map SET {} = ? WHERE Name = ?"
+sql_get_table = "SELECT Name, Sensor, Start_date, End_date{} FROM subject_map"
 
 
 class SubjectManager:
@@ -14,10 +19,15 @@ class SubjectManager:
         """
         self._conn = sqlite3.connect('projects/' + project_name + '/project_data.db')
         self._cur = self._conn.cursor()
+        self.settings = settings.Settings(project_name)
+        if self.settings.get_setting("subj_map") is None:  # subj_map contains the mapping from column names chosen by
+            self.settings.set_setting("subj_map", {})      # the user, and the column name used in the database.
+            self.settings.set_setting("next_col", 0)       # next_col contains the number the next column should use.
 
     def create_table(self) -> None:
         """Method for creating the necessary subject mapping table."""
-        self._cur.execute("CREATE TABLE subject_map (Name TEXT, Sensor TEXT, Start_date TEXT, End_date TEXT)")
+        self._cur.execute("CREATE TABLE subject_map (Name TEXT PRIMARY KEY, "
+                          "Sensor TEXT, Start_date TEXT, End_date TEXT)")
         self._conn.commit()
 
     def add_subject(self, name: str) -> None:
@@ -29,34 +39,112 @@ class SubjectManager:
         self._cur.execute(sql_add_subject, [name])
         self._conn.commit()
 
-    def change_sensor(self, name: str, sens_id: str) -> None:
+    def update_sensor(self, name: str, sens_id: str) -> None:
         """
         Changes the sensor mapped to a subject.
 
         :param name: The name of the subject to map this sensor to
         :param sens_id: The sensor ID of the sensor
         """
-        self._cur.execute(sql_change_sensor, (sens_id, name))
+        self._cur.execute(sql_update_sensor, (sens_id, name))
         self._conn.commit()
 
-    def change_start_date(self, name: str, date: str) -> None:
+    def update_start_date(self, name: str, date: str) -> None:
         """
         Changes the start date for a subject.
 
         :param name: The name of the subject
         :param date: The start date
         """
-        self._cur.execute(sql_change_start_date, (date, name))
+        self._cur.execute(sql_update_start_date, (date, name))
         self._conn.commit()
 
-    def change_end_date(self, name: str, date: str) -> None:
+    def update_end_date(self, name: str, date: str) -> None:
         """
         Changes the end date for a subject.
 
         :param name: The name of the subject
         :param date: The end date
         """
-        self._cur.execute(sql_change_end_date, (date, name))
+        self._cur.execute(sql_update_end_date, (date, name))
         self._conn.commit()
 
-    # TODO: allow user to add and manipulate own columns
+    def add_column(self, name: str) -> bool:
+        """
+        Adds a column to the table with the given name.
+
+        :param name: Name of the new column
+        :return: boolean indicating if the column was added successfully
+        """
+        col_map = self.settings.get_setting("subj_map")
+        if name in col_map.keys():  # if column already exists, return false
+            return False
+        new_col_nr = self.settings.get_setting("next_col")
+        new_col_name = "c" + str(new_col_nr)
+        col_map[name] = new_col_name
+        self._cur.execute(sql_add_column.format(new_col_name))
+        self._conn.commit()
+        self.settings.set_setting("subj_map", col_map)
+        self.settings.set_setting("next_col", new_col_nr + 1)
+        return True
+
+    def delete_column(self, name: str):
+        """
+        Deletes a column from the table if it exists. (The column is not deleted from the actual database,
+        it is just not visible anymore via this class.)
+
+        :param name: the name of the column to delete
+        """
+        col_map = self.settings.get_setting("subj_map")
+        if name in col_map.keys():
+            col_map.pop(name, None)  # remove the given column from the map. the database column is not deleted.
+            self.settings.set_setting("subj_map", col_map)
+
+    def update_user_column(self, col_name: str, subj_name: str, new_value: Any) -> bool:
+        """
+        Update a value in a column made by the user
+
+        :param col_name: the name of the column that should be updated
+        :param subj_name: the subject name for which the row should be updated
+        :param new_value: the value that should be inserted
+        :return: boolean indicating if the column was updated successfully
+        """
+        col_map = self.settings.get_setting("subj_map")
+        if col_name in col_map.keys():  # only try to update if column is known
+            self._cur.execute(sql_update_user_column.format(col_map[col_name]), (new_value, subj_name))
+            self._conn.commit()
+            return True
+        else:
+            return False
+
+    def change_column_name(self, old: str, new: str) -> bool:
+        """
+        Update the name of a user-made column
+
+        :param old: the old name
+        :param new: the new name
+        :return: boolean indicating if the name was updated successfully
+        """
+        col_map = self.settings.get_setting("subj_map")
+        if (new in col_map.keys()) or (old not in col_map.keys()):
+            return False
+
+        col_map[new] = col_map[old]  # add new name and map it to database column of the old name
+        col_map.pop(old, None)       # remove old name from the map
+        self.settings.set_setting("subj_map", col_map)
+        return True
+
+    def get_table(self) -> Tuple[List[str], List[Tuple[str, ...]]]:
+        """
+        Returns the full table together with a list of all column names.
+
+        :return: list of column names and a list of tuples containing the table data
+        """
+        col_map = self.settings.get_setting("subj_map")
+        col_names = ["Subject name", "Sensor ID", "Start date", "End date"] + list(col_map.keys())
+        cols_to_select = list(col_map.values())  # only select the database columns that are currently used by the user
+        select_string = ""
+        for col in cols_to_select:
+            select_string += ", " + col
+        self._cur.execute(sql_get_table.format(select_string))
+        return col_names, self._cur.fetchall()
