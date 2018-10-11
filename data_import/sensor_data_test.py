@@ -1,4 +1,8 @@
 from timeit import timeit
+import random
+
+import pandas as pd
+
 from data_import import sensor_data as sd
 from datetime import datetime, timedelta
 
@@ -75,3 +79,6 @@ def datetime_test():
     print(date + time)
     dt = datetime.strptime(date + time, '%Y-%m-%d%H:%M:%S.%f')
     return dt + timedelta(seconds=timestamp)
+
+
+# time_conversion_test()

@@ -47,7 +47,7 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         self.pushButton_label.clicked.connect(self.open_label)
         self.actionSettings.triggered.connect(self.open_settings)
         self.lineEdit_camera.returnPressed.connect(self.add_camera)
-        # self.doubleSpinBox_offset.valueChanged.connect()
+        self.doubleSpinBox_offset.valueChanged.connect(self.change_offset)
         self.pushButton_camera_ok.clicked.connect(self.add_camera)
         # self.pushButton_camera_del.clicked.connect()
 
@@ -80,6 +80,7 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         self.combidt = datetime(year=1970, month=1, day=1)
 
         self.camera_manager = CameraManager()
+        self.offset_manager = OffsetManager()
         for camera in self.camera_manager.get_all_cameras():
             self.comboBox_camera.addItem(camera)
 
@@ -116,13 +117,9 @@ class GUI(QMainWindow, Ui_VideoPlayer):
             self.timer.start(1)
             self.canvas.draw()
             if self.comboBox_camera.currentText():
-                print(self.comboBox_camera.currentText())
-                print(self.sensordata.metadata['sn'])
-                print(self.sensordata.metadata['date'])
-                print(type(self.sensordata.metadata['date']))
-                # self.doubleSpinBox_offset.setValue(OffsetManager.get_offset(self.comboBox_camera.currentText(),
-                #                                                             self.sensordata.metadata['sn'],
-                #                                                             self.sensordata.metadata['date']))
+                self.doubleSpinBox_offset.setValue(self.offset_manager.get_offset(self.comboBox_camera.currentText(),
+                                                                            self.sensordata.metadata['sn'],
+                                                                            self.sensordata.metadata['date']))
 
     def play(self):
         """
@@ -220,3 +217,7 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         self.comboBox_camera.setCurrentText(self.lineEdit_camera.text())
         self.lineEdit_camera.clear()
 
+    def change_offset(self):
+        if self.comboBox_camera.currentText():
+            self.offset_manager.set_offset(self.comboBox_camera.currentText(), self.sensordata.metadata['sn'],
+                                           self.doubleSpinBox_offset.value(), self.sensordata.metadata['date'])

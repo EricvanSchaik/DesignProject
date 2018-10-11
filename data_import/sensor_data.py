@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 import re
 import pandas as pd
 from data_import import sensor as sens, column_metadata as cm
