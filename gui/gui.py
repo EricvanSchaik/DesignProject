@@ -97,7 +97,7 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         if filename != '':
             self.sensordata = sensor_data.SensorData(filename, self.settings.settings_dict)
             self.data = self.sensordata.data
-            self.combidt = self.data['datetime']
+            self.combidt = self.sensordata.metadata['datetime']
 
             self.figure.clear()
             self.dataplot = self.figure.add_subplot(111)
