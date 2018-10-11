@@ -39,11 +39,15 @@ def split_df(df, col, temp):
     return result
 
 
-def windowing(df, size):
+def windowing(df, col, size):
     if size > len(df):
         # Window size larger than data frame, so discard
         return
 
-    new_df = df.rolling(size).mean()
+    # Roll (window) on data frame with function
+    # TODO: allow for custom function
+    new_df = df.rolling(window=size, on=col).mean()
+
+    # Only take every <size>th row after rolling (cut off at len(df)/size rounded down)
     new_df = new_df[size - 1:: size]
     return new_df

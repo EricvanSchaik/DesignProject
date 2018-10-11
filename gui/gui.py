@@ -97,11 +97,8 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         if filename != '':
             self.sensordata = sensor_data.SensorData(filename, self.settings.settings_dict)
             self.data = self.sensordata.data
-            timestring = self.sensordata.metadata['time']
-            timetd = timedelta(hours=int(timestring[0:2]), minutes=int(timestring[3:5]),
-                               seconds=int(timestring[6:8]), milliseconds=int(timestring[9:12]))
-            datedt = datetime.strptime(self.sensordata.metadata['date'], '%Y-%m-%d')
-            self.combidt = datedt + timetd
+            self.combidt = self.data['datetime']
+
             self.figure.clear()
             self.dataplot = self.figure.add_subplot(111)
             data2 = self.data.drop(['Mx', 'My', 'Mz', 'T', 'Ay', 'Az', 'Gx', 'Gy', 'Gz'], axis=1)

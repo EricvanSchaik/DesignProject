@@ -1,5 +1,6 @@
 from timeit import timeit
 from data_import import sensor_data as sd
+from datetime import datetime, timedelta
 
 
 def test_settings():
@@ -62,7 +63,18 @@ def add_column_test():
     print(sens_data.data[['Ax', 'Ay', 'Az', 'Vector']])
 
 
-# parse_time_test()
-# add_column_time_test()
+def time_conversion_test():
+    sens_data = sd.SensorData("../data/DATA-001.CSV", test_settings())
+    print(sens_data.data[['Time', 'Ax', 'Ay', 'Az']])
 
-add_column_test()
+
+def datetime_test():
+    date = '2018-05-15'
+    time = '08:54:32.261'
+    timestamp = 0.006042
+    print(date + time)
+    dt = datetime.strptime(date + time, '%Y-%m-%d%H:%M:%S.%f')
+    return dt + timedelta(seconds=timestamp)
+
+
+time_conversion_test()

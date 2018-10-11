@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 import re
 import pandas as pd
 from data_import import sensor as sens, column_metadata as cm
@@ -22,7 +23,7 @@ def parse_header_option(file, row_nr, col_nr):
     for line in file:
         if i == row_nr:
             # Turn line into list of columns
-            line_list = re.split(', *', line)
+            line_list = re.split(', *', line[1:-1])
 
             # If col_nr is larger than number of columns, raise ImportException
             if col_nr - 1 >= len(line_list):
@@ -107,9 +108,17 @@ class SensorData:
                 self.metadata['sr'] = parse_header_option(file, settings['sr_row'], settings['sr_col'])
                 self.metadata['sn'] = parse_header_option(file, settings['sn_row'], settings['sn_col'])
                 self.metadata['names'] = parse_names(file, settings['names_row'])
+
+                # Create datetime object from date and time and put it in metadata
+                self.metadata['datetime'] = datetime.strptime(self.metadata['date'] + self.metadata['time'],
+                                                              '%Y-%m-%d%H:%M:%S.%f')
             except ImportException:
                 # Pass ImportException
                 raise
+
+        # If no 'Time' column exists, raise ImportException
+        if 'Time' not in self.metadata['names']:
+            raise ImportException("Sensor data needs a 'Time' column")
 
         # set column metadata
         self.set_column_metadata(settings)
@@ -138,6 +147,10 @@ class SensorData:
         except ParseException:
             # Pass ParseException
             raise
+
+        # Turn 'Time' column into datetime objects
+        data['Time'] = data['Time'].map(lambda x: self.metadata['datetime'] + timedelta(seconds=x))
+
         return data
 
     def set_column_metadata(self, settings):
