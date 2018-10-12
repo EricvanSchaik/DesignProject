@@ -1,6 +1,6 @@
 import sqlite3
 import csv
-from datetime import datetime
+from datetime import datetime, date
 from typing import List, Tuple
 
 sql_add_label_type = "INSERT INTO labelType(Name, Color, Description) VALUES (?,?,?)"
@@ -16,6 +16,7 @@ sql_upd_desc = "UPDATE labelType SET Description = ? WHERE Name = ?"
 sql_change_label = "UPDATE labelData SET Label_name = ? WHERE Start_time = ? AND Sensor_id = ?"
 sql_get_labels = "SELECT Start_time, End_time, Label_name FROM labelData WHERE Sensor_id = ?"
 sql_get_all_labels = "SELECT * FROM labelData"
+sql_get_labels_date = "SELECT * FROM labelData WHERE date(Start_time) = ? AND Sensor_id = ?"
 
 
 class LabelManager:
@@ -80,14 +81,14 @@ class LabelManager:
         except sqlite3.Error as e:
             return False
 
-    def delete_label(self, time: float, sens_id: str) -> None:
+    def delete_label(self, start_time: datetime, sens_id: str) -> None:
         """
         Deletes a label linked to data.
 
-        :param time: The timestamp at which the label starts
+        :param start_time: The time at which the label starts
         :param sens_id: The sensor ID for which the label is made
         """
-        self._cur.execute(sql_del_label_data, (time, sens_id))
+        self._cur.execute(sql_del_label_data, (start_time, sens_id))
         self._conn.commit()
 
     def update_label_name(self, old_name: str, new_name: str) -> None:
@@ -102,35 +103,35 @@ class LabelManager:
         self._cur.execute(sql_upd_name_type, (new_name, old_name))
         self._conn.commit()
 
-    def update_label_color(self, name: str, color: int) -> None:
+    def update_label_color(self, label_name: str, color: int) -> None:
         """
         Updates the color of an existing label type.
 
-        :param name: The name of the label type
+        :param label_name: The name of the label type
         :param color: The new color that the label type should get, represented as an integer
         """
-        self._cur.execute(sql_upd_color, (color, name))
+        self._cur.execute(sql_upd_color, (color, label_name))
         self._conn.commit()
 
-    def update_label_description(self, name: str, desc: str) -> None:
+    def update_label_description(self, label_name: str, desc: str) -> None:
         """
         Updates the description of an existing label type.
 
-        :param name: The name of the label type
+        :param label_name: The name of the label type
         :param desc: The new description that the label type should get
         """
-        self._cur.execute(sql_upd_desc, (desc, name))
+        self._cur.execute(sql_upd_desc, (desc, label_name))
         self._conn.commit()
 
-    def change_label(self, time: float, name: str, sens_id: str) -> None:
+    def change_label(self, start_time: datetime, label_name: str, sens_id: str) -> None:
         """
         Changes the label type of a data-label.
 
-        :param time: The timestamp of the label
-        :param name: The name of the label type into which the label should be changed
+        :param start_time: The start time of the label
+        :param label_name: The name of the label type into which the label should be changed
         :param sens_id: The sensor ID belonging to this label
         """
-        self._cur.execute(sql_change_label, (name, time, sens_id))
+        self._cur.execute(sql_change_label, (label_name, start_time, sens_id))
         self._conn.commit()
 
     def get_label_types(self) -> List[Tuple[str, int, str]]:
@@ -152,9 +153,17 @@ class LabelManager:
         self._cur.execute(sql_get_labels, [sensor_id])
         return self._cur.fetchall()
 
-    def export_labels(self):
-        with open('projects/' + self.project_name + '/exported_labels.csv', 'w', newline='') as csvfile:
+    # TODO: update export location?
+    def export_labels_all(self) -> None:
+        with open('projects/' + self.project_name + '/all_labels_' + self.project_name + '.csv', 'w', newline='') as csvfile:
             filewriter = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
             filewriter.writerow(['Start_time', 'End_time', 'label', 'sensorID'])
             for row in self._cur.execute(sql_get_all_labels).fetchall():
+                filewriter.writerow([row[0], row[1], row[2], row[3]])
+
+    def export_labels_sensor_date(self, sensor: str, date: date) -> None:
+        with open('projects/' + self.project_name + '/' + str(date) + '_' + sensor + '.csv', 'w', newline='') as csvfile:
+            filewriter = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+            filewriter.writerow(['Start_time', 'End_time', 'label', 'sensorID'])
+            for row in self._cur.execute(sql_get_labels_date, (date, sensor)).fetchall():
                 filewriter.writerow([row[0], row[1], row[2], row[3]])
