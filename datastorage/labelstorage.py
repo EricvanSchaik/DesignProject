@@ -1,6 +1,6 @@
 import sqlite3
 import csv
-from datetime import datetime
+from datetime import datetime, date
 from typing import List, Tuple
 
 sql_add_label_type = "INSERT INTO labelType(Name, Color, Description) VALUES (?,?,?)"
@@ -16,6 +16,7 @@ sql_upd_desc = "UPDATE labelType SET Description = ? WHERE Name = ?"
 sql_change_label = "UPDATE labelData SET Label_name = ? WHERE Start_time = ? AND Sensor_id = ?"
 sql_get_labels = "SELECT Start_time, End_time, Label_name FROM labelData WHERE Sensor_id = ?"
 sql_get_all_labels = "SELECT * FROM labelData"
+sql_get_labels_date = "SELECT * FROM labelData WHERE date(Start_time) = ? AND Sensor_id = ?"
 
 
 class LabelManager:
@@ -152,9 +153,16 @@ class LabelManager:
         self._cur.execute(sql_get_labels, [sensor_id])
         return self._cur.fetchall()
 
-    def export_labels(self):
-        with open('projects/' + self.project_name + '/exported_labels.csv', 'w', newline='') as csvfile:
+    def export_labels_all(self):
+        with open('projects/' + self.project_name + '/all_labels_' + self.project_name + '.csv', 'w', newline='') as csvfile:
             filewriter = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
             filewriter.writerow(['Start_time', 'End_time', 'label', 'sensorID'])
             for row in self._cur.execute(sql_get_all_labels).fetchall():
+                filewriter.writerow([row[0], row[1], row[2], row[3]])
+
+    def export_labels_sensor_date(self, sensor: str, date: date):
+        with open('projects/' + self.project_name + '/' + str(date) + '_' + sensor + '.csv', 'w', newline='') as csvfile:
+            filewriter = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+            filewriter.writerow(['Start_time', 'End_time', 'label', 'sensorID'])
+            for row in self._cur.execute(sql_get_labels_date, (date, sensor)).fetchall():
                 filewriter.writerow([row[0], row[1], row[2], row[3]])
