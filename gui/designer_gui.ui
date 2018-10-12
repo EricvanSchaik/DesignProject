@@ -282,7 +282,14 @@
           </widget>
          </item>
          <item>
-          <widget class="QDoubleSpinBox" name="doubleSpinBox_offset"/>
+          <widget class="QDoubleSpinBox" name="doubleSpinBox_offset">
+           <property name="decimals">
+            <number>3</number>
+           </property>
+           <property name="minimum">
+            <double>-99.989999999999995</double>
+           </property>
+          </widget>
          </item>
         </layout>
        </item>

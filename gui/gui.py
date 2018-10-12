@@ -154,8 +154,9 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         Every millisecond the timer triggers this function, which should update the plot to the current time.
         :return:
         """
-        self.dataplot.axis([-10 + (self.mediaplayer.position() / 1000),
-                            10 + (self.mediaplayer.position() / 1000), self.data['Ax'].min(),
+        self.dataplot.axis([-10 + (self.mediaplayer.position() / 1000) - self.doubleSpinBox_offset.value(),
+                            10 + (self.mediaplayer.position() / 1000) - self.doubleSpinBox_offset.value(), self.data[
+                                'Ax'].min(),
                             self.data['Ax'].max()])
         self.canvas.draw()
 
@@ -212,10 +213,11 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         settings.show()
 
     def add_camera(self):
-        self.camera_manager.add_camera(self.lineEdit_camera.text())
-        self.comboBox_camera.addItem(self.lineEdit_camera.text())
-        self.comboBox_camera.setCurrentText(self.lineEdit_camera.text())
-        self.lineEdit_camera.clear()
+        if self.lineEdit_camera.text() and self.lineEdit_camera.text() not in self.camera_manager.get_all_cameras():
+            self.camera_manager.add_camera(self.lineEdit_camera.text())
+            self.comboBox_camera.addItem(self.lineEdit_camera.text())
+            self.comboBox_camera.setCurrentText(self.lineEdit_camera.text())
+            self.lineEdit_camera.clear()
 
     def change_offset(self):
         if self.comboBox_camera.currentText():
@@ -231,3 +233,10 @@ class GUI(QMainWindow, Ui_VideoPlayer):
                 self.comboBox_camera.clear()
                 for camera in self.camera_manager.get_all_cameras():
                     self.comboBox_camera.addItem(camera)
+                if self.comboBox_camera.currentText():
+                    self.doubleSpinBox_offset.setValue(
+                        self.offset_manager.get_offset(self.comboBox_camera.currentText(),
+                                                       self.sensordata.metadata['sn'],
+                                                       self.sensordata.metadata['date']))
+                else:
+                    self.doubleSpinBox_offset.clear()
