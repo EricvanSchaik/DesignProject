@@ -79,6 +79,8 @@ class GUI(QMainWindow, Ui_VideoPlayer):
 
         self.combidt = datetime(year=1970, month=1, day=1)
 
+        self.sensordata = None
+
         self.camera_manager = CameraManager()
         self.offset_manager = OffsetManager()
         for camera in self.camera_manager.get_all_cameras():
@@ -112,7 +114,9 @@ class GUI(QMainWindow, Ui_VideoPlayer):
             self.figure.clear()
             self.dataplot = self.figure.add_subplot(111)
             self.dataplot.plot(self.data['Time'], self.data['Ax'], ',-', linewidth=1.0)
-            self.dataplot.axis([0, 10, self.data['Ax'].min(), self.data['Ax'].max()])
+            self.vertical_line = self.dataplot.axvline(x=0)
+            self.vertical_line.set_color('red')
+            self.dataplot.axis([10, 10, self.data['Ax'].min(), self.data['Ax'].max()])
             self.timer.timeout.connect(self.update_plot)
             self.timer.start(1)
             self.canvas.draw()
@@ -154,10 +158,10 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         Every millisecond the timer triggers this function, which should update the plot to the current time.
         :return:
         """
-        self.dataplot.axis([-10 + (self.mediaplayer.position() / 1000) - self.doubleSpinBox_offset.value(),
-                            10 + (self.mediaplayer.position() / 1000) - self.doubleSpinBox_offset.value(), self.data[
-                                'Ax'].min(),
-                            self.data['Ax'].max()])
+        xmin = -10 + (self.mediaplayer.position() / 1000) - self.doubleSpinBox_offset.value()
+        xmax = 10 + (self.mediaplayer.position() / 1000) - self.doubleSpinBox_offset.value()
+        self.dataplot.axis([xmin, xmax, self.data['Ax'].min(), self.data['Ax'].max()])
+        self.vertical_line.set_xdata((xmin + xmax) / 2)
         self.canvas.draw()
 
     def set_position(self, position):
@@ -233,10 +237,11 @@ class GUI(QMainWindow, Ui_VideoPlayer):
                 self.comboBox_camera.clear()
                 for camera in self.camera_manager.get_all_cameras():
                     self.comboBox_camera.addItem(camera)
-                if self.comboBox_camera.currentText():
+                self.doubleSpinBox_offset.clear()
+                if self.comboBox_camera.currentText() and self.sensordata:
                     self.doubleSpinBox_offset.setValue(
                         self.offset_manager.get_offset(self.comboBox_camera.currentText(),
                                                        self.sensordata.metadata['sn'],
                                                        self.sensordata.metadata['date']))
                 else:
-                    self.doubleSpinBox_offset.clear()
+                    self.doubleSpinBox_offset.setValue(0)
