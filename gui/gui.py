@@ -7,7 +7,7 @@ from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5.QtCore import QUrl, QDir
 from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
-from PyQt5.QtWidgets import QMainWindow, QFileDialog
+from PyQt5.QtWidgets import QMainWindow, QFileDialog, QMessageBox
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
 
 import video_metadata as vm
@@ -49,7 +49,7 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         self.lineEdit_camera.returnPressed.connect(self.add_camera)
         self.doubleSpinBox_offset.valueChanged.connect(self.change_offset)
         self.pushButton_camera_ok.clicked.connect(self.add_camera)
-        # self.pushButton_camera_del.clicked.connect()
+        self.pushButton_camera_del.clicked.connect(self.delete_camera)
 
         # Connect the QMediaPlayer to the right widget.
         self.mediaplayer.setVideoOutput(self.widget)
@@ -221,3 +221,13 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         if self.comboBox_camera.currentText():
             self.offset_manager.set_offset(self.comboBox_camera.currentText(), self.sensordata.metadata['sn'],
                                            self.doubleSpinBox_offset.value(), self.sensordata.metadata['date'])
+
+    def delete_camera(self):
+        if self.comboBox_camera.currentText():
+            reply = QMessageBox.question(self, 'Message', "Are you sure you want to delete the current camera?",
+                                         QMessageBox.Yes, QMessageBox.No)
+            if reply == QMessageBox.Yes:
+                self.camera_manager.delete_camera(self.comboBox_camera.currentText())
+                self.comboBox_camera.clear()
+                for camera in self.camera_manager.get_all_cameras():
+                    self.comboBox_camera.addItem(camera)
