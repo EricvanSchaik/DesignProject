@@ -3,9 +3,6 @@ from data_import import label_data as ld
 from data_import import sensor_data as sd
 from data_import import sensor_data_test as sdt
 from datastorage import labelstorage as ls
-from data_export import windowing as wd
-
-import csv
 import pandas as pd
 import datetime as dt
 

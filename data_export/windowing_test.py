@@ -1,49 +1,54 @@
-from timeit import timeit
-
-import pandas as pd
-from data_export import windowing as ed
-from datetime import datetime, timedelta
+import csv
 from data_import import sensor_data as sd
 from data_import.sensor_data_test import test_settings as settings
-import random
+from machine_learning import preprocessor as pp
+import pandas as pd
+from data_export import windowing as w
+from datetime import timedelta
 
 
-def time():
-    t = [0.006042, 0.006378, 0.015350, 0.015717, 0.016052,
-         0.025360, 0.035370, 0.045441, 0.055389, 0.065399]
-    df = pd.DataFrame({'Time': t,
-                       'Data': list(range(0, 10)),
-                       'Label': ['A', 'A', 'B', 'B', 'B', 'C', 'A', 'A', 'A', 'A']})
-    date = '2018-05-15'
-    time = '08:54:32.261'
-    dt = datetime.strptime(date + time, '%Y-%m-%d%H:%M:%S.%f')
-    df['Time'] = df['Time'].map(lambda x: dt + timedelta(seconds=x))
-    return df
+def test_sensor_data():
+    sensor_data = sd.SensorData("../data/20180515_09-58_CCDC301661B33D7_sensor.csv", settings())
+    file = open('../data/20180515_09-58_CCDC301661B33D7_labels.csv')
+    labels = csv.reader(file)
+    next(labels)
+    labels = sorted(labels, key=lambda row: row[0])
+
+    res = []
+    for i in range(len(labels) - 1):
+        res.append([labels[i][0], labels[i + 1][0], labels[i][1]])
+
+    sensor_data.data['Timestamp'] = pd.to_timedelta(
+        sensor_data.data['Time'], unit='s') + sensor_data.metadata['datetime']
+    return pp.add_labels_to_data(sensor_data.data, res, 'Label', 'Timestamp')
 
 
-def test_df():
-    sensor_data = sd.SensorData("../data/DATA-001.CSV", settings())
-    size = len(sensor_data.data)
-    labels = ['A', 'A', 'B']
-    sensor_data.data['Label'] = pd.Series(random.choice(labels) for _ in range(size))
-    return sensor_data.data
+def windowing_test():
+    df = test_sensor_data()
+    print("data frame constructed")
+
+    dfs = w.split_df(df, 'Label')
+
+    print("data frame split, length:", len(dfs))
+
+    for df in dfs:
+        if len(df) < 1000:
+            continue
+        rolled = df.resample('2s', on='Timestamp').mean()
+        print("Label:", df['Label'].iloc[0])
+        print(rolled)
 
 
-def test():
-    df = test_df()
-    print('DataFrame constructed')
+def windowing_2_test():
+    df = test_sensor_data()
+    print("DataFrame constructed")
 
-    result = ed.split_df(df, 'Label')
-    print('DataFrame split:', len(result))
-
-    def loop():
-        for r in result:
-            # print('Label:', r['Label'].tolist()[0], 'with length:', len(r))
-            # print(r)
-            collist = r.columns.tolist()
-            r = r[collist[:-1]]
-            ed.windowing(r, 'Time', 4, 2)
-    print(timeit(loop, number=1))
+    res = w.windowing_2(df, 'Label', 'Timestamp')
+    print(res)
 
 
-test()
+def nearest(items, pivot):
+    return min(items, key=lambda x: abs(x - pivot))
+
+
+windowing_2_test()

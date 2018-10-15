@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 import pandas as pd
 
 
@@ -66,9 +68,56 @@ def zip_df(df1, df2):
     return df
 
 
+def nearest(items, pivot):
+    """
+    Finds the item in a list of items closest to a pivot.
+    :param items: List of items
+    :param pivot: Pivot looked for in the list.
+    :return: Item in the list closest to the pivot.
+    """
+    return min(items, key=lambda x: abs(x - pivot))
+
+
+def windowing_2(df, label_col, timestamp_col):
+    # Split DataFrame by label
+    dfs = split_df(df, label_col)
+
+    # Initialise list to store results
+    res = []
+
+    # Window over every DataFrame in the dfs list
+    for df in dfs:
+        # Determine label of DataFrame
+        label = df[label_col].iloc[0]
+
+        # Determine index of timestamp 1 second after starting timestamp
+        pivot = df[timestamp_col].iloc[0] + timedelta(seconds=1)
+        cutoff = df.loc[df[timestamp_col] == nearest(df[timestamp_col].tolist(), pivot)]
+        df2_index = df.index[-1] - cutoff.index[0]
+
+        # Window over DataFrame
+        # TODO: Allow custom function
+        df1 = df.resample('2s', on=timestamp_col).mean()
+
+        # Perform second time windowing
+        df2 = df.tail(df2_index).resample('2s', on=timestamp_col).mean()
+
+        # Zip both DataFrames into one
+        new_df = zip_df(df1, df2)
+
+        # Add label column again
+        new_df[label_col] = label
+
+        # Add resulting DataFrame to list
+        res.append(new_df)
+
+    # Concatenate DataFrames from list into one single DataFrame and return it
+    return pd.concat(res)
+
+
 def windowing(df, col, step, offset=0):
     """
-    Rolls over a data frame on a specific column with a given window size. An extra offset can be
+    Windows over a data frame on a specific column with a given window size. An extra offset can be
     given to get overlap.
 
     :param df: Data frame that is getting rolled over.
@@ -83,7 +132,7 @@ def windowing(df, col, step, offset=0):
 
     # Roll (window) on data frame with function
     # TODO: allow for custom function
-    new_df = df.rolling(window=step, on=col).mean().fillna(df)
+    new_df = df.resample('2s', on=col).mean()
 
     # Only take every <step>th row after rolling (cut off at len(df)/step rounded down)
     df1 = new_df[step - 1::step]
@@ -97,8 +146,3 @@ def windowing(df, col, step, offset=0):
 
     # No extra offset given, so return first data frame only without zipping.
     return df1
-
-
-def window_with_overlap(df: pd.DataFrame):
-    rolling = df.rolling(window='2s', on='Timestamp')
-    return rolling

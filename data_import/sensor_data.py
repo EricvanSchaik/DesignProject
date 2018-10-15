@@ -193,7 +193,3 @@ class SensorData:
         except ParseException:
             # Pass ParseException
             raise
-
-    def export_data(self, file_path):
-        # TODO: window self.data and export is as a CSV file
-        pass
