@@ -1,9 +1,17 @@
 import random
+from timeit import timeit
 from datetime import timedelta, datetime
 
 import pandas as pd
 from data_import import sensor_data as sd
 from data_import.sensor_data_test import test_settings as settings
+from data_export import windowing as w
+
+
+def wrapper(func, *args, **kwargs):
+    def wrapped():
+        return func(*args, **kwargs)
+    return wrapped
 
 
 def test_df():
@@ -27,7 +35,28 @@ def time_df():
     return df
 
 
-df = time_df()
+def drop_column(df, col):
+    return df.drop(col, axis=1)
 
-df['temp'] = df['Label'].eq(df['Label'].shift())
-print(df)
+
+def new_df_without_column(df):
+    collist = df.columns.tolist()
+    return df[collist[:-1]]
+
+
+df = test_df()
+print('DataFrame constructed')
+
+wrapped1 = wrapper(drop_column, df, 'Label')
+wrapped2 = wrapper(new_df_without_column, df)
+t1 = timeit(wrapped1, number=1000)
+# t2 = timeit(wrapped2, number=1000)
+print("drop:", t1)
+# print("new df:", t2)
+
+
+# wrapped = wrapper(w.split_df, df, 'Label')
+# t = timeit(wrapped, number=1)
+# print('split_df():', t)
+
+# result = w.split_df(df, 'Label')

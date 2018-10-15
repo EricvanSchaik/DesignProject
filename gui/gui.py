@@ -7,7 +7,7 @@ from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5.QtCore import QUrl, QDir
 from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
-from PyQt5.QtWidgets import QMainWindow, QFileDialog
+from PyQt5.QtWidgets import QMainWindow, QFileDialog, QMessageBox
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
 
 import video_metadata as vm
@@ -49,7 +49,7 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         self.lineEdit_camera.returnPressed.connect(self.add_camera)
         self.doubleSpinBox_offset.valueChanged.connect(self.change_offset)
         self.pushButton_camera_ok.clicked.connect(self.add_camera)
-        # self.pushButton_camera_del.clicked.connect()
+        self.pushButton_camera_del.clicked.connect(self.delete_camera)
 
         # Connect the QMediaPlayer to the right widget.
         self.mediaplayer.setVideoOutput(self.widget)
@@ -78,6 +78,8 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         self.settings = self.project_dialog.new_settings
 
         self.combidt = datetime(year=1970, month=1, day=1)
+
+        self.sensordata = None
 
         self.camera_manager = CameraManager()
         self.offset_manager = OffsetManager()
@@ -112,7 +114,9 @@ class GUI(QMainWindow, Ui_VideoPlayer):
             self.figure.clear()
             self.dataplot = self.figure.add_subplot(111)
             self.dataplot.plot(self.data['Time'], self.data['Ax'], ',-', linewidth=1.0)
-            self.dataplot.axis([0, 10, self.data['Ax'].min(), self.data['Ax'].max()])
+            self.vertical_line = self.dataplot.axvline(x=0)
+            self.vertical_line.set_color('red')
+            self.dataplot.axis([10, 10, self.data['Ax'].min(), self.data['Ax'].max()])
             self.timer.timeout.connect(self.update_plot)
             self.timer.start(1)
             self.canvas.draw()
@@ -154,9 +158,10 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         Every millisecond the timer triggers this function, which should update the plot to the current time.
         :return:
         """
-        self.dataplot.axis([-10 + (self.mediaplayer.position() / 1000),
-                            10 + (self.mediaplayer.position() / 1000), self.data['Ax'].min(),
-                            self.data['Ax'].max()])
+        xmin = -10 + (self.mediaplayer.position() / 1000) - self.doubleSpinBox_offset.value()
+        xmax = 10 + (self.mediaplayer.position() / 1000) - self.doubleSpinBox_offset.value()
+        self.dataplot.axis([xmin, xmax, self.data['Ax'].min(), self.data['Ax'].max()])
+        self.vertical_line.set_xdata((xmin + xmax) / 2)
         self.canvas.draw()
 
     def set_position(self, position):
@@ -212,12 +217,31 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         settings.show()
 
     def add_camera(self):
-        self.camera_manager.add_camera(self.lineEdit_camera.text())
-        self.comboBox_camera.addItem(self.lineEdit_camera.text())
-        self.comboBox_camera.setCurrentText(self.lineEdit_camera.text())
-        self.lineEdit_camera.clear()
+        if self.lineEdit_camera.text() and self.lineEdit_camera.text() not in self.camera_manager.get_all_cameras():
+            self.camera_manager.add_camera(self.lineEdit_camera.text())
+            self.comboBox_camera.addItem(self.lineEdit_camera.text())
+            self.comboBox_camera.setCurrentText(self.lineEdit_camera.text())
+            self.lineEdit_camera.clear()
 
     def change_offset(self):
         if self.comboBox_camera.currentText():
             self.offset_manager.set_offset(self.comboBox_camera.currentText(), self.sensordata.metadata['sn'],
                                            self.doubleSpinBox_offset.value(), self.sensordata.metadata['date'])
+
+    def delete_camera(self):
+        if self.comboBox_camera.currentText():
+            reply = QMessageBox.question(self, 'Message', "Are you sure you want to delete the current camera?",
+                                         QMessageBox.Yes, QMessageBox.No)
+            if reply == QMessageBox.Yes:
+                self.camera_manager.delete_camera(self.comboBox_camera.currentText())
+                self.comboBox_camera.clear()
+                for camera in self.camera_manager.get_all_cameras():
+                    self.comboBox_camera.addItem(camera)
+                self.doubleSpinBox_offset.clear()
+                if self.comboBox_camera.currentText() and self.sensordata:
+                    self.doubleSpinBox_offset.setValue(
+                        self.offset_manager.get_offset(self.comboBox_camera.currentText(),
+                                                       self.sensordata.metadata['sn'],
+                                                       self.sensordata.metadata['date']))
+                else:
+                    self.doubleSpinBox_offset.setValue(0)

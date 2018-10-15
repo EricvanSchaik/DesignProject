@@ -57,13 +57,13 @@ def add_column_time_test():
     # Time test for adding a vector column to the data
     # about 0.0129 seconds
     sensor_data = sd.SensorData("../data/DATA-001.CSV", test_settings())
-    wrapped = wrapper(sensor_data.add_column, "Vector", "sqrt(Ax^2 + Ay^2 + Az^2)")
+    wrapped = wrapper(sensor_data.add_column_from_func, "Vector", "sqrt(Ax^2 + Ay^2 + Az^2)")
     print("add_column_time_test() average of 5:", timeit(wrapped, number=5) / 5)
 
 
 def add_column_test():
     sens_data = sd.SensorData("../data/DATA-001.CSV", test_settings())
-    sens_data.add_column("Vector", "sqrt(Ax^2 + Ay^2 + Az^2)")
+    sens_data.add_column_from_func("Vector", "sqrt(Ax^2 + Ay^2 + Az^2)")
     print(sens_data.data[['Ax', 'Ay', 'Az', 'Vector']])
 
 

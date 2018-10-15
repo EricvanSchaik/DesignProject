@@ -2,6 +2,8 @@ import os
 import sys
 
 from PyQt5 import QtWidgets
+from PyQt5.QtWidgets import QMessageBox
+
 
 from gui.designer_new import Ui_NewProject
 from datastorage import settings
@@ -140,3 +142,10 @@ class NewProject(QtWidgets.QDialog, Ui_NewProject):
     def set_comment(self, new):
         self.comment = new
 
+    def accept(self):
+        if self.lineEdit_new.text() in [self.comboBox_existing.itemText(i) for i in range(
+                self.comboBox_existing.count())]:
+            QMessageBox.warning(self, 'Warning', "The name of your new project already exists",
+                                QMessageBox.Cancel)
+        else:
+            super().accept()

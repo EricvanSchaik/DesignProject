@@ -177,9 +177,9 @@ class SensorData:
             # create new column metadata and add it to list with metadata
             self.col_metadata[name] = cm.ColumnMetadata(name, data_type, sensor)
 
-    def add_column(self, name: str, func: str):
+    def add_column_from_func(self, name: str, func: str):
         """
-        Constructs a new column in the data frame using a given function
+        Constructs a new column in the data frame using a given function.
         :param name: The name of the new column
         :param func: The function to calculate the values of the new column as a string
         """
@@ -193,3 +193,7 @@ class SensorData:
         except ParseException:
             # Pass ParseException
             raise
+
+    def export_data(self, file_path):
+        # TODO: window self.data and export is as a CSV file
+        pass

@@ -1,3 +1,5 @@
+from timeit import timeit
+
 import pandas as pd
 from data_export import windowing as ed
 from datetime import datetime, timedelta
@@ -22,17 +24,26 @@ def time():
 def test_df():
     sensor_data = sd.SensorData("../data/DATA-001.CSV", settings())
     size = len(sensor_data.data)
-    labels = ['A', 'B']
+    labels = ['A', 'A', 'B']
     sensor_data.data['Label'] = pd.Series(random.choice(labels) for _ in range(size))
     return sensor_data.data
 
 
-df = test_df()
-print(df)
+def test():
+    df = test_df()
+    print('DataFrame constructed')
 
-result = ed.split_df(df, 'Label', 'temp')
-for r in result:
-    print('Label:', r['Label'].tolist()[0], 'with length:', len(r))
-    print(r)
-    r2 = r.drop('Label', axis=1)
-    print(ed.windowing(r2, 'Time', 2, 1))
+    result = ed.split_df(df, 'Label')
+    print('DataFrame split:', len(result))
+
+    def loop():
+        for r in result:
+            # print('Label:', r['Label'].tolist()[0], 'with length:', len(r))
+            # print(r)
+            collist = r.columns.tolist()
+            r = r[collist[:-1]]
+            ed.windowing(r, 'Time', 4, 2)
+    print(timeit(loop, number=1))
+
+
+test()
