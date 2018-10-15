@@ -138,6 +138,8 @@ class Ui_VideoPlayer(object):
         self.label_offset.setObjectName("label_offset")
         self.horizontalLayout_2.addWidget(self.label_offset)
         self.doubleSpinBox_offset = QtWidgets.QDoubleSpinBox(self.verticalLayoutWidget_2)
+        self.doubleSpinBox_offset.setDecimals(3)
+        self.doubleSpinBox_offset.setMinimum(-99.99)
         self.doubleSpinBox_offset.setObjectName("doubleSpinBox_offset")
         self.horizontalLayout_2.addWidget(self.doubleSpinBox_offset)
         self.verticalLayout_info.addLayout(self.horizontalLayout_2)

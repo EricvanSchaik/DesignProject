@@ -1,4 +1,5 @@
 import sqlite3
+from datetime import date
 from statistics import mean
 
 sql_queryDate = "SELECT Offset FROM offsets WHERE Camera = ? AND Sensor = ? AND Date = ?"
@@ -10,16 +11,16 @@ sql_updateOffset = "UPDATE Offsets SET Offset = ? WHERE Camera = ? AND Sensor = 
 class OffsetManager:
 
     def __init__(self):
-        self._conn = sqlite3.connect('data.db')
+        self._conn = sqlite3.connect('data.db', detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES)
         self._cur = self._conn.cursor()
 
     def create_table(self) -> None:
         """Method for creating the necessary offset table in the database."""
-        self._cur.execute("CREATE TABLE offsets (Camera TEXT, Sensor TEXT, Offset REAL, Date TEXT,"
+        self._cur.execute("CREATE TABLE offsets (Camera TEXT, Sensor TEXT, Offset REAL, Date TIMESTAMP,"
                           "PRIMARY KEY (Camera, Sensor, Date), FOREIGN KEY (Camera) REFERENCES cameras(Name))")
         self._conn.commit()
 
-    def get_offset(self, cam_id: str, sens_id: str, date: str) -> float:
+    def get_offset(self, cam_id: str, sens_id: str, date: date) -> float:
         """
         Returns the offset between a camera and sensor on a given date.
         If there is no known offset for the given date, this returns the average of the offsets of previous dates.
@@ -54,7 +55,7 @@ class OffsetManager:
         self._conn.commit()
         return avg
 
-    def set_offset(self, cam_id: str, sens_id: str, offset: float, date: str) -> None:
+    def set_offset(self, cam_id: str, sens_id: str, offset: float, date: date) -> None:
         """
         Changes the offset between a camera and sensor.
 
