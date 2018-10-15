@@ -97,3 +97,8 @@ def windowing(df, col, step, offset=0):
 
     # No extra offset given, so return first data frame only without zipping.
     return df1
+
+
+def window_with_overlap(df: pd.DataFrame):
+    rolling = df.rolling(window='2s', on='Timestamp')
+    return rolling

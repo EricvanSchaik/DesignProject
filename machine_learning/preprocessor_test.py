@@ -3,6 +3,7 @@ from data_import import label_data as ld
 from data_import import sensor_data as sd
 from data_import import sensor_data_test as sdt
 from datastorage import labelstorage as ls
+from data_export import windowing as wd
 
 import csv
 import pandas as pd
@@ -36,8 +37,10 @@ def add_timestamp_column(sensor_data: pd.DataFrame, base_datetime: dt.datetime, 
 base_datetime = sensor_data.metadata['datetime']
 
 sensor_data = add_timestamp_column(sensor_data.data, base_datetime, 'Time', 'Timestamp')
-preprocessed = pp.add_labels_to_data(sensor_data, res, 'Label', 'Timestamp')
+preprocessed = pp.add_labels_to_data(
+    sensor_data, res, 'Label', 'Timestamp')[['Timestamp', 'Ax', 'Ay', 'Az', 'Gx', 'Gy', 'Gz']]
 
-print(preprocessed['Timestamp'])
+# print(preprocessed)
 
-# print(label_manager.get_all_labels('SN:CCDC3016AE9D6B4'))
+rolling = preprocessed.resample('2s', on='Timestamp').mean()
+print(rolling)
