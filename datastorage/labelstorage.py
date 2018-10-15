@@ -16,7 +16,8 @@ sql_upd_desc = "UPDATE labelType SET Description = ? WHERE Name = ?"
 sql_change_label = "UPDATE labelData SET Label_name = ? WHERE Start_time = ? AND Sensor_id = ?"
 sql_get_labels = "SELECT Start_time, End_time, Label_name FROM labelData WHERE Sensor_id = ? ORDER BY Start_time ASC"
 sql_get_all_labels = "SELECT * FROM labelData ORDER BY Start_time ASC"
-sql_get_labels_date = "SELECT * FROM labelData WHERE date(Start_time) = ? AND Sensor_id = ? ORDER BY Start_time ASC"
+sql_get_labels_date = "SELECT Start_time, End_time, Label_name FROM labelData WHERE date(Start_time) = ? AND " \
+                      "Sensor_id = ? ORDER BY Start_time ASC"
 
 
 class LabelManager:
@@ -153,7 +154,7 @@ class LabelManager:
         self._cur.execute(sql_get_labels, [sensor_id])
         return self._cur.fetchall()
 
-    def get_labels_date(self, sensor_id: str, date: date):
+    def get_labels_date(self, sensor_id: str, date: date) -> List[Tuple[datetime, datetime, str]]:
         """
         Returns all the labels for a given sensor on a given date.
 
@@ -186,4 +187,4 @@ class LabelManager:
             filewriter = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
             filewriter.writerow(['Start_time', 'End_time', 'label', 'sensorID'])
             for row in self._cur.execute(sql_get_labels_date, (date, sensor)).fetchall():
-                filewriter.writerow([row[0], row[1], row[2], row[3]])
+                filewriter.writerow([row[0], row[1], row[2]])

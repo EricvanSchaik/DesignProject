@@ -2,6 +2,7 @@ from PyQt5 import QtWidgets
 
 from datastorage.labelstorage import LabelManager
 from gui.designer_labelspecs import Ui_LabelSpecs
+from datetime import datetime
 
 
 class LabelSpecs(QtWidgets.QDialog, Ui_LabelSpecs):
@@ -16,7 +17,7 @@ class LabelSpecs(QtWidgets.QDialog, Ui_LabelSpecs):
         self.label = Label()
         self.doubleSpinBox_start.valueChanged.connect(self.start_changed)
         self.doubleSpinBox_end.valueChanged.connect(self.stop_changed)
-        self.label_storage = LabelManager(project_name)
+        self.label_manager = LabelManager(project_name)
         self.accepted.connect(self.send_label)
         self.comboBox_labels.activated.connect(self.label_changed)
 
@@ -30,7 +31,9 @@ class LabelSpecs(QtWidgets.QDialog, Ui_LabelSpecs):
         self.label.label = label
 
     def send_label(self):
-        self.label_storage.add_label(self.label.start, self.label.end, self.label.label, self.serial_number)
+        print(self.label_manager.get_all_labels(self.serial_number))
+        # self.label_manager.add_label(datetime.fromtimestamp(self.label.start), datetime.fromtimestamp(
+        #     self.label.end), str(self.label.label), self.serial_number)
 
 
 class Label:

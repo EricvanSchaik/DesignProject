@@ -1,5 +1,5 @@
 import sqlite3
-from typing import List, Tuple
+from typing import List
 
 sql_add_camera = "INSERT INTO cameras(Name) VALUES (?)"
 sql_delete_camera = "DELETE FROM cameras WHERE Name = ?"

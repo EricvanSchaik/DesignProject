@@ -77,6 +77,8 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         # Save the settings from the new project dialog window.
         self.settings = self.project_dialog.new_settings
 
+        self.label_storage = LabelManager(self.project_dialog.project_name)
+
         self.combidt = datetime(year=1970, month=1, day=1)
 
         self.sensordata = None
@@ -152,6 +154,8 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         self.label_duration.setText(self.ms_to_time(position))
         self.label_time.setText(str(add_time_strings(self.ms_to_time(position), vm.datetime_with_tz_to_string(
             vm.parse_start_time_from_file(self.video_filename), '%H:%M:%S'))))
+        # if self.sensordata:
+        #     print(self.label_storage.get_all_labels(self.sensordata.metadata['sn']))
 
     def update_plot(self):
         """
@@ -201,11 +205,14 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         Helper function that opens the label dialog window.
         :return:
         """
-        label_storage = LabelManager(self.project_dialog.project_name)
-        dialog = LabelSpecs(self.project_dialog.project_name, self.sensordata.metadata['sn'], self.combidt.timestamp())
-        dialog.exec_()
-        dialog.show()
-        print(label_storage.get_all_labels(self.sensordata.metadata['sn']))
+        if not self.sensordata:
+            QMessageBox.information(self, 'Warning', "You need to import sensordata first.", QMessageBox.Ok)
+        else:
+            dialog = LabelSpecs(self.project_dialog.project_name, self.sensordata.metadata['sn'],
+                                self.combidt.timestamp())
+            dialog.exec_()
+            dialog.show()
+            # print(self.label_storage.get_all_labels(self.sensordata.metadata['sn']))
 
     def open_settings(self):
         """
