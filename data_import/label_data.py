@@ -1,6 +1,7 @@
 import csv
 
 from datastorage.labelstorage import LabelManager
+from datetime import datetime
 
 
 class LabelData:
@@ -58,7 +59,7 @@ if __name__ == '__main__':
 
     # Add a stop time to the rows
     for i in range(len(labels) - 1):
-        res.append([labels[i][0], labels[i + 1][0], labels[i][1]])
+        res.append([datetime.strptime(labels[i][0], "%Y%m%d %H:%M:%S.%f"), datetime.strptime(labels[i + 1][0], "%Y%m%d %H:%M:%S.%f"), labels[i][1]])
 
-    lbd.add_labels([res[0]])
+    lbd.add_labels(res)
     print(lbd.get_labels())
