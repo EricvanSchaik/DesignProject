@@ -187,4 +187,4 @@ class LabelManager:
             filewriter = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
             filewriter.writerow(['Start_time', 'End_time', 'label', 'sensorID'])
             for row in self._cur.execute(sql_get_labels_date, (date, sensor)).fetchall():
-                filewriter.writerow([row[0], row[1], row[2], row[3]])
+                filewriter.writerow([row[0], row[1], row[2]])
