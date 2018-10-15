@@ -67,7 +67,7 @@ class SensorDataTestCase(unittest.TestCase):
                          "First value of T is incorrect")
 
     def test_add_column(self):
-        self.sensor_data.add_column("Vector", "sqrt(Ax^2 + Ay^2 + Az^2)")
+        self.sensor_data.add_column_from_func("Vector", "sqrt(Ax^2 + Ay^2 + Az^2)")
         self.assertEqual(self.sensor_data.data["Vector"][0], 8.536469993305431,
                          "Vector incorrectly calculated")
 
