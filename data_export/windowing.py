@@ -7,6 +7,7 @@ def split_df(df, col, temp):
     changes, a new data frame is created. Changes are stored in the temp column, which has a
     False value for every new value in the given column. The temp column can be dropped after
     this function (is already done with the split data frames).
+
     :param df: The data frame that will be split up
     :param col: The column that determines the split locations
     :param temp: A temporary column name that can (should) be dropped after this function.
@@ -44,7 +45,8 @@ def split_df(df, col, temp):
 
 def zip_df(df1, df2):
     """
-    Zips two data frames together alternately
+    Zips two data frames together alternately.
+
     :param df1: The first data frame. Its first row will be the first row in the resulting data frame.
     :param df2: The second data frame. Its first row will be the second row in the resulting data frame.
     :return: A zipped data frame from df1 and df2
@@ -73,6 +75,7 @@ def windowing(df, col, step, offset=0):
     """
     Rolls over a data frame on a specific column with a given window size. An extra offset can be
     given to get overlap.
+
     :param df: Data frame that is getting rolled over.
     :param col: Specific column that is rolled on.
     :param step: Window size
