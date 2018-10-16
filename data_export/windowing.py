@@ -42,6 +42,7 @@ def split_df(df, col):
 
 def zip_df(df1, df2):
     """
+    --Deprecated--
     Zips two data frames together alternately.
 
     :param df1: The first data frame. Its first row will be the first row in the resulting data frame.
@@ -78,7 +79,15 @@ def nearest(items, pivot):
     return min(items, key=lambda x: abs(x - pivot))
 
 
-def windowing_2(df, label_col, timestamp_col):
+def windowing(df, label_col, timestamp_col):
+    """
+    Windows over a DataFrame by splitting it into segments based on the label column and
+    windowing over every segment separately.
+    :param df: The DataFrame to be windowed over.
+    :param label_col: The column containing the labels.
+    :param timestamp_col: The column containing the timestamps.
+    :return: A windowed DataFrame with the timestamp as index
+    """
     # Split DataFrame by label
     dfs = split_df(df, label_col)
 
@@ -103,7 +112,6 @@ def windowing_2(df, label_col, timestamp_col):
         # Window over DataFrame
         # TODO: Allow custom function
         new_df = df.rolling(window='2s', on='Timestamp').mean()
-        print(new_df)
 
         # Slice DataFrame to get correct windows with overlap
         new_df = new_df[rps*2 - 1:: rps]
@@ -116,36 +124,3 @@ def windowing_2(df, label_col, timestamp_col):
 
     # Concatenate DataFrames from list into one single DataFrame and return it
     return pd.concat(res).set_index(timestamp_col)
-
-
-def windowing(df, col, step, offset=0):
-    """
-    Windows over a data frame on a specific column with a given window size. An extra offset can be
-    given to get overlap.
-
-    :param df: Data frame that is getting rolled over.
-    :param col: Specific column that is rolled on.
-    :param step: Window size
-    :param offset: Optional offset to get overlap
-    :return: A windowed data frame
-    """
-    if step > len(df):
-        # Window size larger than data frame, so discard
-        return
-
-    # Roll (window) on data frame with function
-    # TODO: allow for custom function
-    new_df = df.resample('2s', on=col).mean()
-
-    # Only take every <step>th row after rolling (cut off at len(df)/step rounded down)
-    df1 = new_df[step - 1::step]
-
-    # If an extra offset is given, previous step is repeated with the extra offset to
-    # get overlap, result is zipped together with previous result to get an end result.
-    if offset > 0:
-        df2 = new_df[step - 1 + offset::step]
-        # Zip the partial data frames together to get the result
-        return zip_df(df1, df2)
-
-    # No extra offset given, so return first data frame only without zipping.
-    return df1

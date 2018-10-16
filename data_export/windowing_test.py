@@ -23,7 +23,7 @@ def test_sensor_data():
     return pp.add_labels_to_data(sensor_data.data, res, 'Label', 'Timestamp')
 
 
-def resample_test():
+def small_data_test():
     timestamps = []
     for i in range(20):
         timestamps.append(datetime(2000, 1, 1, 0, 0, 0) + timedelta(milliseconds=i*500))
@@ -40,35 +40,15 @@ def resample_test():
     rps = cutoff.index[0] - df.index[0]
     print('rows per second:', rps)
 
-    df2 = df1[rps*2 - 1::rps*2]
-    df3 = df1[rps*3 - 1::rps*2]
-
+    df2 = df1[rps*2 - 1::rps]
     print(df2)
-    print(df3)
-    print(w.zip_df(df2, df3))
 
 
 def windowing_test():
     df = test_sensor_data()
-    print("data frame constructed")
-
-    dfs = w.split_df(df, 'Label')
-
-    print("data frame split, length:", len(dfs))
-
-    for df in dfs:
-        if len(df) < 1000:
-            continue
-        rolled = df.resample('2s', on='Timestamp').mean()
-        print("Label:", df['Label'].iloc[0])
-        print(rolled)
-
-
-def windowing_2_test():
-    df = test_sensor_data()
     print("DataFrame constructed")
 
-    res = w.windowing_2(df.head(2010), 'Label', 'Timestamp')
+    res = w.windowing(df, 'Label', 'Timestamp')
     return res
 
 
@@ -76,5 +56,4 @@ def nearest(items, pivot):
     return min(items, key=lambda x: abs(x - pivot))
 
 
-print(windowing_2_test())
-# resample_test()
+print(windowing_test())
