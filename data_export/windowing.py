@@ -90,20 +90,23 @@ def windowing_2(df, label_col, timestamp_col):
         # Determine label of DataFrame
         label = df[label_col].iloc[0]
 
+        # Remove label column
+        df = df[df.columns.tolist()[:-1]]
+
         # Determine index of timestamp 1 second after starting timestamp
         pivot = df[timestamp_col].iloc[0] + timedelta(seconds=1)
         cutoff = df.loc[df[timestamp_col] == nearest(df[timestamp_col].tolist(), pivot)]
-        df2_index = df.index[-1] - cutoff.index[0]
+
+        # Determine rows per second of DataFrame
+        rps = cutoff.index[0] - df.index[0]
 
         # Window over DataFrame
         # TODO: Allow custom function
-        df1 = df.resample('2s', on=timestamp_col).mean()
+        new_df = df.rolling(window='2s', on='Timestamp').mean()
+        print(new_df)
 
-        # Perform second time windowing
-        df2 = df.tail(df2_index).resample('2s', on=timestamp_col).mean()
-
-        # Zip both DataFrames into one
-        new_df = zip_df(df1, df2)
+        # Slice DataFrame to fit
+        new_df = new_df[rps*2 - 1:: rps]
 
         # Add label column again
         new_df[label_col] = label
@@ -112,7 +115,7 @@ def windowing_2(df, label_col, timestamp_col):
         res.append(new_df)
 
     # Concatenate DataFrames from list into one single DataFrame and return it
-    return pd.concat(res)
+    return pd.concat(res).set_index(timestamp_col)
 
 
 def windowing(df, col, step, offset=0):
