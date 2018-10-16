@@ -34,8 +34,9 @@ def add_timestamp_column(sensor_data: pd.DataFrame, base_datetime: dt.datetime, 
 base_datetime = sensor_data.metadata['datetime']
 
 sensor_data = add_timestamp_column(sensor_data.data, base_datetime, 'Time', 'Timestamp')
-preprocessed = pp.add_labels_to_data(
-    sensor_data, res, 'Label', 'Timestamp')[['Timestamp', 'Ax', 'Ay', 'Az', 'Gx', 'Gy', 'Gz']]
+preprocessed = pp.add_labels_to_data(sensor_data, res, 'Label', 'Timestamp')[
+    ['Timestamp', 'Ax', 'Ay', 'Az', 'Gx', 'Gy', 'Gz']
+]
 
 # print(preprocessed)
 
