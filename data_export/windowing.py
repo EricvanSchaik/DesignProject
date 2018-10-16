@@ -105,7 +105,7 @@ def windowing_2(df, label_col, timestamp_col):
         new_df = df.rolling(window='2s', on='Timestamp').mean()
         print(new_df)
 
-        # Slice DataFrame to fit
+        # Slice DataFrame to get correct windows with overlap
         new_df = new_df[rps*2 - 1:: rps]
 
         # Add label column again
