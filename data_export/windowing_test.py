@@ -1,10 +1,13 @@
 import csv
+from timeit import timeit
+
 from data_import import sensor_data as sd
 from data_import.sensor_data_test import test_settings as settings
 from machine_learning import preprocessor as pp
 import pandas as pd
 from data_export import windowing as w
 from datetime import timedelta, datetime
+from data_export import export_data as ed
 
 
 def test_sensor_data():
@@ -48,6 +51,16 @@ def windowing_test():
     df = test_sensor_data()
     print("DataFrame constructed")
 
+    def wrapper(func, *args, **kwargs):
+        def wrapped():
+            return func(*args, **kwargs)
+        return wrapped
+
+    # wrapped = wrapper(w.windowing, df, 'Label', 'Timestamp')
+    # print('.mean():', timeit(wrapped, number=1))
+    # wrapped = wrapper(w.windowing, df, 'Label', 'Timestamp', w.mean)
+    # print('Apply:', timeit(wrapped, number=1))
+
     res = w.windowing(df, 'Label', 'Timestamp')
     return res
 
@@ -56,4 +69,5 @@ def nearest(items, pivot):
     return min(items, key=lambda x: abs(x - pivot))
 
 
-print(windowing_test())
+df = windowing_test()
+ed.export([df.drop(columns='Time')], '../data/export_test.csv')
