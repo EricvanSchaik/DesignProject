@@ -65,6 +65,7 @@ class SensorData:
         """
         The SensorData starts parsing as soon as it's constructed. Only SensorData.data needs to
         be called in order to get the parsed data. SensorData.metadata contains the metadata.
+
         :param file_path: path to the file to be parsed
         :param settings: The settings dictionary contains information on where metadata can
         be found in the parsed file. It should have the following keys in order for it to work:
@@ -97,6 +98,7 @@ class SensorData:
     def parse(self, settings):
         """
         Parses a csv file to get metadata and data.
+
         :param settings: contains the metadata
         :return: the parsed data
         """
@@ -147,7 +149,7 @@ class SensorData:
 
     def set_column_metadata(self, settings):
         """
-        Sets the metadata for every column using the settings
+        Sets the metadata for every column using the settings.
         """
         for name in self.metadata['names']:
             # parse data_type
@@ -180,6 +182,7 @@ class SensorData:
     def add_column_from_func(self, name: str, func: str):
         """
         Constructs a new column in the data frame using a given function.
+
         :param name: The name of the new column
         :param func: The function to calculate the values of the new column as a string
         """
@@ -193,3 +196,14 @@ class SensorData:
         except ParseException:
             # Pass ParseException
             raise
+
+    def add_timestamp_column(self, time_col: str, timestamp_col: str, time_unit='s'):
+        """
+        Adds a timestamp column to the sensor data.
+
+        :param time_col: The name of the column that contains the recorded time.
+        :param timestamp_col: The name of the new timestamp column.
+        :param time_unit: The time unit of the time column.
+        """
+        self.data[timestamp_col] = pd.to_timedelta(self.data[time_col], unit=time_unit) + self.metadata['datetime']
+        # TODO: The parameters 'time_col' and 'timestamp_col' should not have to be passed manually but should beretrieved from the SensorData object.
