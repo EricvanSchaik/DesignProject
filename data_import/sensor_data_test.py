@@ -81,4 +81,6 @@ def datetime_test():
     return dt + timedelta(seconds=timestamp)
 
 
-# time_conversion_test()
+if __name__ == '__main__':
+    # time_conversion_test()
+    add_column_test()

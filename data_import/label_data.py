@@ -16,13 +16,13 @@ class LabelData:
     def __init__(self, sensor_id: str, label_manager: LabelManager):
         self._sensor_id = sensor_id
         self._label_manager = label_manager
-        self._labels = self.fill_from_db()
+        self._data = self.fill_from_db()
 
     def fill_from_db(self):
         return self._label_manager.get_all_labels(self._sensor_id)
 
-    def get_labels(self):
-        return self._labels
+    def get_data(self):
+        return self._data
 
     def get_sensor_id(self):
         return self._sensor_id
@@ -30,7 +30,7 @@ class LabelData:
     def set_sensor_id(self, sensor_id: str):
         self._sensor_id = sensor_id
 
-    def add_labels(self, labels: [[]]):
+    def add_data(self, labels: [[]]):
         """
         Adds a list of labels to the database.
 
@@ -39,7 +39,7 @@ class LabelData:
         for label in labels:
             self._label_manager.add_label(label[self.START_TIME_INDEX], label[self.STOP_TIME_INDEX],
                                           label[self.LABEL_INDEX], self._sensor_id)
-        self._labels = self.fill_from_db()
+        self._data = self.fill_from_db()
 
 
 if __name__ == '__main__':
@@ -61,5 +61,5 @@ if __name__ == '__main__':
     for i in range(len(labels) - 1):
         res.append([datetime.strptime(labels[i][0], "%Y%m%d %H:%M:%S.%f"), datetime.strptime(labels[i + 1][0], "%Y%m%d %H:%M:%S.%f"), labels[i][1]])
 
-    lbd.add_labels(res)
-    print(lbd.get_labels())
+    lbd.add_data(res)
+    print(lbd.get_data())
