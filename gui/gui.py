@@ -115,7 +115,7 @@ class GUI(QMainWindow, Ui_VideoPlayer):
             self.sensordata = sensor_data.SensorData(filename, self.settings.settings_dict)
             self.data = self.sensordata.data
             self.combidt = self.sensordata.metadata['datetime']
-            # print(self.combidt)
+            print(self.combidt)
             self.figure.clear()
             self.dataplot = self.figure.add_subplot(111)
             self.dataplot.plot(self.data['Time'], self.data['Ax'], ',-', linewidth=1.0)
@@ -130,10 +130,9 @@ class GUI(QMainWindow, Ui_VideoPlayer):
                                                                             self.sensordata.metadata['sn'],
                                                                             self.sensordata.metadata['date']))
             for label in self.label_storage.get_all_labels(self.sensordata.metadata['sn']):
-                # print((label[0] - self.sensordata.metadata['datetime']).total_seconds())
                 self.dataplot.text(((label[0] - self.sensordata.metadata['datetime']).total_seconds() + (
                     (label[1] - self.sensordata.metadata['datetime']).total_seconds())) / 2,
-                                   (self.data['Ax'].max() * (3 / 4)), label[2])
+                                   (self.data['Ax'].max() * (3 / 4)), label[2], horizontalalignment='center')
 
     def play(self):
         """
@@ -269,12 +268,10 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         if self.sensordata:
             self.new_label = LabelSpecs(self.project_dialog.project_name, self.sensordata.metadata['sn'],
                                 self.combidt.timestamp())
-            self.new_label.start_time = self.combidt.timestamp() + event.xdata
             self.new_label.doubleSpinBox_start.setValue(event.xdata)
 
     def onrelease(self, event):
         if self.sensordata:
-            self.new_label.end_time = self.combidt.timestamp() + event.xdata
             self.new_label.doubleSpinBox_end.setValue(event.xdata)
             self.new_label.exec_()
             if self.new_label.is_accepted:
@@ -283,4 +280,4 @@ class GUI(QMainWindow, Ui_VideoPlayer):
                         'datetime']).total_seconds())
                      + ((datetime.fromtimestamp(self.new_label.label.end) - self.sensordata.metadata[
                                 'datetime']).total_seconds())) / 2,
-                    self.data['Ax'].max() * (3 / 4), self.new_label.label.label)
+                    self.data['Ax'].max() * (3 / 4), self.new_label.label.label, horizontalalignment='center')

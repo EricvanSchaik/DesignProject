@@ -208,7 +208,7 @@ class Ui_VideoPlayer(object):
         self.actionExit.setText(_translate("VideoPlayer", "Exit"))
         self.actionExit.setToolTip(_translate("VideoPlayer", "Exit application"))
         self.actionOpen_sensordata.setText(_translate("VideoPlayer", "Open Sensordata"))
-        self.actionSettings.setText(_translate("VideoPlayer", "Settings"))
+        self.actionSettings.setText(_translate("VideoPlayer", "Import Settings"))
 
 from PyQt5.QtMultimedia import QMediaPlayer
 from PyQt5.QtMultimediaWidgets import QVideoWidget
