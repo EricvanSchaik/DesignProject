@@ -17,6 +17,7 @@ from datastorage.camerainfo import CameraManager
 from datastorage.deviceoffsets import OffsetManager
 from gui.designer_gui import Ui_VideoPlayer
 from gui.label_dialog import LabelSpecs
+from gui.label_settings_dialog import LabelSettingsDialog
 from gui.new_dialog import NewProject
 from gui.settings_dialog import SettingsDialog
 
@@ -46,6 +47,7 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         self.actionOpen_sensordata.triggered.connect(self.open_sensordata)
         self.pushButton_label.clicked.connect(self.open_label)
         self.actionSettings.triggered.connect(self.open_settings)
+        self.actionLabel_Settings.triggered.connect(self.open_label_settings)
         self.lineEdit_camera.returnPressed.connect(self.add_camera)
         self.doubleSpinBox_offset.valueChanged.connect(self.change_offset)
         self.pushButton_camera_ok.clicked.connect(self.add_camera)
@@ -232,6 +234,11 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         settings.exec_()
         settings.show()
 
+    def open_label_settings(self):
+        label_settings = LabelSettingsDialog()
+        label_settings.exec_()
+        label_settings.show()
+
     def add_camera(self):
         if self.lineEdit_camera.text() and self.lineEdit_camera.text() not in self.camera_manager.get_all_cameras():
             self.camera_manager.add_camera(self.lineEdit_camera.text())
@@ -263,8 +270,6 @@ class GUI(QMainWindow, Ui_VideoPlayer):
                     self.doubleSpinBox_offset.setValue(0)
 
     def onclick(self, event):
-        # print('%s click: button=%d, x=%d, y=%d, xdata=%f, ydata=%f' % ('double' if event.dblclick else 'single',
-        #       event.button, event.x, event.y, event.xdata, event.ydata))
         if self.sensordata:
             self.new_label = LabelSpecs(self.project_dialog.project_name, self.sensordata.metadata['sn'],
                                 self.combidt.timestamp())

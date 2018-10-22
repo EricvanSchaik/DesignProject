@@ -1,10 +1,10 @@
-import pytz
+from datetime import datetime
+
 from PyQt5 import QtWidgets
 
 from datastorage.labelstorage import LabelManager
 from gui.designer_labelspecs import Ui_LabelSpecs
-from datetime import datetime
-from dateutil import tz
+
 
 class LabelSpecs(QtWidgets.QDialog, Ui_LabelSpecs):
 
