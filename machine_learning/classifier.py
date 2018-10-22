@@ -1,4 +1,3 @@
-import pandas as pd
 import numpy as np
 
 from sklearn.model_selection import train_test_split
@@ -15,18 +14,17 @@ class Classifier:
 
     def __init__(self, classifier, sensor_data: sd.SensorData, label_data: ld.LabelData, label_col: str='Label',
                  timestamp_col: str='Timestamp'):
+        self.classifier = classifier
+        self.sensor_data = sensor_data.data
+        self.label_data = label_data.get_data()
         self.label_col = label_col
         self.timestamp_col = timestamp_col
-        self.classifier = classifier
-
-        self.sensor_data = sensor_data.data
-        self.label_data = label_data.get_labels()
 
         self.add_labels_to_data()
-
-        print('start window')
         self.sensor_data = wd.windowing(self.sensor_data, self.label_col, self.timestamp_col)
-        print('end window')
+
+    def get_sensor_data(self):
+        return self.sensor_data
 
     def add_labels_to_data(self):
         """
@@ -79,7 +77,6 @@ class Classifier:
         probs = self.classifier.predict_proba(test_set[used_features])
 
         true_labels = list(test_set['Label'])
-        # times = list(test_set['Timestamp'])
         res = []
 
         if len(preds) == len(true_labels):
@@ -99,8 +96,10 @@ if __name__ == '__main__':
     label_data = ld.LabelData(SENSOR_ID, label_manager)
 
     sensor_data.add_timestamp_column('Time', 'Timestamp')
+    sensor_data.add_column_from_func("Vector", "sqrt(Ax^2 + Ay^2 + Az^2)")
     clsf = Classifier(GaussianNB(), sensor_data, label_data)
-    res = clsf.classify(['Ax', 'Ay', 'Az', 'Gx', 'Gy', 'Gz'])
-
-    for x in res:
-        print(x)
+    print(clsf.get_sensor_data()[['Time', 'Vector']])
+    # res = clsf.classify(['Vector'])
+    #
+    # for x in res:
+    #     print(x)

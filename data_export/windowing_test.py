@@ -1,4 +1,5 @@
 import csv
+import numpy as np
 from timeit import timeit
 
 from data_import import sensor_data as sd
@@ -65,9 +66,32 @@ def windowing_test():
     return res
 
 
+def windowing2_test():
+    df = test_sensor_data()
+    print("DataFrame constructed")
+
+    def wrapper(func, *args, **kwargs):
+        def wrapped():
+            return func(*args, **kwargs)
+        return wrapped
+
+    # wrapped = wrapper(w.windowing, df, 'Label', 'Timestamp')
+    # print('.mean():', timeit(wrapped, number=1))
+    # wrapped = wrapper(w.windowing, df, 'Label', 'Timestamp', w.mean)
+    # print('Apply:', timeit(wrapped, number=1))
+
+    res = w.windowing2(df, ['Ax', 'Ay'], 'Label', 'Timestamp', mean=np.mean, std=np.std)
+    return res
+
+
 def nearest(items, pivot):
     return min(items, key=lambda x: abs(x - pivot))
 
 
-df = windowing_test()
-ed.export([df.drop(columns='Time')], '../data/export_test.csv')
+if __name__ == '__main__':
+    df = windowing_test()
+    df2 = windowing2_test()
+    print(df[['Ax', 'Ay']])
+    print(df2[['Ax_mean', 'Ay_mean']])
+    print(df2.columns.values)
+    # ed.export([df.drop(columns='Time')], '../data/export_test.csv')
