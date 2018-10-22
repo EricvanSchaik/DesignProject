@@ -18,6 +18,8 @@ sql_get_labels = "SELECT Start_time, End_time, Label_name FROM labelData WHERE S
 sql_get_all_labels = "SELECT * FROM labelData ORDER BY Start_time ASC"
 sql_get_labels_date = "SELECT Start_time, End_time, Label_name FROM labelData WHERE date(Start_time) = ? AND " \
                       "Sensor_id = ? ORDER BY Start_time ASC"
+sql_get_labels_between_dates = "SELECT Start_time, End_time, Label_name FROM labelData WHERE (date(Start_time) " \
+                               "BETWEEN ? AND ?) AND Sensor_id = ? ORDER BY Start_time ASC"
 
 
 class LabelManager:
@@ -163,6 +165,19 @@ class LabelManager:
         :return: List of tuples (start_time, end_time, label_name)
         """
         self._cur.execute(sql_get_labels_date, (date, sensor_id))
+        return self._cur.fetchall()
+
+    def get_labels_between_dates(self, sensor_id: str, start_date: date, end_date: date) \
+            -> List[Tuple[datetime, datetime, str]]:
+        """
+        Returns all the labels for a given sensor between the given dates.
+
+        :param sensor_id: The sensor ID of the sensor for which the labels need to be returned
+        :param start_date: The first date of the interval
+        :param end_date: The second date of the interval
+        :return: List of tuples (start_time, end_time, label_name)
+        """
+        self._cur.execute(sql_get_labels_between_dates, (start_date, end_date, sensor_id))
         return self._cur.fetchall()
 
     # TODO: update export location?
