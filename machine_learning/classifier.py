@@ -1,22 +1,63 @@
-import time
-
 import pandas as pd
-from pandas import Series
-from sklearn.naive_bayes import GaussianNB
-from sklearn.tree import DecisionTreeClassifier
+import numpy as np
 
-from data_import.import_data import parse_csv
-from machine_learning.preprocessor import get_data
 from sklearn.model_selection import train_test_split
+from sklearn.naive_bayes import GaussianNB
+
+from datastorage import labelstorage as ls
+from data_import import label_data as ld
+from data_import import sensor_data as sd
+from data_import import sensor_data_test as sdt
+from data_export import windowing as wd
 
 
 class Classifier:
 
-    def __init__(self, classifier, data):
+    def __init__(self, classifier, sensor_data: sd.SensorData, label_data: ld.LabelData, label_col: str='Label',
+                 timestamp_col: str='Timestamp'):
+        self.label_col = label_col
+        self.timestamp_col = timestamp_col
         self.classifier = classifier
-        self.data = data
 
-    def classify(self, used_features, ground_truth):
+        self.sensor_data = sensor_data.data
+        self.label_data = label_data.get_labels()
+
+        self.add_labels_to_data()
+
+        print('start window')
+        self.sensor_data = wd.windowing(self.sensor_data, self.label_col, self.timestamp_col)
+        print('end window')
+
+    def add_labels_to_data(self):
+        """
+        Add a label column to a DataFrame and fill it with provided labels.
+
+        :param label_col: The name of the label column.
+        :param timestamp_col: The name of the timestamp column.
+        :return: Sensor data DataFrame where a label column has been added.
+        """
+        START_TIME_INDEX = 0
+        STOP_TIME_INDEX = 1
+        LABEL_INDEX = 2
+
+        # Add Label column to the DataFrame and initialize it to NaN
+        self.sensor_data[self.label_col] = np.nan
+
+        for label_entry in self.label_data:
+            start_time = label_entry[START_TIME_INDEX]
+            stop_time = label_entry[STOP_TIME_INDEX]
+            label = label_entry[LABEL_INDEX]
+
+            # Add label to the corresponding rows in the sensor data
+            self.sensor_data.loc[
+                (self.sensor_data[self.timestamp_col] >= start_time) & (self.sensor_data[self.timestamp_col] < stop_time),
+                self.label_col
+            ] = label
+
+        # Drop rows where the label is NaN (no label data available)
+        self.sensor_data = self.sensor_data.dropna(subset=[self.label_col])
+
+    def classify(self, used_features: [str]):
         """
         Makes class predictions for datasets.
 
@@ -27,19 +68,7 @@ class Classifier:
         :return: list of tuples: First element of tuple is predicted class, second element is a list of probabilities
             for each class.
         """
-
-        if len(self.data) != len(ground_truth):
-            raise ValueError("len(data) != len(ground_truth)")
-
-        # # Add ground_truth column to the dataset
-        # data['ground_truth'] = Series(ground_truth)
-
-        # # Clean the data set of entries that have not been classified yet (remove NaN 'ground_truth' rows)
-        # train_set = data[pd.notnull(data['ground_truth'])]
-
-        # gnb = GaussianNB()
-
-        train_set, test_set = train_test_split(self.data, test_size=0.3)
+        train_set, test_set = train_test_split(self.sensor_data, test_size=0.3)
 
         self.classifier.fit(
             train_set[used_features],
@@ -50,23 +79,28 @@ class Classifier:
         probs = self.classifier.predict_proba(test_set[used_features])
 
         true_labels = list(test_set['Label'])
-        times = list(test_set['Timestamp'])
+        # times = list(test_set['Timestamp'])
         res = []
 
         if len(preds) == len(true_labels):
             for i in range(0, len(preds)):
-                res.append([times[i], true_labels[i], preds[i], round(max(probs[i][0], probs[i][1]), 2)])
+                res.append([preds[i], round(max(probs[i][0], probs[i][1]), 2)])
 
         return res
 
 
 if __name__ == '__main__':
-    data = get_data()
-    ground_truth = data['Label']
-    classifier = Classifier(GaussianNB(), data)
+    SENSOR_FILE = 'data/20180515_09-58_CCDC301661B33D7_sensor.csv'
+    PROJECT_DIR = 'test_project'
+    SENSOR_ID = 'CCDC301661B33D7'
 
-    start_time = time.time()
-    res = sorted(classifier.classify(['Ax', 'Ay', 'Az', 'Gx', 'Gy', 'Gz'], ground_truth), key=lambda row: row[0])
-    for i in range(0, 1000):
-        print(res[i])
-    print("--- %s seconds ---" % (time.time() - start_time))
+    sensor_data = sd.SensorData(SENSOR_FILE, sdt.test_settings())
+    label_manager = ls.LabelManager(PROJECT_DIR)
+    label_data = ld.LabelData(SENSOR_ID, label_manager)
+
+    sensor_data.add_timestamp_column('Time', 'Timestamp')
+    clsf = Classifier(GaussianNB(), sensor_data, label_data)
+    res = clsf.classify(['Ax', 'Ay', 'Az', 'Gx', 'Gy', 'Gz'])
+
+    for x in res:
+        print(x)

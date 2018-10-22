@@ -40,35 +40,6 @@ def split_df(df, col):
     return result
 
 
-def zip_df(df1, df2):
-    """
-    --Deprecated--
-    Zips two data frames together alternately.
-
-    :param df1: The first data frame. Its first row will be the first row in the resulting data frame.
-    :param df2: The second data frame. Its first row will be the second row in the resulting data frame.
-    :return: A zipped data frame from df1 and df2
-    """
-    # Determine length of new data frame
-    new_len = len(df1) + len(df2)
-
-    # Create shell of new data frame
-    df = pd.DataFrame(index=range(new_len), columns=list(df1))
-
-    # Iterate over both data frames
-    pointer1, pointer2 = 0, 0
-    for i in range(new_len):
-        if i % 2 == 0:
-            # Even, so a row from df1 is added
-            df.iloc[i] = df1.iloc[pointer1].tolist()
-            pointer1 += 1
-        else:
-            # Odd, so a row from df2 is added
-            df.iloc[i] = df2.iloc[pointer2].tolist()
-            pointer2 += 1
-    return df
-
-
 def nearest(items, pivot):
     """
     Finds the item in a list of items closest to a pivot.
@@ -79,13 +50,14 @@ def nearest(items, pivot):
     return min(items, key=lambda x: abs(x - pivot))
 
 
-def windowing(df, label_col, timestamp_col):
+def windowing(df, label_col, timestamp_col, func=None):
     """
     Windows over a DataFrame by splitting it into segments based on the label column and
     windowing over every segment separately.
     :param df: The DataFrame to be windowed over.
     :param label_col: The column containing the labels.
     :param timestamp_col: The column containing the timestamps.
+    :param func: The function used during windowing
     :return: A windowed DataFrame with the timestamp as index
     """
     # Split DataFrame by label
@@ -110,8 +82,9 @@ def windowing(df, label_col, timestamp_col):
         rps = cutoff.index[0] - df.index[0]
 
         # Window over DataFrame
-        # TODO: Allow custom function
-        new_df = df.rolling(window='2s', on='Timestamp').mean()
+        # TODO: fix apply very slow
+        new_df = (df.rolling(window='2s', on=timestamp_col).mean() if func is None
+                  else df.rolling(window='2s', on=timestamp_col).apply(func, raw=True))
 
         # Slice DataFrame to get correct windows with overlap
         new_df = new_df[rps*2 - 1:: rps]
@@ -124,3 +97,9 @@ def windowing(df, label_col, timestamp_col):
 
     # Concatenate DataFrames from list into one single DataFrame and return it
     return pd.concat(res).set_index(timestamp_col)
+
+
+# TODO: implement statistical functions
+# already existing pandas functions for statistics:
+# min, max, mean, median, standard deviation, percentile (as quantile),
+# skewness (?), kurtosis
