@@ -117,7 +117,6 @@ class GUI(QMainWindow, Ui_VideoPlayer):
             self.sensordata = sensor_data.SensorData(filename, self.settings.settings_dict)
             self.data = self.sensordata.data
             self.combidt = self.sensordata.metadata['datetime']
-            print(self.combidt)
             self.figure.clear()
             self.dataplot = self.figure.add_subplot(111)
             self.dataplot.plot(self.data['Time'], self.data['Ax'], ',-', linewidth=1.0)
