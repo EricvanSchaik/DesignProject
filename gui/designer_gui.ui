@@ -344,6 +344,7 @@
     <addaction name="actionOpen_video"/>
     <addaction name="actionOpen_sensordata"/>
     <addaction name="actionSettings"/>
+    <addaction name="actionLabel_Settings"/>
     <addaction name="actionExit"/>
    </widget>
    <addaction name="menuFile"/>
@@ -384,7 +385,12 @@
   </action>
   <action name="actionSettings">
    <property name="text">
-    <string>Settings</string>
+    <string>Import Settings</string>
+   </property>
+  </action>
+  <action name="actionLabel_Settings">
+   <property name="text">
+    <string>Label Settings</string>
    </property>
   </action>
  </widget>

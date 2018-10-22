@@ -17,6 +17,7 @@ from datastorage.camerainfo import CameraManager
 from datastorage.deviceoffsets import OffsetManager
 from gui.designer_gui import Ui_VideoPlayer
 from gui.label_dialog import LabelSpecs
+from gui.label_settings_dialog import LabelSettingsDialog
 from gui.new_dialog import NewProject
 from gui.settings_dialog import SettingsDialog
 
@@ -46,6 +47,7 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         self.actionOpen_sensordata.triggered.connect(self.open_sensordata)
         self.pushButton_label.clicked.connect(self.open_label)
         self.actionSettings.triggered.connect(self.open_settings)
+        self.actionLabel_Settings.triggered.connect(self.open_label_settings)
         self.lineEdit_camera.returnPressed.connect(self.add_camera)
         self.doubleSpinBox_offset.valueChanged.connect(self.change_offset)
         self.pushButton_camera_ok.clicked.connect(self.add_camera)
@@ -65,6 +67,8 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         self.figure = matplotlib.pyplot.figure()
         self.canvas = FigureCanvasQTAgg(self.figure)
         self.verticalLayout_sensordata.addWidget(self.canvas)
+        self.canvas.mpl_connect('button_press_event', self.onclick)
+        self.canvas.mpl_connect('button_release_event', self.onrelease)
 
         # Initialize a timer that makes sure that the sensor data plays smoothly.
         self.timer = QtCore.QTimer(self)
@@ -126,6 +130,10 @@ class GUI(QMainWindow, Ui_VideoPlayer):
                 self.doubleSpinBox_offset.setValue(self.offset_manager.get_offset(self.comboBox_camera.currentText(),
                                                                             self.sensordata.metadata['sn'],
                                                                             self.sensordata.metadata['date']))
+            for label in self.label_storage.get_all_labels(self.sensordata.metadata['sn']):
+                self.dataplot.text(((label[0] - self.sensordata.metadata['datetime']).total_seconds() + (
+                    (label[1] - self.sensordata.metadata['datetime']).total_seconds())) / 2,
+                                   (self.data['Ax'].max() * (3 / 4)), label[2], horizontalalignment='center')
 
     def play(self):
         """
@@ -154,8 +162,6 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         self.label_duration.setText(self.ms_to_time(position))
         self.label_time.setText(str(add_time_strings(self.ms_to_time(position), vm.datetime_with_tz_to_string(
             vm.parse_start_time_from_file(self.video_filename), '%H:%M:%S'))))
-        # if self.sensordata:
-        #     print(self.label_storage.get_all_labels(self.sensordata.metadata['sn']))
 
     def update_plot(self):
         """
@@ -212,7 +218,11 @@ class GUI(QMainWindow, Ui_VideoPlayer):
                                 self.combidt.timestamp())
             dialog.exec_()
             dialog.show()
-            # print(self.label_storage.get_all_labels(self.sensordata.metadata['sn']))
+            if dialog.is_accepted:
+                self.dataplot.text((((datetime.fromtimestamp(dialog.label.start) - self.sensordata.metadata['datetime']).total_seconds())
+                                + ((datetime.fromtimestamp(dialog.label.end) - self.sensordata.metadata[
+                        'datetime']).total_seconds())) / 2,
+                               self.data['Ax'].max() * (3 / 4), dialog.label.label)
 
     def open_settings(self):
         """
@@ -222,6 +232,11 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         settings = SettingsDialog(self.settings)
         settings.exec_()
         settings.show()
+
+    def open_label_settings(self):
+        label_settings = LabelSettingsDialog(self.label_storage)
+        label_settings.exec_()
+        label_settings.show()
 
     def add_camera(self):
         if self.lineEdit_camera.text() and self.lineEdit_camera.text() not in self.camera_manager.get_all_cameras():
@@ -252,3 +267,21 @@ class GUI(QMainWindow, Ui_VideoPlayer):
                                                        self.sensordata.metadata['date']))
                 else:
                     self.doubleSpinBox_offset.setValue(0)
+
+    def onclick(self, event):
+        if self.sensordata:
+            self.new_label = LabelSpecs(self.project_dialog.project_name, self.sensordata.metadata['sn'],
+                                self.combidt.timestamp())
+            self.new_label.doubleSpinBox_start.setValue(event.xdata)
+
+    def onrelease(self, event):
+        if self.sensordata:
+            self.new_label.doubleSpinBox_end.setValue(event.xdata)
+            self.new_label.exec_()
+            if self.new_label.is_accepted:
+                self.dataplot.text(
+                    (((datetime.fromtimestamp(self.new_label.label.start) - self.sensordata.metadata[
+                        'datetime']).total_seconds())
+                     + ((datetime.fromtimestamp(self.new_label.label.end) - self.sensordata.metadata[
+                                'datetime']).total_seconds())) / 2,
+                    self.data['Ax'].max() * (3 / 4), self.new_label.label.label, horizontalalignment='center')

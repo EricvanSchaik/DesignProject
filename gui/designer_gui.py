@@ -180,9 +180,12 @@ class Ui_VideoPlayer(object):
         self.actionOpen_sensordata.setObjectName("actionOpen_sensordata")
         self.actionSettings = QtWidgets.QAction(VideoPlayer)
         self.actionSettings.setObjectName("actionSettings")
+        self.actionLabel_Settings = QtWidgets.QAction(VideoPlayer)
+        self.actionLabel_Settings.setObjectName("actionLabel_Settings")
         self.menuFile.addAction(self.actionOpen_video)
         self.menuFile.addAction(self.actionOpen_sensordata)
         self.menuFile.addAction(self.actionSettings)
+        self.menuFile.addAction(self.actionLabel_Settings)
         self.menuFile.addAction(self.actionExit)
         self.menubar.addAction(self.menuFile.menuAction())
 
@@ -208,7 +211,8 @@ class Ui_VideoPlayer(object):
         self.actionExit.setText(_translate("VideoPlayer", "Exit"))
         self.actionExit.setToolTip(_translate("VideoPlayer", "Exit application"))
         self.actionOpen_sensordata.setText(_translate("VideoPlayer", "Open Sensordata"))
-        self.actionSettings.setText(_translate("VideoPlayer", "Settings"))
+        self.actionSettings.setText(_translate("VideoPlayer", "Import Settings"))
+        self.actionLabel_Settings.setText(_translate("VideoPlayer", "Label Settings"))
 
 from PyQt5.QtMultimedia import QMediaPlayer
 from PyQt5.QtMultimediaWidgets import QVideoWidget
