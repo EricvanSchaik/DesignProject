@@ -235,7 +235,7 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         settings.show()
 
     def open_label_settings(self):
-        label_settings = LabelSettingsDialog()
+        label_settings = LabelSettingsDialog(self.label_storage)
         label_settings.exec_()
         label_settings.show()
 

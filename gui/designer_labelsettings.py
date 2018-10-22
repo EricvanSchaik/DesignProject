@@ -66,7 +66,13 @@ class Ui_Dialog(object):
         self.lineEdit = QtWidgets.QLineEdit(self.verticalLayoutWidget)
         self.lineEdit.setObjectName("lineEdit")
         self.horizontalLayout_3.addWidget(self.lineEdit)
+        self.comboBox_3 = QtWidgets.QComboBox(self.verticalLayoutWidget)
+        self.comboBox_3.setObjectName("comboBox_3")
+        self.horizontalLayout_3.addWidget(self.comboBox_3)
         self.verticalLayout.addLayout(self.horizontalLayout_3)
+        self.pushButton = QtWidgets.QPushButton(self.verticalLayoutWidget)
+        self.pushButton.setObjectName("pushButton")
+        self.verticalLayout.addWidget(self.pushButton)
 
         self.retranslateUi(Dialog)
         self.buttonBox.accepted.connect(Dialog.accept)
@@ -79,4 +85,5 @@ class Ui_Dialog(object):
         self.label.setText(_translate("Dialog", "Labels"))
         self.label_2.setText(_translate("Dialog", "Color"))
         self.label_3.setText(_translate("Dialog", "Add label:"))
+        self.pushButton.setText(_translate("Dialog", "Delete label"))
 
