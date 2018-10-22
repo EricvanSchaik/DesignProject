@@ -18,6 +18,8 @@ sql_get_labels = "SELECT Start_time, End_time, Label_name FROM labelData WHERE S
 sql_get_all_labels = "SELECT * FROM labelData ORDER BY Start_time ASC"
 sql_get_labels_date = "SELECT Start_time, End_time, Label_name FROM labelData WHERE date(Start_time) = ? AND " \
                       "Sensor_id = ? ORDER BY Start_time ASC"
+sql_get_labels_between_dates = "SELECT Start_time, End_time, Label_name FROM labelData WHERE (date(Start_time) " \
+                               "BETWEEN ? AND ?) AND Sensor_id = ? ORDER BY Start_time ASC"
 
 
 class LabelManager:
@@ -34,17 +36,17 @@ class LabelManager:
     def create_tables(self) -> None:
         """Method for creating the necessary label tables in the database."""
         c = self._conn.cursor()
-        c.execute("CREATE TABLE labelType (Name TEXT PRIMARY KEY, Color INTEGER, Description TEXT)")
+        c.execute("CREATE TABLE labelType (Name TEXT PRIMARY KEY, Color TEXT, Description TEXT)")
         c.execute("CREATE TABLE labelData (Start_time TIMESTAMP, End_time TIMESTAMP, Label_name TEXT, Sensor_id TEXT, "
                   "PRIMARY KEY(Start_time, Sensor_id), FOREIGN KEY (Label_name) REFERENCES labelType(Name))")
         self._conn.commit()
 
-    def add_label_type(self, name: str, color: int, desc: str) -> bool:
+    def add_label_type(self, name: str, color: str, desc: str) -> bool:
         """
         Creates a new label type.
 
         :param name: The name of the new label type
-        :param color: The color of the new label represented as an integer
+        :param color: The color of the new label
         :param desc: The description of the label
         :return: boolean indication if the label type was added successfully
         """
@@ -104,12 +106,12 @@ class LabelManager:
         self._cur.execute(sql_upd_name_type, (new_name, old_name))
         self._conn.commit()
 
-    def update_label_color(self, label_name: str, color: int) -> None:
+    def update_label_color(self, label_name: str, color: str) -> None:
         """
         Updates the color of an existing label type.
 
         :param label_name: The name of the label type
-        :param color: The new color that the label type should get, represented as an integer
+        :param color: The new color that the label type should get
         """
         self._cur.execute(sql_upd_color, (color, label_name))
         self._conn.commit()
@@ -135,7 +137,7 @@ class LabelManager:
         self._cur.execute(sql_change_label, (label_name, start_time, sens_id))
         self._conn.commit()
 
-    def get_label_types(self) -> List[Tuple[str, int, str]]:
+    def get_label_types(self) -> List[Tuple[str, str, str]]:
         """
         Returns all label types
 
@@ -163,6 +165,19 @@ class LabelManager:
         :return: List of tuples (start_time, end_time, label_name)
         """
         self._cur.execute(sql_get_labels_date, (date, sensor_id))
+        return self._cur.fetchall()
+
+    def get_labels_between_dates(self, sensor_id: str, start_date: date, end_date: date) \
+            -> List[Tuple[datetime, datetime, str]]:
+        """
+        Returns all the labels for a given sensor between the given dates.
+
+        :param sensor_id: The sensor ID of the sensor for which the labels need to be returned
+        :param start_date: The first date of the interval
+        :param end_date: The second date of the interval
+        :return: List of tuples (start_time, end_time, label_name)
+        """
+        self._cur.execute(sql_get_labels_between_dates, (start_date, end_date, sensor_id))
         return self._cur.fetchall()
 
     # TODO: update export location?
