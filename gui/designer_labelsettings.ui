@@ -115,6 +115,9 @@
       <item>
        <widget class="QLineEdit" name="lineEdit"/>
       </item>
+      <item>
+       <widget class="QComboBox" name="comboBox_3"/>
+      </item>
      </layout>
     </item>
     <item>
