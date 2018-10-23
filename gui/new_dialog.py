@@ -93,6 +93,7 @@ class NewProject(QtWidgets.QDialog, Ui_NewProject):
             self.spinBox_sncol.setEnabled(True)
             self.spinBox_namesrow.setEnabled(True)
             self.lineEdit_comment.setEnabled(True)
+            self.lineEdit.setEnabled(True)
 
             self.spinBox_timerow.setValue(3)
             self.spinBox_timecol.setValue(3)
@@ -116,6 +117,7 @@ class NewProject(QtWidgets.QDialog, Ui_NewProject):
             self.spinBox_sncol.setEnabled(False)
             self.spinBox_namesrow.setEnabled(False)
             self.lineEdit_comment.setEnabled(False)
+            self.lineEdit.setEnabled(False)
 
     def name_changed(self, name):
         self.project_name = name
