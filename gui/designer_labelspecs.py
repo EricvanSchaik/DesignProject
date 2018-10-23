@@ -36,9 +36,6 @@ class Ui_LabelSpecs(object):
         self.comboBox_labels = QtWidgets.QComboBox(self.verticalLayoutWidget_3)
         self.comboBox_labels.setMaximumSize(QtCore.QSize(16777215, 16777215))
         self.comboBox_labels.setObjectName("comboBox_labels")
-        self.comboBox_labels.addItem("")
-        self.comboBox_labels.addItem("")
-        self.comboBox_labels.addItem("")
         self.verticalLayout_4.addWidget(self.comboBox_labels)
         self.verticalLayout_3.addLayout(self.verticalLayout_4)
         self.horizontalLayout = QtWidgets.QHBoxLayout()
@@ -74,9 +71,6 @@ class Ui_LabelSpecs(object):
         _translate = QtCore.QCoreApplication.translate
         LabelSpecs.setWindowTitle(_translate("LabelSpecs", "Dialog"))
         self.label_3.setText(_translate("LabelSpecs", "Label"))
-        self.comboBox_labels.setItemText(0, _translate("LabelSpecs", "Walking"))
-        self.comboBox_labels.setItemText(1, _translate("LabelSpecs", "Trotting"))
-        self.comboBox_labels.setItemText(2, _translate("LabelSpecs", "Standing"))
         self.label.setText(_translate("LabelSpecs", "From (s)"))
         self.label_2.setText(_translate("LabelSpecs", "To (s)"))
 

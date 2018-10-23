@@ -23,6 +23,7 @@ class NewProject(QtWidgets.QDialog, Ui_NewProject):
         for folder in os.listdir("projects"):
             self.comboBox_existing.addItem(folder)
         self.lineEdit_new.textChanged.connect(self.text_changed)
+        self.comboBox_existing.currentTextChanged.connect(self.name_changed)
         self.project_name = ""
         if os.listdir("projects"):
             self.project_name = os.listdir("projects")[0]
@@ -111,6 +112,9 @@ class NewProject(QtWidgets.QDialog, Ui_NewProject):
             self.spinBox_sncol.setEnabled(False)
             self.spinBox_namesrow.setEnabled(False)
             self.lineEdit_comment.setEnabled(False)
+
+    def name_changed(self, name):
+        self.project_name = name
 
     def set_timerow(self, new):
         self.time_row = new
