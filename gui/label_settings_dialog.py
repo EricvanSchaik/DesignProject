@@ -11,6 +11,7 @@ class LabelSettingsDialog(QtWidgets.QDialog, Ui_Dialog):
         self.setupUi(self)
         self.label_manager = label_manager
         self.accepted.connect(self.add_label)
+        self.is_accepted = False
         self.pushButton.clicked.connect(self.delete_label)
         self.comboBox.currentTextChanged.connect(self.label_changed)
         self.comboBox_2.currentTextChanged.connect(self.color_changed)
@@ -25,6 +26,7 @@ class LabelSettingsDialog(QtWidgets.QDialog, Ui_Dialog):
             self.comboBox_2.setCurrentText(self.label_manager.get_label_types()[0][1])
 
     def add_label(self):
+        self.is_accepted = True
         if self.lineEdit.text():
             self.label_manager.add_label_type(self.lineEdit.text(), self.comboBox_3.currentText(), '')
 

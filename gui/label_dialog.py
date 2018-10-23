@@ -8,7 +8,7 @@ from gui.designer_labelspecs import Ui_LabelSpecs
 
 class LabelSpecs(QtWidgets.QDialog, Ui_LabelSpecs):
 
-    def __init__(self, project_name, serial_number, start_time=0):
+    def __init__(self, project_name, serial_number, label_manager: LabelManager, start_time=0):
         super().__init__()
         # Initialize the generated UI from designer_gui.py.
         self.setupUi(self)
@@ -22,8 +22,13 @@ class LabelSpecs(QtWidgets.QDialog, Ui_LabelSpecs):
         self.doubleSpinBox_end.valueChanged.connect(self.stop_changed)
         self.label_manager = LabelManager(project_name)
         self.accepted.connect(self.send_label)
-        self.comboBox_labels.activated.connect(self.label_changed)
+        self.comboBox_labels.currentTextChanged.connect(self.label_changed)
         self.is_accepted = False
+        self.label_manager = label_manager
+        if label_manager.get_label_types():
+            self.label.label = label_manager.get_label_types()[0][0]
+        for label in label_manager.get_label_types():
+            self.comboBox_labels.addItem(label[0])
 
     def start_changed(self, value: float):
         self.label.start = value + self.start_time
@@ -32,12 +37,7 @@ class LabelSpecs(QtWidgets.QDialog, Ui_LabelSpecs):
         self.label.end = value + self.start_time
 
     def label_changed(self, label):
-        if label == 0:
-            self.label.label = 'walking'
-        if label == 1:
-            self.label.label = 'trotting'
-        if label == 2:
-            self.label.label = 'standing'
+        self.label.label = label
 
     def send_label(self):
         self.label_manager.add_label(datetime.fromtimestamp(self.label.start), datetime.fromtimestamp(
@@ -48,7 +48,7 @@ class LabelSpecs(QtWidgets.QDialog, Ui_LabelSpecs):
 class Label:
 
     def __init__(self):
-        self.label = 'walking'
+        self.label = ''
         self.start = 0.00
         self.end = 0.00
 

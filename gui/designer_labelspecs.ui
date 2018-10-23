@@ -89,7 +89,11 @@
          </widget>
         </item>
         <item>
-         <widget class="QDoubleSpinBox" name="doubleSpinBox_start"/>
+         <widget class="QDoubleSpinBox" name="doubleSpinBox_start">
+          <property name="maximum">
+           <double>99999.990000000005239</double>
+          </property>
+         </widget>
         </item>
        </layout>
       </item>
@@ -106,7 +110,11 @@
          </widget>
         </item>
         <item>
-         <widget class="QDoubleSpinBox" name="doubleSpinBox_end"/>
+         <widget class="QDoubleSpinBox" name="doubleSpinBox_end">
+          <property name="maximum">
+           <double>99999.990000000005239</double>
+          </property>
+         </widget>
         </item>
        </layout>
       </item>
