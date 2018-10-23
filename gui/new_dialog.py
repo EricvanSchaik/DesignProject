@@ -37,6 +37,7 @@ class NewProject(QtWidgets.QDialog, Ui_NewProject):
             self.spinBox_sncol.setEnabled(False)
             self.spinBox_namesrow.setEnabled(False)
             self.lineEdit_comment.setEnabled(False)
+            self.lineEdit.setEnabled(False)
         self.time_row = 3
         self.spinBox_timerow.valueChanged.connect(self.set_timerow)
         self.time_col = 3
