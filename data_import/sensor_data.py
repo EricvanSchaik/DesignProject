@@ -1,8 +1,11 @@
-from datetime import datetime
 import re
+from datetime import datetime
+
+import numpy as np
 import pandas as pd
-from data_import import sensor as sens, column_metadata as cm
+
 import parse_function.custom_function_parser as parser
+from data_import import sensor as sens, column_metadata as cm
 from data_import.import_exception import ImportException
 from parse_function.parse_exception import ParseException
 
@@ -63,7 +66,7 @@ class SensorData:
 
     def __init__(self, file_path, settings):
         """
-        The SensorData starts parsing as soon as it's constructed. Only SensorData.data needs to
+        The SensorData starts parsing as soon as it's constructed. Only SensorData.get_data() needs to
         be called in order to get the parsed data. SensorData.metadata contains the metadata.
 
         :param file_path: path to the file to be parsed
@@ -93,7 +96,7 @@ class SensorData:
         self.col_metadata = dict()
 
         # Parse metadata and data
-        self.data = self.parse(settings)
+        self._data = self.parse(settings)
 
     def parse(self, settings):
         """
@@ -179,6 +182,9 @@ class SensorData:
             # create new column metadata and add it to list with metadata
             self.col_metadata[name] = cm.ColumnMetadata(name, data_type, sensor)
 
+    def get_data(self):
+        return self._data.copy()
+
     def add_column_from_func(self, name: str, func: str):
         """
         Constructs a new column in the data frame using a given function.
@@ -192,7 +198,7 @@ class SensorData:
             parsed_expr = parser.parse(func)
 
             # Apply parsed expression to data to create new column
-            self.data.eval(name + " = " + parsed_expr, inplace=True)
+            self._data.eval(name + " = " + parsed_expr, inplace=True)
         except ParseException:
             # Pass ParseException
             raise
@@ -205,5 +211,27 @@ class SensorData:
         :param timestamp_col: The name of the new timestamp column.
         :param time_unit: The time unit of the time column.
         """
-        self.data[timestamp_col] = pd.to_timedelta(self.data[time_col], unit=time_unit) + self.metadata['datetime']
-        # TODO: The parameters 'time_col' and 'timestamp_col' should not have to be passed manually but should beretrieved from the SensorData object.
+        self._data[timestamp_col] = pd.to_timedelta(self._data[time_col], unit=time_unit) + self.metadata['datetime']
+        # TODO: The parameters 'time_col' and 'timestamp_col' should not have to be passed manually but should beretrieved from the SensorData object
+
+    def add_labels(self, label_data: [], label_col: str, timestamp_col: str):
+        START_TIME_INDEX = 0
+        STOP_TIME_INDEX = 1
+        LABEL_INDEX = 2
+
+        # Add Label column to the DataFrame and initialize it to NaN
+        self._data[label_col] = np.nan
+
+        for label_entry in label_data:
+            start_time = label_entry[START_TIME_INDEX]
+            stop_time = label_entry[STOP_TIME_INDEX]
+            label = label_entry[LABEL_INDEX]
+
+            # Add label to the corresponding rows in the sensor data
+            self._data.loc[
+                (self._data[timestamp_col] >= start_time) & (self._data[timestamp_col] < stop_time),
+                label_col
+            ] = label
+
+        # Drop rows where the label is NaN (no label data available)
+        self._data = self._data.dropna(subset=[label_col])
