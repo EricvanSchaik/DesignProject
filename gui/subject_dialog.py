@@ -1,5 +1,5 @@
 from PyQt5 import QtWidgets
-from PyQt5.QtWidgets import QInputDialog, QLineEdit, QTableWidgetItem
+from PyQt5.QtWidgets import QInputDialog, QLineEdit, QTableWidgetItem, QMessageBox
 
 from gui.designer_subject_table import Ui_Subject_table
 from datastorage.subjectmapping import SubjectManager
@@ -14,7 +14,10 @@ class SubjectTable(QtWidgets.QDialog, Ui_Subject_table):
 
         self.project_name = project_name
         self.subject_manager = SubjectManager(project_name)
-        self.row_count = 0
+        self.col_names, self.table_data = self.subject_manager.get_table()
+        self.subject_names = [x[0] for x in self.table_data]
+        print(self.subject_names)
+        self.tableWidget.setColumnCount(len(self.col_names))
 
         # self.accepted.connect()
         self.rowButton.clicked.connect(self.add_row)
@@ -24,20 +27,25 @@ class SubjectTable(QtWidgets.QDialog, Ui_Subject_table):
         self.tableWidget.cellChanged.connect(self.update_cell)
 
     def add_row(self):
-        text, okPressed = QInputDialog.getText(self, "Enter new subject name", "Subject name:", QLineEdit.Normal, "")
-        if okPressed and text != '':
-            print(text)
-        self.tableWidget.insertRow(self.tableWidget.rowCount())
-
+        text, accepted = QInputDialog.getText(self, "Enter new subject name", "Subject name:", QLineEdit.Normal, "")
+        if accepted:
+            if text == '':
+                QMessageBox.warning(self, 'Warning', "Give a subject name", QMessageBox.Cancel)
+                return
+            if text in self.subject_names:
+                QMessageBox.warning(self, 'Warning', "The name of this subject already exists", QMessageBox.Cancel)
+                return
+            self.tableWidget.blockSignals(True)
+            position = self.tableWidget.rowCount()
+            self.tableWidget.insertRow(position)
+            self.tableWidget.setItem(position, 0, QTableWidgetItem(text))
+            self.tableWidget.blockSignals(False)
 
     def add_col(self):
         self.tableWidget.insertColumn(self.tableWidget.columnCount())
 
     def print_00(self):
-        new_item = QTableWidgetItem()
-        new_item.setText("test123321")
-        print(new_item.text())
-        self.tableWidget.setCellWidget(0, 0, new_item)
+        pass
 
     def update_cell(self):
         x = self.tableWidget.currentRow()
