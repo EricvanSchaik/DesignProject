@@ -95,6 +95,8 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         for camera in self.camera_manager.get_all_cameras():
             self.comboBox_camera.addItem(camera)
 
+        self.labeling = False
+
     def open_video(self):
         """
         A helper function that allows a user to open a video in the QMediaPlayer via the menu bar.
@@ -281,43 +283,83 @@ class GUI(QMainWindow, Ui_VideoPlayer):
 
     def onclick(self, event):
         if self.sensordata:
-            self.new_label = LabelSpecs(self.project_dialog.project_name, self.sensordata.metadata['sn'],
-                                        self.label_storage, self.combidt.timestamp())
-            self.new_label.doubleSpinBox_start.setValue(event.xdata)
+            if event.button == 1:
+                self.new_label = LabelSpecs(self.project_dialog.project_name, self.sensordata.metadata['sn'],
+                                            self.label_storage, self.combidt.timestamp())
+                self.new_label.doubleSpinBox_start.setValue(event.xdata)
+            elif event.button == 3:
+                if not self.labeling:
+                    self.large_label = LabelSpecs(self.project_dialog.project_name, self.sensordata.metadata['sn'],
+                                                  self.label_storage, self.combidt.timestamp())
+                    self.large_label.doubleSpinBox_start.setValue(event.xdata)
+                else:
+                    deleting = False
+                    if event.xdata < self.large_label.doubleSpinBox_start.value():
+                        self.large_label.doubleSpinBox_end.setValue(self.large_label.doubleSpinBox_start.value())
+                        self.large_label.doubleSpinBox_start.setValue(event.xdata)
+                    else:
+                        self.large_label.doubleSpinBox_end.setValue(event.xdata)
+                    start = self.large_label.doubleSpinBox_start.value()
+                    end = self.large_label.doubleSpinBox_end.value()
+                    for label in self.label_storage.get_all_labels(self.sensordata.metadata['sn']):
+                        label_start = (label[0] - self.sensordata.metadata['datetime']).total_seconds()
+                        label_end = (label[1] - self.sensordata.metadata['datetime']).total_seconds()
+                        if label_start < start < label_end and label_start < end < label_end:
+                            deleting = True
+                            delete_label = label
+                            break
+                        elif label_start < start < label_end or label_start < end < label_end:
+                            if label_start < start < label_end:
+                                self.large_label.doubleSpinBox_start.setValue(label_end)
+                            else:
+                                self.large_label.doubleSpinBox_end.setValue(label_start)
+                    if deleting:
+                        reply = QMessageBox.question(self, 'Message', "Are you sure you want to delete this label?",
+                                                     QMessageBox.Yes, QMessageBox.No)
+                        if reply == QMessageBox.Yes:
+                            self.label_storage.delete_label(delete_label[0], self.sensordata.metadata['sn'])
+                            self.reset_graph()
+                    else:
+                        self.large_label.exec_()
+                    if self.large_label.is_accepted:
+                        self.reset_graph()
+                self.labeling = not self.labeling
 
     def onrelease(self, event):
         if self.sensordata:
-            deleting = False
-            if event.xdata < self.new_label.doubleSpinBox_start.value():
-                self.new_label.doubleSpinBox_end.setValue(self.new_label.doubleSpinBox_start.value())
-                self.new_label.doubleSpinBox_start.setValue(event.xdata)
-            else:
-                self.new_label.doubleSpinBox_end.setValue(event.xdata)
-            start = self.new_label.doubleSpinBox_start.value()
-            end = self.new_label.doubleSpinBox_end.value()
-            for label in self.label_storage.get_all_labels(self.sensordata.metadata['sn']):
-                label_start = (label[0] - self.sensordata.metadata['datetime']).total_seconds()
-                label_end = (label[1] - self.sensordata.metadata['datetime']).total_seconds()
-                if label_start < start < label_end and label_start < end < label_end:
-                    deleting = True
-                    delete_label = label
-                    break
-                elif label_start < start < label_end or label_start < end < label_end:
-                    if label_start < start < label_end:
-                        print(label_end)
-                        self.new_label.doubleSpinBox_start.setValue(label_end)
-                    else:
-                        self.new_label.doubleSpinBox_end.setValue(label_start)
-            if deleting:
-                reply = QMessageBox.question(self, 'Message', "Are you sure you want to delete this label?",
-                                             QMessageBox.Yes, QMessageBox.No)
-                if reply == QMessageBox.Yes:
-                    self.label_storage.delete_label(delete_label[0], self.sensordata.metadata['sn'])
+            if event.button == 1:
+                deleting = False
+                if event.xdata < self.new_label.doubleSpinBox_start.value():
+                    self.new_label.doubleSpinBox_end.setValue(self.new_label.doubleSpinBox_start.value())
+                    self.new_label.doubleSpinBox_start.setValue(event.xdata)
+                else:
+                    self.new_label.doubleSpinBox_end.setValue(event.xdata)
+                start = self.new_label.doubleSpinBox_start.value()
+                end = self.new_label.doubleSpinBox_end.value()
+                for label in self.label_storage.get_all_labels(self.sensordata.metadata['sn']):
+                    label_start = (label[0] - self.sensordata.metadata['datetime']).total_seconds()
+                    label_end = (label[1] - self.sensordata.metadata['datetime']).total_seconds()
+                    if label_start < start < label_end and label_start < end < label_end:
+                        deleting = True
+                        delete_label = label
+                        break
+                    elif label_start < start < label_end or label_start < end < label_end:
+                        if label_start < start < label_end:
+                            self.new_label.doubleSpinBox_start.setValue(label_end)
+                        else:
+                            self.new_label.doubleSpinBox_end.setValue(label_start)
+                if deleting:
+                    reply = QMessageBox.question(self, 'Message', "Are you sure you want to delete this label?",
+                                                 QMessageBox.Yes, QMessageBox.No)
+                    if reply == QMessageBox.Yes:
+                        self.label_storage.delete_label(delete_label[0], self.sensordata.metadata['sn'])
+                        self.reset_graph()
+                else:
+                    self.new_label.exec_()
+                if self.new_label.is_accepted:
                     self.reset_graph()
-            else:
-                self.new_label.exec_()
-            if self.new_label.is_accepted:
-                self.reset_graph()
+            elif event.button == 3:
+                pass
 
     def reset_graph(self):
         self.dataplot.clear()
