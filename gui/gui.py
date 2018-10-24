@@ -49,6 +49,7 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         self.pushButton_label.clicked.connect(self.open_label)
         self.actionSettings.triggered.connect(self.open_settings)
         self.actionLabel_Settings.triggered.connect(self.open_label_settings)
+        self.comboBox_camera.currentTextChanged.connect(self.change_camera)
         self.lineEdit_camera.returnPressed.connect(self.add_camera)
         self.doubleSpinBox_offset.valueChanged.connect(self.change_offset)
         self.pushButton_camera_ok.clicked.connect(self.add_camera)
@@ -123,32 +124,7 @@ class GUI(QMainWindow, Ui_VideoPlayer):
             self.figure.clear()
             self.dataplot = self.figure.add_subplot(111)
 
-            for label_type in self.label_storage.get_label_types():
-                self.color_dict[label_type[0]] = label_type[1]
-            labels = self.label_storage.get_all_labels(self.sensordata.metadata['sn'])
-            if labels:
-                for i in range(len(labels)):
-                    label_start = (labels[i][0] - self.sensordata.metadata['datetime']).total_seconds()
-                    label_end = (labels[i][1] - self.sensordata.metadata['datetime']).total_seconds()
-                    subdata = self.data.where(label_start < self.data['Time'])
-                    subdata = subdata.where(self.data['Time'] < label_end)
-                    self.dataplot.plot(subdata['Time'], subdata['Ax'], ',-', linewidth=1, color=self.color_dict[
-                        labels[i][2]])
-                    if not i:
-                        subdata = self.data.where(self.data['Time'] < label_start)
-                        self.dataplot.plot(subdata['Time'], subdata['Ax'], ',-', linewidth=1, color='grey')
-                    if i == (len(labels)-1):
-                        subdata = self.data.where(self.data['Time'] > label_end)
-                        self.dataplot.plot(subdata['Time'], subdata['Ax'], ',-', linewidth=1, color='grey')
-                    else:
-                        subdata = self.data.where(self.data['Time'] > label_end)
-                        subdata = subdata.where(subdata['Time'] < (labels[i+1][0] - self.sensordata.metadata[
-                            'datetime']).total_seconds())
-                        self.dataplot.plot(subdata['Time'], subdata['Ax'], ',-', linewidth=1, color='grey')
-            else:
-                self.dataplot.plot(self.data['Time'], self.data['Ax'], ',-', linewidth=1, color='grey')
-            self.vertical_line = self.dataplot.axvline(x=0)
-            self.vertical_line.set_color('red')
+            self.reset_graph()
             self.dataplot.axis([10, 10, self.data['Ax'].min(), self.data['Ax'].max()])
             self.timer.timeout.connect(self.update_plot)
             self.timer.start(1)
@@ -157,10 +133,6 @@ class GUI(QMainWindow, Ui_VideoPlayer):
                 self.doubleSpinBox_offset.setValue(self.offset_manager.get_offset(self.comboBox_camera.currentText(),
                                                                             self.sensordata.metadata['sn'],
                                                                             self.sensordata.metadata['date']))
-            for label in self.label_storage.get_all_labels(self.sensordata.metadata['sn']):
-                self.dataplot.text(((label[0] - self.sensordata.metadata['datetime']).total_seconds() + (
-                    (label[1] - self.sensordata.metadata['datetime']).total_seconds())) / 2,
-                                   (self.data['Ax'].max() * (3 / 4)), label[2], horizontalalignment='center')
 
     def play(self):
         """
@@ -273,6 +245,16 @@ class GUI(QMainWindow, Ui_VideoPlayer):
             self.comboBox_camera.addItem(self.lineEdit_camera.text())
             self.comboBox_camera.setCurrentText(self.lineEdit_camera.text())
             self.lineEdit_camera.clear()
+            if self.comboBox_camera.currentText() and self.sensordata:
+                self.doubleSpinBox_offset.setValue(self.offset_manager.get_offset(self.comboBox_camera.currentText(),
+                                                                            self.sensordata.metadata['sn'],
+                                                                            self.sensordata.metadata['date']))
+
+    def change_camera(self):
+        if self.comboBox_camera.currentText() and self.sensordata:
+            self.doubleSpinBox_offset.setValue(self.offset_manager.get_offset(self.comboBox_camera.currentText(),
+                                                                              self.sensordata.metadata['sn'],
+                                                                              self.sensordata.metadata['date']))
 
     def change_offset(self):
         if self.comboBox_camera.currentText():
@@ -298,6 +280,7 @@ class GUI(QMainWindow, Ui_VideoPlayer):
                     self.doubleSpinBox_offset.setValue(0)
 
     def onclick(self, event):
+        # print(self.label_storage.get_all_labels(self.sensordata.metadata['sn']))
         if self.sensordata:
             self.new_label = LabelSpecs(self.project_dialog.project_name, self.sensordata.metadata['sn'],
                                         self.label_storage, self.combidt.timestamp())
@@ -306,6 +289,8 @@ class GUI(QMainWindow, Ui_VideoPlayer):
     def onrelease(self, event):
         if self.sensordata:
             self.new_label.doubleSpinBox_end.setValue(event.xdata)
+            # for label in self.label_storage.get_all_labels(self.sensordata['sn']):
+            #     label_start = (label[0] - self.sensordata.metadata['datetime']).total_seconds()
             self.new_label.exec_()
             if self.new_label.is_accepted:
                 self.reset_graph()
