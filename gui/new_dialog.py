@@ -106,6 +106,10 @@ class NewProject(QtWidgets.QDialog, Ui_NewProject):
             self.spinBox_namesrow.setValue(8)
             self.lineEdit_comment.setText(";")
         else:
+            if os.listdir("projects"):
+                self.project_name = os.listdir("projects")[0]
+            else:
+                self.project_name = ""
             self.comboBox_existing.setEnabled(True)
             self.spinBox_timerow.setEnabled(False)
             self.spinBox_timecol.setEnabled(False)
@@ -159,6 +163,9 @@ class NewProject(QtWidgets.QDialog, Ui_NewProject):
         if self.lineEdit_new.text() in [self.comboBox_existing.itemText(i) for i in range(
                 self.comboBox_existing.count())]:
             QMessageBox.warning(self, 'Warning', "The name of your new project already exists",
+                                QMessageBox.Cancel)
+        elif not self.project_name:
+            QMessageBox.warning(self, 'Warning', "Choose a name for your project",
                                 QMessageBox.Cancel)
         else:
             super().accept()

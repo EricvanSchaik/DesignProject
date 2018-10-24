@@ -27,6 +27,7 @@ class SettingsDialog(NewProject):
         self.spinBox_sncol.setEnabled(True)
         self.spinBox_namesrow.setEnabled(True)
         self.lineEdit_comment.setEnabled(True)
+        self.lineEdit.setEnabled(True)
 
         self.spinBox_timerow.setValue(settings.get_setting("time_row"))
         self.spinBox_timecol.setValue(settings.get_setting("time_col"))

@@ -63,6 +63,7 @@ class GUI(QMainWindow, Ui_VideoPlayer):
 
         # Connect the usage of the slider to its appropriate helper function.
         self.horizontalSlider.sliderMoved.connect(self.set_position)
+        self.horizontalSlider.setEnabled(False)
 
         # Initialize the libraries that are needed to plot the sensor data, and add them to the GUI.
         self.figure = matplotlib.pyplot.figure()
@@ -103,6 +104,7 @@ class GUI(QMainWindow, Ui_VideoPlayer):
             self.mediaplayer.setMedia(QMediaContent(QUrl.fromLocalFile(self.video_filename)))
             self.mediaplayer.play()
             self.playButton.setEnabled(True)
+            self.horizontalSlider.setEnabled(True)
             self.label_date.setText(vm.datetime_with_tz_to_string(vm.parse_start_time_from_file(self.video_filename),
                                                                   '%d-%B-%Y'))
             self.label_time.setText(vm.datetime_with_tz_to_string(vm.parse_start_time_from_file(self.video_filename),
