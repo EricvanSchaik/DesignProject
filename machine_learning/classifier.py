@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 
 from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import GaussianNB
@@ -12,50 +13,14 @@ from data_export import windowing as wd
 
 class Classifier:
 
-    def __init__(self, classifier, sensor_data: sd.SensorData, label_data: ld.LabelData, label_col: str='Label',
-                 timestamp_col: str='Timestamp'):
+    def __init__(self, classifier, df: pd.DataFrame, used_cols: [str], label_col: str='Label', timestamp_col: str='Timestamp'):
         self.classifier = classifier
-        self.sensor_data = sensor_data.data
-        self.label_data = label_data.get_data()
+        self.df = df
+        self.used_cols = used_cols
         self.label_col = label_col
         self.timestamp_col = timestamp_col
 
-        self.add_labels_to_data()
-        self.sensor_data = wd.windowing(self.sensor_data, self.label_col, self.timestamp_col)
-
-    def get_sensor_data(self):
-        return self.sensor_data
-
-    def add_labels_to_data(self):
-        """
-        Add a label column to a DataFrame and fill it with provided labels.
-
-        :param label_col: The name of the label column.
-        :param timestamp_col: The name of the timestamp column.
-        :return: Sensor data DataFrame where a label column has been added.
-        """
-        START_TIME_INDEX = 0
-        STOP_TIME_INDEX = 1
-        LABEL_INDEX = 2
-
-        # Add Label column to the DataFrame and initialize it to NaN
-        self.sensor_data[self.label_col] = np.nan
-
-        for label_entry in self.label_data:
-            start_time = label_entry[START_TIME_INDEX]
-            stop_time = label_entry[STOP_TIME_INDEX]
-            label = label_entry[LABEL_INDEX]
-
-            # Add label to the corresponding rows in the sensor data
-            self.sensor_data.loc[
-                (self.sensor_data[self.timestamp_col] >= start_time) & (self.sensor_data[self.timestamp_col] < stop_time),
-                self.label_col
-            ] = label
-
-        # Drop rows where the label is NaN (no label data available)
-        self.sensor_data = self.sensor_data.dropna(subset=[self.label_col])
-
-    def classify(self, used_features: [str]):
+    def classify(self):
         """
         Makes class predictions for datasets.
 
@@ -66,22 +31,27 @@ class Classifier:
         :return: list of tuples: First element of tuple is predicted class, second element is a list of probabilities
             for each class.
         """
-        train_set, test_set = train_test_split(self.sensor_data, test_size=0.3)
+        train_set, test_set = train_test_split(self.df, test_size=0.5, random_state=0)
 
         self.classifier.fit(
-            train_set[used_features],
-            train_set['Label']
+            train_set[self.used_cols],
+            train_set[self.label_col]
         )
 
-        preds = self.classifier.predict(test_set[used_features])
-        probs = self.classifier.predict_proba(test_set[used_features])
+        classes = self.classifier
 
-        true_labels = list(test_set['Label'])
+        preds = self.classifier.predict(test_set[self.used_cols])
+        probs = self.classifier.predict_proba(test_set[self.used_cols])
+
+        true_labels = list(test_set[self.label_col])
         res = []
 
         if len(preds) == len(true_labels):
+
             for i in range(0, len(preds)):
-                res.append([preds[i], round(max(probs[i][0], probs[i][1]), 2)])
+
+                if preds[i] != true_labels[i]:
+                    res.append([preds[i], true_labels[i], round(max(probs[i]), 2)])
 
         return res
 
@@ -91,15 +61,29 @@ if __name__ == '__main__':
     PROJECT_DIR = 'test_project'
     SENSOR_ID = 'CCDC301661B33D7'
 
+    LABEL_COL = 'Label'
+    TIME_COL = 'Time'
+    TIMESTAMP_COL = 'Timestamp'
+
     sensor_data = sd.SensorData(SENSOR_FILE, sdt.test_settings())
     label_manager = ls.LabelManager(PROJECT_DIR)
     label_data = ld.LabelData(SENSOR_ID, label_manager)
 
-    sensor_data.add_timestamp_column('Time', 'Timestamp')
-    sensor_data.add_column_from_func("Vector", "sqrt(Ax^2 + Ay^2 + Az^2)")
-    clsf = Classifier(GaussianNB(), sensor_data, label_data)
-    print(clsf.get_sensor_data()[['Time', 'Vector']])
-    # res = clsf.classify(['Vector'])
-    #
-    # for x in res:
-    #     print(x)
+    # Prepare the sensor data for use by classifier
+    sensor_data.add_timestamp_column(TIME_COL, TIMESTAMP_COL)
+    sensor_data.add_column_from_func('Vector', 'sqrt(Ax^2 + Ay^2 + Az^2)')
+    sensor_data.add_labels(label_data.get_data(), LABEL_COL, TIMESTAMP_COL)
+    data = sensor_data.get_data()
+
+    # Remove data points where label == 'unknown'
+    data = data[data.Label != 'unknown']
+
+    window_cols = ['Vector']
+    used_cols = ['Vector_mean', 'Vector_std']
+
+    df = wd.windowing2(data, window_cols, LABEL_COL, TIMESTAMP_COL, mean=np.mean, std=np.std)
+    clsf = Classifier(GaussianNB(), df, used_cols)
+    res = clsf.classify()
+
+    for pred in res:
+        print(pred)

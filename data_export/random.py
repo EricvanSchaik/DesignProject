@@ -16,10 +16,11 @@ def wrapper(func, *args, **kwargs):
 
 def test_df():
     sensor_data = sd.SensorData("../data/DATA-001.CSV", settings())
-    size = len(sensor_data.data)
+    data = sensor_data.get_data()
+    size = len(data)
     labels = ['A', 'B']
-    sensor_data.data['Label'] = pd.Series(random.choice(labels) for _ in range(size))
-    return sensor_data.data
+    data['Label'] = pd.Series(random.choice(labels) for _ in range(size))
+    return data
 
 
 def time_df():
