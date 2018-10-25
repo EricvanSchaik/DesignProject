@@ -20,6 +20,7 @@ from gui.label_dialog import LabelSpecs
 from gui.label_settings_dialog import LabelSettingsDialog
 from gui.new_dialog import NewProject
 from gui.settings_dialog import SettingsDialog
+from gui.subject_dialog import SubjectTable
 
 
 def add_time_strings(time1, time2):
@@ -39,8 +40,16 @@ class GUI(QMainWindow, Ui_VideoPlayer):
     def __init__(self):
         super().__init__()
         # Initialize the generated UI from designer_gui.py.
-        self.color_dict = dict()
         self.setupUi(self)
+
+        # Initialize the dictionary that is used to map a label type to a color.
+        self.color_dict = dict()
+
+        # Initialize the dictionary that is used to map the name of a new formula to the formula itself (as a string).
+        self.formula_dict = dict()
+
+        # Initialize the boolean that keeps track if the user is labeling with the right-mouse button.
+        self.labeling = False
 
         # Connect all the buttons to their appropriate helper functions.
         self.playButton.clicked.connect(self.play)
@@ -53,9 +62,11 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         self.lineEdit_camera.returnPressed.connect(self.add_camera)
         self.lineEdit.returnPressed.connect(self.new_plot)
         self.doubleSpinBox_offset.valueChanged.connect(self.change_offset)
-        self.comboBox.activated.connect(self.change_plot)
+        self.doubleSpinBox_speed.valueChanged.connect(self.change_speed)
+        self.comboBox_plot.activated.connect(self.change_plot)
         self.pushButton_camera_ok.clicked.connect(self.add_camera)
         self.pushButton_camera_del.clicked.connect(self.delete_camera)
+        self.actionSubject_Mapping.triggered.connect(self.open_subject_mapping)
 
         # Connect the QMediaPlayer to the right widget.
         self.mediaplayer.setVideoOutput(self.widget)
@@ -97,9 +108,6 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         for camera in self.camera_manager.get_all_cameras():
             self.comboBox_camera.addItem(camera)
 
-        self.labeling = False
-
-        self.formula_dict = dict()
 
     def open_video(self):
         """
@@ -128,9 +136,9 @@ class GUI(QMainWindow, Ui_VideoPlayer):
             self.data = self.sensordata.get_data()
 
             for column in self.data.columns:
-                self.comboBox.addItem(column)
-            self.comboBox.removeItem(0)
-            self.current_plot = self.comboBox.currentText()
+                self.comboBox_plot.addItem(column)
+            self.comboBox_plot.removeItem(0)
+            self.current_plot = self.comboBox_plot.currentText()
 
             self.combidt = self.sensordata.metadata['datetime']
             self.figure.clear()
@@ -252,6 +260,11 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         if label_settings.is_accepted:
             self.reset_graph()
 
+    def open_subject_mapping(self):
+        subject_mapping = SubjectTable(self.project_dialog.project_name)
+        subject_mapping.exec_()
+        subject_mapping.show()
+
     def add_camera(self):
         if self.lineEdit_camera.text() and self.lineEdit_camera.text() not in self.camera_manager.get_all_cameras():
             self.camera_manager.add_camera(self.lineEdit_camera.text())
@@ -293,9 +306,9 @@ class GUI(QMainWindow, Ui_VideoPlayer):
                     self.doubleSpinBox_offset.setValue(0)
 
     def change_plot(self):
-        self.current_plot = self.comboBox.currentText()
-        if self.formula_dict[self.comboBox.currentText()]:
-            self.label_4.setText(self.formula_dict[self.comboBox.currentText()])
+        self.current_plot = self.comboBox_plot.currentText()
+        if self.comboBox_plot.currentText() in self.formula_dict:
+            self.label_current_formula.setText(self.formula_dict[self.comboBox_plot.currentText()])
         self.reset_graph()
 
     def new_plot(self):
@@ -304,13 +317,16 @@ class GUI(QMainWindow, Ui_VideoPlayer):
                 raise Exception
             self.sensordata.add_column_from_func(self.lineEdit_2.text(), self.lineEdit.text())
             self.data = self.sensordata.get_data()
-            self.comboBox.addItem(self.lineEdit_2.text())
+            self.comboBox_plot.addItem(self.lineEdit_2.text())
             self.formula_dict[self.lineEdit_2.text()] = self.lineEdit.text()
             self.lineEdit.clear()
             self.lineEdit_2.clear()
         except:
             QMessageBox.warning(self, 'Warning', "Please enter a valid regular expression",
                                 QMessageBox.Cancel)
+
+    def change_speed(self):
+        self.mediaplayer.setPlaybackRate(self.doubleSpinBox_speed.value())
 
     def onclick(self, event):
         if self.sensordata:
