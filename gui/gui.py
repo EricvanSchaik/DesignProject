@@ -51,7 +51,9 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         self.actionLabel_Settings.triggered.connect(self.open_label_settings)
         self.comboBox_camera.currentTextChanged.connect(self.change_camera)
         self.lineEdit_camera.returnPressed.connect(self.add_camera)
+        self.lineEdit.returnPressed.connect(self.new_plot)
         self.doubleSpinBox_offset.valueChanged.connect(self.change_offset)
+        self.comboBox.activated.connect(self.change_plot)
         self.pushButton_camera_ok.clicked.connect(self.add_camera)
         self.pushButton_camera_del.clicked.connect(self.delete_camera)
 
@@ -97,6 +99,8 @@ class GUI(QMainWindow, Ui_VideoPlayer):
 
         self.labeling = False
 
+        self.formula_dict = dict()
+
     def open_video(self):
         """
         A helper function that allows a user to open a video in the QMediaPlayer via the menu bar.
@@ -122,12 +126,18 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         if filename != '':
             self.sensordata = sensor_data.SensorData(filename, self.settings.settings_dict)
             self.data = self.sensordata.get_data()
+
+            for column in self.data.columns:
+                self.comboBox.addItem(column)
+            self.comboBox.removeItem(0)
+            self.current_plot = self.comboBox.currentText()
+
             self.combidt = self.sensordata.metadata['datetime']
             self.figure.clear()
             self.dataplot = self.figure.add_subplot(111)
 
             self.reset_graph()
-            self.dataplot.axis([10, 10, self.data['Ax'].min(), self.data['Ax'].max()])
+            self.dataplot.axis([10, 10, self.data[self.current_plot].min(), self.data[self.current_plot].max()])
             self.timer.timeout.connect(self.update_plot)
             self.timer.start(1)
             self.canvas.draw()
@@ -135,6 +145,7 @@ class GUI(QMainWindow, Ui_VideoPlayer):
                 self.doubleSpinBox_offset.setValue(self.offset_manager.get_offset(self.comboBox_camera.currentText(),
                                                                             self.sensordata.metadata['sn'],
                                                                             self.sensordata.metadata['date']))
+
 
     def play(self):
         """
@@ -171,7 +182,7 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         """
         xmin = -10 + (self.mediaplayer.position() / 1000) - self.doubleSpinBox_offset.value()
         xmax = 10 + (self.mediaplayer.position() / 1000) - self.doubleSpinBox_offset.value()
-        self.dataplot.axis([xmin, xmax, self.data['Ax'].min(), self.data['Ax'].max()])
+        self.dataplot.axis([xmin, xmax, self.data[self.current_plot].min(), self.data[self.current_plot].max()])
         self.vertical_line.set_xdata((xmin + xmax) / 2)
         self.canvas.draw()
 
@@ -223,7 +234,7 @@ class GUI(QMainWindow, Ui_VideoPlayer):
                 self.dataplot.text((((datetime.fromtimestamp(dialog.label.start) - self.sensordata.metadata['datetime']).total_seconds())
                                 + ((datetime.fromtimestamp(dialog.label.end) - self.sensordata.metadata[
                         'datetime']).total_seconds())) / 2,
-                               self.data['Ax'].max() * (3 / 4), dialog.label.label)
+                               self.data[self.current_plot].max() * (3 / 4), dialog.label.label)
 
     def open_settings(self):
         """
@@ -280,6 +291,26 @@ class GUI(QMainWindow, Ui_VideoPlayer):
                                                        self.sensordata.metadata['date']))
                 else:
                     self.doubleSpinBox_offset.setValue(0)
+
+    def change_plot(self):
+        self.current_plot = self.comboBox.currentText()
+        if self.formula_dict[self.comboBox.currentText()]:
+            self.label_4.setText(self.formula_dict[self.comboBox.currentText()])
+        self.reset_graph()
+
+    def new_plot(self):
+        try:
+            if not self.lineEdit_2.text():
+                raise Exception
+            self.sensordata.add_column_from_func(self.lineEdit_2.text(), self.lineEdit.text())
+            self.data = self.sensordata.get_data()
+            self.comboBox.addItem(self.lineEdit_2.text())
+            self.formula_dict[self.lineEdit_2.text()] = self.lineEdit.text()
+            self.lineEdit.clear()
+            self.lineEdit_2.clear()
+        except:
+            QMessageBox.warning(self, 'Warning', "Please enter a valid regular expression",
+                                QMessageBox.Cancel)
 
     def onclick(self, event):
         if self.sensordata:
@@ -371,26 +402,26 @@ class GUI(QMainWindow, Ui_VideoPlayer):
             for i in range(len(labels)):
                 label_start = (labels[i][0] - self.sensordata.metadata['datetime']).total_seconds()
                 label_end = (labels[i][1] - self.sensordata.metadata['datetime']).total_seconds()
-                subdata = self.data.where(label_start < self.data['Time'])
-                subdata = subdata.where(self.data['Time'] < label_end)
-                self.dataplot.plot(subdata['Time'], subdata['Ax'], ',-', linewidth=1, color=self.color_dict[
+                subdata = self.data.where(label_start < self.data[self.data.columns[0]])
+                subdata = subdata.where(self.data[self.data.columns[0]] < label_end)
+                self.dataplot.plot(subdata[self.data.columns[0]], subdata[self.current_plot], ',-', linewidth=1, color=self.color_dict[
                     labels[i][2]])
                 if not i:
-                    subdata = self.data.where(self.data['Time'] < label_start)
-                    self.dataplot.plot(subdata['Time'], subdata['Ax'], ',-', linewidth=1, color='grey')
+                    subdata = self.data.where(self.data[self.data.columns[0]] < label_start)
+                    self.dataplot.plot(subdata[self.data.columns[0]], subdata[self.current_plot], ',-', linewidth=1, color='grey')
                 if i == (len(labels) - 1):
-                    subdata = self.data.where(self.data['Time'] > label_end)
-                    self.dataplot.plot(subdata['Time'], subdata['Ax'], ',-', linewidth=1, color='grey')
+                    subdata = self.data.where(self.data[self.data.columns[0]] > label_end)
+                    self.dataplot.plot(subdata[self.data.columns[0]], subdata[self.current_plot], ',-', linewidth=1, color='grey')
                 else:
-                    subdata = self.data.where(self.data['Time'] > label_end)
-                    subdata = subdata.where(subdata['Time'] < (labels[i + 1][0] - self.sensordata.metadata[
+                    subdata = self.data.where(self.data[self.data.columns[0]] > label_end)
+                    subdata = subdata.where(subdata[self.data.columns[0]] < (labels[i + 1][0] - self.sensordata.metadata[
                         'datetime']).total_seconds())
-                    self.dataplot.plot(subdata['Time'], subdata['Ax'], ',-', linewidth=1, color='grey')
+                    self.dataplot.plot(subdata[self.data.columns[0]], subdata[self.current_plot], ',-', linewidth=1, color='grey')
         else:
-            self.dataplot.plot(self.data['Time'], self.data['Ax'], ',-', linewidth=1, color='grey')
+            self.dataplot.plot(self.data[self.data.columns[0]], self.data[self.current_plot], ',-', linewidth=1, color='grey')
         self.vertical_line = self.dataplot.axvline(x=0)
         self.vertical_line.set_color('red')
         for label in self.label_storage.get_all_labels(self.sensordata.metadata['sn']):
             self.dataplot.text(((label[0] - self.sensordata.metadata['datetime']).total_seconds() + (
                 (label[1] - self.sensordata.metadata['datetime']).total_seconds())) / 2,
-                               (self.data['Ax'].max() * (3 / 4)), label[2], horizontalalignment='center')
+                               (self.data[self.current_plot].max() * (3 / 4)), label[2], horizontalalignment='center')
