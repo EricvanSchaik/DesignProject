@@ -1,11 +1,12 @@
 from datetime import datetime
 
 from PyQt5 import QtWidgets
-from PyQt5.QtCore import QDate
-from PyQt5.QtWidgets import QInputDialog, QLineEdit, QTableWidgetItem, QMessageBox, QDateEdit
+from PyQt5.QtCore import QDate, QStringListModel
+from PyQt5.QtWidgets import QInputDialog, QLineEdit, QTableWidgetItem, QMessageBox, QDateEdit, QComboBox
 
 from gui.designer_subject_table import Ui_Subject_table
 from datastorage.subjectmapping import SubjectManager
+from datastorage.labelstorage import LabelManager
 
 
 class SubjectTable(QtWidgets.QDialog, Ui_Subject_table):
@@ -19,6 +20,7 @@ class SubjectTable(QtWidgets.QDialog, Ui_Subject_table):
         self.subject_manager = SubjectManager(project_name)
         self.col_names, self.table_data = self.subject_manager.get_table()
         self.subject_names = [x[0] for x in self.table_data]
+        self.sensorIDs = LabelManager(self.project_name).get_sensor_ids()
         self.tableWidget.setColumnCount(len(self.col_names))
         self.tableWidget.setRowCount(len(self.table_data))
 
@@ -28,14 +30,24 @@ class SubjectTable(QtWidgets.QDialog, Ui_Subject_table):
         for i in range(len(self.table_data)):
             for j in range(len(self.table_data[i])):
                 item = self.table_data[i][j]
-                # TODO: get sensor IDs from database and use drop-down menu
-                if j == 2 or j == 3:
+                if j == 1:  # sensor id column
+                    combo_box = QComboBox()
+                    combo_box.setModel(QStringListModel())
+                    if item is None:
+                        combo_box.addItem("")
+                    combo_box.addItems(self.sensorIDs)
+                    combo_box.setCurrentText(item)
+                    combo_box.currentTextChanged.connect(self.update_sensor_id)
+                    self.tableWidget.setCellWidget(i, j, combo_box)
+                elif j == 2 or j == 3:  # date columns
                     date_item = QDateEdit(QDate(item.year, item.month, item.day))
                     date_item.dateChanged.connect(self.update_date)
                     self.tableWidget.setCellWidget(i, j, date_item)
                 else:
                     self.tableWidget.setItem(i, j, QTableWidgetItem(item))
         self.tableWidget.blockSignals(False)
+
+        self.tableWidget.resizeColumnToContents(1)
 
         self.closeButton.clicked.connect(self.close)
         self.rowButton.clicked.connect(self.add_row)
@@ -61,6 +73,15 @@ class SubjectTable(QtWidgets.QDialog, Ui_Subject_table):
             self.subject_names += [text]
             self.subject_manager.add_subject(text)
 
+            # sensor id column
+            combo_box = QComboBox()
+            combo_box.setModel(QStringListModel())
+            combo_box.addItem("")
+            combo_box.addItems(self.sensorIDs)
+            combo_box.currentTextChanged.connect(self.update_sensor_id)
+            self.tableWidget.setCellWidget(position, 1, combo_box)
+
+            # date columns
             start_date = QDateEdit(QDate.currentDate())
             start_date.dateChanged.connect(self.update_date)
             end_date = QDateEdit(QDate.currentDate())
@@ -88,6 +109,9 @@ class SubjectTable(QtWidgets.QDialog, Ui_Subject_table):
             self.col_names += [text]
 
     def delete_row(self):
+        if len(self.subject_names) == 0:
+            self.show_warning("There is no subject that can be removed")
+            return
         subject, accepted = QInputDialog.getItem(self, "Select a subject",
                                                  "Select a subject to remove", self.subject_names, 0, False)
         if accepted:
@@ -98,7 +122,7 @@ class SubjectTable(QtWidgets.QDialog, Ui_Subject_table):
 
     def delete_column(self):
         if len(self.col_names) == 4:
-            self.show_warning("There is no column that can be deleted")
+            self.show_warning("There is no column that can be removed")
             return
 
         col_name, accepted = QInputDialog.getItem(self, "Select a column",
@@ -120,14 +144,19 @@ class SubjectTable(QtWidgets.QDialog, Ui_Subject_table):
                 self.tableWidget.blockSignals(False)
                 return
             self.subject_manager.update_subject(self.subject_names[row], new_value)
-            self.subject_names[row] = subject
-
-        elif col == 1:  # sensor ID
-            self.subject_manager.update_sensor(self.subject_names[row], new_value)
+            self.subject_names[row] = new_value
 
         else:  # user-made column
             col_name = self.tableWidget.horizontalHeaderItem(col).text()
             self.subject_manager.update_user_column(col_name, subject, new_value)
+
+    def update_sensor_id(self, sensor_id):
+        row = self.tableWidget.currentRow()
+        combo_box = self.tableWidget.cellWidget(row, self.tableWidget.currentColumn())
+        if "" in combo_box.model().stringList():
+            combo_box.removeItem(0)
+        subject = self.subject_names[row]
+        self.subject_manager.update_sensor(subject, sensor_id)
 
     def update_date(self, date: QDate):
         row = self.tableWidget.currentRow()

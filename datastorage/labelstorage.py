@@ -20,6 +20,7 @@ sql_get_labels_date = "SELECT Start_time, End_time, Label_name FROM labelData WH
                       "Sensor_id = ? ORDER BY Start_time ASC"
 sql_get_labels_between_dates = "SELECT Start_time, End_time, Label_name FROM labelData WHERE (date(Start_time) " \
                                "BETWEEN ? AND ?) AND Sensor_id = ? ORDER BY Start_time ASC"
+sql_get_sensor_ids = "SELECT DISTINCT Sensor_id FROM labelData"
 
 
 class LabelManager:
@@ -179,6 +180,10 @@ class LabelManager:
         """
         self._cur.execute(sql_get_labels_between_dates, (start_date, end_date, sensor_id))
         return self._cur.fetchall()
+
+    def get_sensor_ids(self) -> List[str]:
+        self._cur.execute(sql_get_sensor_ids)
+        return [x[0] for x in self._cur.fetchall()]
 
     # TODO: update export location?
     def export_labels_all(self) -> None:
