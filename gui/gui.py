@@ -20,6 +20,7 @@ from gui.label_dialog import LabelSpecs
 from gui.label_settings_dialog import LabelSettingsDialog
 from gui.new_dialog import NewProject
 from gui.settings_dialog import SettingsDialog
+from gui.subject_dialog import SubjectTable
 
 
 def add_time_strings(time1, time2):
@@ -39,8 +40,16 @@ class GUI(QMainWindow, Ui_VideoPlayer):
     def __init__(self):
         super().__init__()
         # Initialize the generated UI from designer_gui.py.
-        self.color_dict = dict()
         self.setupUi(self)
+
+        # Initialize the dictionary that is used to map a label type to a color.
+        self.color_dict = dict()
+
+        # Initialize the dictionary that is used to map the name of a new formula to the formula itself (as a string).
+        self.formula_dict = dict()
+
+        # Initialize the boolean that keeps track if the user is labeling with the right-mouse button.
+        self.labeling = False
 
         # Connect all the buttons to their appropriate helper functions.
         self.playButton.clicked.connect(self.play)
@@ -51,9 +60,13 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         self.actionLabel_Settings.triggered.connect(self.open_label_settings)
         self.comboBox_camera.currentTextChanged.connect(self.change_camera)
         self.lineEdit_camera.returnPressed.connect(self.add_camera)
+        self.lineEdit.returnPressed.connect(self.new_plot)
         self.doubleSpinBox_offset.valueChanged.connect(self.change_offset)
+        self.doubleSpinBox_speed.valueChanged.connect(self.change_speed)
+        self.comboBox_plot.activated.connect(self.change_plot)
         self.pushButton_camera_ok.clicked.connect(self.add_camera)
         self.pushButton_camera_del.clicked.connect(self.delete_camera)
+        self.actionSubject_Mapping.triggered.connect(self.open_subject_mapping)
 
         # Connect the QMediaPlayer to the right widget.
         self.mediaplayer.setVideoOutput(self.widget)
@@ -95,6 +108,7 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         for camera in self.camera_manager.get_all_cameras():
             self.comboBox_camera.addItem(camera)
 
+
     def open_video(self):
         """
         A helper function that allows a user to open a video in the QMediaPlayer via the menu bar.
@@ -120,12 +134,18 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         if filename != '':
             self.sensordata = sensor_data.SensorData(filename, self.settings.settings_dict)
             self.data = self.sensordata.get_data()
+
+            for column in self.data.columns:
+                self.comboBox_plot.addItem(column)
+            self.comboBox_plot.removeItem(0)
+            self.current_plot = self.comboBox_plot.currentText()
+
             self.combidt = self.sensordata.metadata['datetime']
             self.figure.clear()
             self.dataplot = self.figure.add_subplot(111)
 
             self.reset_graph()
-            self.dataplot.axis([10, 10, self.data['Ax'].min(), self.data['Ax'].max()])
+            self.dataplot.axis([10, 10, self.data[self.current_plot].min(), self.data[self.current_plot].max()])
             self.timer.timeout.connect(self.update_plot)
             self.timer.start(1)
             self.canvas.draw()
@@ -133,6 +153,7 @@ class GUI(QMainWindow, Ui_VideoPlayer):
                 self.doubleSpinBox_offset.setValue(self.offset_manager.get_offset(self.comboBox_camera.currentText(),
                                                                             self.sensordata.metadata['sn'],
                                                                             self.sensordata.metadata['date']))
+
 
     def play(self):
         """
@@ -169,7 +190,7 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         """
         xmin = -10 + (self.mediaplayer.position() / 1000) - self.doubleSpinBox_offset.value()
         xmax = 10 + (self.mediaplayer.position() / 1000) - self.doubleSpinBox_offset.value()
-        self.dataplot.axis([xmin, xmax, self.data['Ax'].min(), self.data['Ax'].max()])
+        self.dataplot.axis([xmin, xmax, self.data[self.current_plot].min(), self.data[self.current_plot].max()])
         self.vertical_line.set_xdata((xmin + xmax) / 2)
         self.canvas.draw()
 
@@ -221,7 +242,7 @@ class GUI(QMainWindow, Ui_VideoPlayer):
                 self.dataplot.text((((datetime.fromtimestamp(dialog.label.start) - self.sensordata.metadata['datetime']).total_seconds())
                                 + ((datetime.fromtimestamp(dialog.label.end) - self.sensordata.metadata[
                         'datetime']).total_seconds())) / 2,
-                               self.data['Ax'].max() * (3 / 4), dialog.label.label)
+                               self.data[self.current_plot].max() * (3 / 4), dialog.label.label)
 
     def open_settings(self):
         """
@@ -238,6 +259,11 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         label_settings.show()
         if label_settings.is_accepted:
             self.reset_graph()
+
+    def open_subject_mapping(self):
+        subject_mapping = SubjectTable(self.project_dialog.project_name)
+        subject_mapping.exec_()
+        subject_mapping.show()
 
     def add_camera(self):
         if self.lineEdit_camera.text() and self.lineEdit_camera.text() not in self.camera_manager.get_all_cameras():
@@ -279,45 +305,108 @@ class GUI(QMainWindow, Ui_VideoPlayer):
                 else:
                     self.doubleSpinBox_offset.setValue(0)
 
+    def change_plot(self):
+        self.current_plot = self.comboBox_plot.currentText()
+        if self.comboBox_plot.currentText() in self.formula_dict:
+            self.label_current_formula.setText(self.formula_dict[self.comboBox_plot.currentText()])
+        self.reset_graph()
+
+    def new_plot(self):
+        try:
+            if not self.lineEdit_2.text():
+                raise Exception
+            self.sensordata.add_column_from_func(self.lineEdit_2.text(), self.lineEdit.text())
+            self.data = self.sensordata.get_data()
+            self.comboBox_plot.addItem(self.lineEdit_2.text())
+            self.formula_dict[self.lineEdit_2.text()] = self.lineEdit.text()
+            self.lineEdit.clear()
+            self.lineEdit_2.clear()
+        except:
+            QMessageBox.warning(self, 'Warning', "Please enter a valid regular expression",
+                                QMessageBox.Cancel)
+
+    def change_speed(self):
+        self.mediaplayer.setPlaybackRate(self.doubleSpinBox_speed.value())
+
     def onclick(self, event):
         if self.sensordata:
-            self.new_label = LabelSpecs(self.project_dialog.project_name, self.sensordata.metadata['sn'],
-                                        self.label_storage, self.combidt.timestamp())
-            self.new_label.doubleSpinBox_start.setValue(event.xdata)
+            if event.button == 1:
+                self.new_label = LabelSpecs(self.project_dialog.project_name, self.sensordata.metadata['sn'],
+                                            self.label_storage, self.combidt.timestamp())
+                self.new_label.doubleSpinBox_start.setValue(event.xdata)
+            elif event.button == 3:
+                if not self.labeling:
+                    self.large_label = LabelSpecs(self.project_dialog.project_name, self.sensordata.metadata['sn'],
+                                                  self.label_storage, self.combidt.timestamp())
+                    self.large_label.doubleSpinBox_start.setValue(event.xdata)
+                else:
+                    deleting = False
+                    if event.xdata < self.large_label.doubleSpinBox_start.value():
+                        self.large_label.doubleSpinBox_end.setValue(self.large_label.doubleSpinBox_start.value())
+                        self.large_label.doubleSpinBox_start.setValue(event.xdata)
+                    else:
+                        self.large_label.doubleSpinBox_end.setValue(event.xdata)
+                    start = self.large_label.doubleSpinBox_start.value()
+                    end = self.large_label.doubleSpinBox_end.value()
+                    for label in self.label_storage.get_all_labels(self.sensordata.metadata['sn']):
+                        label_start = (label[0] - self.sensordata.metadata['datetime']).total_seconds()
+                        label_end = (label[1] - self.sensordata.metadata['datetime']).total_seconds()
+                        if label_start < start < label_end and label_start < end < label_end:
+                            deleting = True
+                            delete_label = label
+                            break
+                        elif label_start < start < label_end or label_start < end < label_end:
+                            if label_start < start < label_end:
+                                self.large_label.doubleSpinBox_start.setValue(label_end)
+                            else:
+                                self.large_label.doubleSpinBox_end.setValue(label_start)
+                    if deleting:
+                        reply = QMessageBox.question(self, 'Message', "Are you sure you want to delete this label?",
+                                                     QMessageBox.Yes, QMessageBox.No)
+                        if reply == QMessageBox.Yes:
+                            self.label_storage.delete_label(delete_label[0], self.sensordata.metadata['sn'])
+                            self.reset_graph()
+                    else:
+                        self.large_label.exec_()
+                    if self.large_label.is_accepted:
+                        self.reset_graph()
+                self.labeling = not self.labeling
 
     def onrelease(self, event):
         if self.sensordata:
-            deleting = False
-            if event.xdata < self.new_label.doubleSpinBox_start.value():
-                self.new_label.doubleSpinBox_end.setValue(self.new_label.doubleSpinBox_start.value())
-                self.new_label.doubleSpinBox_start.setValue(event.xdata)
-            else:
-                self.new_label.doubleSpinBox_end.setValue(event.xdata)
-            start = self.new_label.doubleSpinBox_start.value()
-            end = self.new_label.doubleSpinBox_end.value()
-            for label in self.label_storage.get_all_labels(self.sensordata.metadata['sn']):
-                label_start = (label[0] - self.sensordata.metadata['datetime']).total_seconds()
-                label_end = (label[1] - self.sensordata.metadata['datetime']).total_seconds()
-                if label_start < start < label_end and label_start < end < label_end:
-                    deleting = True
-                    delete_label = label
-                    break
-                elif label_start < start < label_end or label_start < end < label_end:
-                    if label_start < start < label_end:
-                        print(label_end)
-                        self.new_label.doubleSpinBox_start.setValue(label_end)
-                    else:
-                        self.new_label.doubleSpinBox_end.setValue(label_start)
-            if deleting:
-                reply = QMessageBox.question(self, 'Message', "Are you sure you want to delete this label?",
-                                             QMessageBox.Yes, QMessageBox.No)
-                if reply == QMessageBox.Yes:
-                    self.label_storage.delete_label(delete_label[0], self.sensordata.metadata['sn'])
+            if event.button == 1:
+                deleting = False
+                if event.xdata < self.new_label.doubleSpinBox_start.value():
+                    self.new_label.doubleSpinBox_end.setValue(self.new_label.doubleSpinBox_start.value())
+                    self.new_label.doubleSpinBox_start.setValue(event.xdata)
+                else:
+                    self.new_label.doubleSpinBox_end.setValue(event.xdata)
+                start = self.new_label.doubleSpinBox_start.value()
+                end = self.new_label.doubleSpinBox_end.value()
+                for label in self.label_storage.get_all_labels(self.sensordata.metadata['sn']):
+                    label_start = (label[0] - self.sensordata.metadata['datetime']).total_seconds()
+                    label_end = (label[1] - self.sensordata.metadata['datetime']).total_seconds()
+                    if label_start < start < label_end and label_start < end < label_end:
+                        deleting = True
+                        delete_label = label
+                        break
+                    elif label_start < start < label_end or label_start < end < label_end:
+                        if label_start < start < label_end:
+                            self.new_label.doubleSpinBox_start.setValue(label_end)
+                        else:
+                            self.new_label.doubleSpinBox_end.setValue(label_start)
+                if deleting:
+                    reply = QMessageBox.question(self, 'Message', "Are you sure you want to delete this label?",
+                                                 QMessageBox.Yes, QMessageBox.No)
+                    if reply == QMessageBox.Yes:
+                        self.label_storage.delete_label(delete_label[0], self.sensordata.metadata['sn'])
+                        self.reset_graph()
+                else:
+                    self.new_label.exec_()
+                if self.new_label.is_accepted:
                     self.reset_graph()
-            else:
-                self.new_label.exec_()
-            if self.new_label.is_accepted:
-                self.reset_graph()
+            elif event.button == 3:
+                pass
 
     def reset_graph(self):
         self.dataplot.clear()
@@ -329,26 +418,26 @@ class GUI(QMainWindow, Ui_VideoPlayer):
             for i in range(len(labels)):
                 label_start = (labels[i][0] - self.sensordata.metadata['datetime']).total_seconds()
                 label_end = (labels[i][1] - self.sensordata.metadata['datetime']).total_seconds()
-                subdata = self.data.where(label_start < self.data['Time'])
-                subdata = subdata.where(self.data['Time'] < label_end)
-                self.dataplot.plot(subdata['Time'], subdata['Ax'], ',-', linewidth=1, color=self.color_dict[
+                subdata = self.data.where(label_start < self.data[self.data.columns[0]])
+                subdata = subdata.where(self.data[self.data.columns[0]] < label_end)
+                self.dataplot.plot(subdata[self.data.columns[0]], subdata[self.current_plot], ',-', linewidth=1, color=self.color_dict[
                     labels[i][2]])
                 if not i:
-                    subdata = self.data.where(self.data['Time'] < label_start)
-                    self.dataplot.plot(subdata['Time'], subdata['Ax'], ',-', linewidth=1, color='grey')
+                    subdata = self.data.where(self.data[self.data.columns[0]] < label_start)
+                    self.dataplot.plot(subdata[self.data.columns[0]], subdata[self.current_plot], ',-', linewidth=1, color='grey')
                 if i == (len(labels) - 1):
-                    subdata = self.data.where(self.data['Time'] > label_end)
-                    self.dataplot.plot(subdata['Time'], subdata['Ax'], ',-', linewidth=1, color='grey')
+                    subdata = self.data.where(self.data[self.data.columns[0]] > label_end)
+                    self.dataplot.plot(subdata[self.data.columns[0]], subdata[self.current_plot], ',-', linewidth=1, color='grey')
                 else:
-                    subdata = self.data.where(self.data['Time'] > label_end)
-                    subdata = subdata.where(subdata['Time'] < (labels[i + 1][0] - self.sensordata.metadata[
+                    subdata = self.data.where(self.data[self.data.columns[0]] > label_end)
+                    subdata = subdata.where(subdata[self.data.columns[0]] < (labels[i + 1][0] - self.sensordata.metadata[
                         'datetime']).total_seconds())
-                    self.dataplot.plot(subdata['Time'], subdata['Ax'], ',-', linewidth=1, color='grey')
+                    self.dataplot.plot(subdata[self.data.columns[0]], subdata[self.current_plot], ',-', linewidth=1, color='grey')
         else:
-            self.dataplot.plot(self.data['Time'], self.data['Ax'], ',-', linewidth=1, color='grey')
+            self.dataplot.plot(self.data[self.data.columns[0]], self.data[self.current_plot], ',-', linewidth=1, color='grey')
         self.vertical_line = self.dataplot.axvline(x=0)
         self.vertical_line.set_color('red')
         for label in self.label_storage.get_all_labels(self.sensordata.metadata['sn']):
             self.dataplot.text(((label[0] - self.sensordata.metadata['datetime']).total_seconds() + (
                 (label[1] - self.sensordata.metadata['datetime']).total_seconds())) / 2,
-                               (self.data['Ax'].max() * (3 / 4)), label[2], horizontalalignment='center')
+                               (self.data[self.current_plot].max() * (3 / 4)), label[2], horizontalalignment='center')

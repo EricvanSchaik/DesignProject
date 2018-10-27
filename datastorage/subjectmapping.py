@@ -1,8 +1,11 @@
 import sqlite3
 from datastorage import settings
+from datetime import datetime
 from typing import Any, List, Tuple
 
 sql_add_subject = "INSERT INTO subject_map (Name) VALUES (?)"
+sql_update_subject = "UPDATE subject_map SET Name = ? WHERE Name = ?"
+sql_delete_subject = "DELETE FROM subject_map WHERE Name = ?"
 sql_update_sensor = "UPDATE subject_map SET Sensor = ? WHERE Name = ?"
 sql_update_start_date = "UPDATE subject_map SET Start_date = ? WHERE Name = ?"
 sql_update_end_date = "UPDATE subject_map SET End_date = ? WHERE Name = ?"
@@ -17,7 +20,8 @@ class SubjectManager:
         """
         :param project_name: The name of the current project
         """
-        self._conn = sqlite3.connect('projects/' + project_name + '/project_data.db')
+        self._conn = sqlite3.connect('projects/' + project_name + '/project_data.db',
+                                     detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES)
         self._cur = self._conn.cursor()
         self.settings = settings.Settings(project_name)
         if self.settings.get_setting("subj_map") is None:  # subj_map contains the mapping from column names chosen by
@@ -27,7 +31,7 @@ class SubjectManager:
     def create_table(self) -> None:
         """Method for creating the necessary subject mapping table."""
         self._cur.execute("CREATE TABLE subject_map (Name TEXT PRIMARY KEY, "
-                          "Sensor TEXT, Start_date TEXT, End_date TEXT)")
+                          "Sensor TEXT, Start_date TIMESTAMP, End_date TIMESTAMP)")
         self._conn.commit()
 
     def add_subject(self, name: str) -> None:
@@ -37,6 +41,14 @@ class SubjectManager:
         :param name: The name of the new subject
         """
         self._cur.execute(sql_add_subject, [name])
+        self._conn.commit()
+
+    def update_subject(self, name_old: str, name_new: str) -> None:
+        self._cur.execute(sql_update_subject, (name_new, name_old))
+        self._conn.commit()
+
+    def delete_subject(self, name: str) -> None:
+        self._cur.execute(sql_delete_subject, [name])
         self._conn.commit()
 
     def update_sensor(self, name: str, sens_id: str) -> None:
@@ -49,7 +61,7 @@ class SubjectManager:
         self._cur.execute(sql_update_sensor, (sens_id, name))
         self._conn.commit()
 
-    def update_start_date(self, name: str, date: str) -> None:
+    def update_start_date(self, name: str, date: datetime) -> None:
         """
         Changes the start date for a subject.
 
@@ -59,7 +71,7 @@ class SubjectManager:
         self._cur.execute(sql_update_start_date, (date, name))
         self._conn.commit()
 
-    def update_end_date(self, name: str, date: str) -> None:
+    def update_end_date(self, name: str, date: datetime) -> None:
         """
         Changes the end date for a subject.
 
@@ -134,7 +146,7 @@ class SubjectManager:
         self.settings.set_setting("subj_map", col_map)
         return True
 
-    def get_table(self) -> Tuple[List[str], List[Tuple[str, ...]]]:
+    def get_table(self):
         """
         Returns the full table together with a list of all column names.
 
