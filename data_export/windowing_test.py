@@ -75,10 +75,33 @@ def windowing2_test():
             return func(*args, **kwargs)
         return wrapped
 
-    wrapped = wrapper(w.windowing2, df, ['Ax'], 'Label', 'Timestamp', mean=np.mean)
+    # wrapped = wrapper(w.windowing2, df, ['Ax', 'Ay', 'Az'], 'Label', 'Timestamp', mean=np.mean, std=np.std)
+    # print('mean: ', timeit(wrapped, number=1))
+    return w.windowing2(df, ['Ax', 'Ay', 'Az'], 'Label', 'Timestamp', mean=np.mean, std=np.std)
+
+
+def windowing3_test():
+    df = test_sensor_data()
+    print("DataFrame constructed")
+
+    def wrapper(func, *args, **kwargs):
+        def wrapped():
+            return func(*args, **kwargs)
+        return wrapped
+
+    funcs = {
+        'mean': {
+            w.STR_FUNC: np.mean,
+            w.STR_COLS: ['Ax', 'Ay', 'Az']
+        },
+        'std': {
+            w.STR_FUNC: np.std,
+            w.STR_COLS: ['Ax', 'Ay', 'Az']
+        }
+    }
+    wrapped = wrapper(w.windowing3, df, funcs, 'Label', 'Timestamp', True)
     print('mean: ', timeit(wrapped, number=1))
-    # res = w.windowing2(df, ['Ax', 'Ay', 'Az'], 'Label', 'Timestamp', mean=np.mean, std=np.std)
-    # return res
+    # return w.windowing3(df, funcs, 'Label', 'Timestamp')
 
 
 def nearest(items, pivot):
@@ -91,6 +114,7 @@ if __name__ == '__main__':
     # print(df[['Ax', 'Ay']])
     # print(df2[['Ax_mean', 'Ay_mean']])
     # print(df2.columns.values)
-    windowing2_test()
+    # print(windowing2_test())
+    windowing3_test()
 
     # ed.export([df.drop(columns='Time')], '../data/export_test.csv')

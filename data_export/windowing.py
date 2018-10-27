@@ -3,6 +3,11 @@ from datetime import timedelta
 import pandas as pd
 
 
+STR_FUNC = 'function'
+STR_FUNCS = 'functions'
+STR_COLS = 'columns'
+
+
 def split_df(df, col):
     """
     Splits a data frame into multiple data frames based on the given column; if the column value
@@ -161,6 +166,62 @@ def windowing2(df: pd.DataFrame, cols: [str], label_col: str, timestamp_col: str
         df_rolls = pd.concat(df_rolls, axis=1)
         df_rolls[label_col] = label
         df_rolls[timestamp_col] = timestamps
+
+        res.append(df_rolls)
+
+    # Concatenate DataFrames from list into one single DataFrame and return it
+    return pd.concat(res).set_index(timestamp_col)
+
+
+def windowing3(df: pd.DataFrame, funcs: {}, label_col: str, timestamp_col: str):
+    """
+    Windows over a DataFrame by splitting it into segments based on the label column and
+    windowing over every segment separately.
+
+    :param df: The DataFrame to be windowed over.
+    :param cols: The columns that should be used for windowing.
+    :param label_col: The column containing the labels.
+    :param timestamp_col: The column containing the timestamps.
+    :param funcs: A dictionary of function names and functions.
+    :return: A windowed DataFrame with the timestamp as index.
+    """
+    # Split DataFrame by label
+    split_dfs = split_df(df, label_col)
+
+    # Initialise list to store results
+    res = []
+
+    # Window over every DataFrame in the dfs list
+    for df in split_dfs:
+        label = df[label_col].iloc[0]   # Determine label of DataFrame
+        timestamps = df[timestamp_col]  # Save timestamp column to add later on
+        df_rolls = []
+
+        # Determine index of timestamp 1 second after starting timestamp
+        pivot = df[timestamp_col].iloc[0] + timedelta(seconds=1)
+        cutoff = df.loc[df[timestamp_col] == nearest(df[timestamp_col].tolist(), pivot)]
+
+        # Determine rows per second of DataFrame
+        rps = cutoff.index[0] - df.index[0]
+
+        for func_name in funcs:
+            func = funcs[func_name][STR_FUNC]
+            columns = funcs[func_name][STR_COLS]
+
+            for col in columns:
+                new_col_name = '%s_%s' % (col, func_name)
+                df_roll = df[[col, timestamp_col]].rolling(window='2s', on=timestamp_col).apply(func, raw=True)
+                df_roll = df_roll.rename(columns={col: new_col_name})
+                df_roll = df_roll[rps*2 - 1::rps]
+
+                # Remove timestamp column to avoid duplicate columns when concatenating
+                df_roll.drop(timestamp_col, axis=1, inplace=True)
+
+                df_rolls.append(df_roll)
+
+        df_rolls = pd.concat(df_rolls, axis=1)  # Concatenate the DataFrames
+        df_rolls[label_col] = label             # Re-add label column
+        df_rolls[timestamp_col] = timestamps    # Re-add timestamp column
 
         res.append(df_rolls)
 
