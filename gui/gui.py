@@ -153,7 +153,8 @@ class GUI(QMainWindow, Ui_VideoPlayer):
                 self.doubleSpinBox_offset.setValue(self.offset_manager.get_offset(self.comboBox_camera.currentText(),
                                                                             self.sensordata.metadata['sn'],
                                                                             self.sensordata.metadata['date']))
-
+            if not self.label_storage.file_is_added(filename):
+                self.label_storage.add_file(filename, self.sensordata.metadata['sn'], self.combidt)
 
     def play(self):
         """
