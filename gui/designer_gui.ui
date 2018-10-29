@@ -421,6 +421,7 @@
     </property>
     <addaction name="actionOpen_video"/>
     <addaction name="actionOpen_sensordata"/>
+    <addaction name="actionExport_Sensordata"/>
     <addaction name="actionSettings"/>
     <addaction name="actionLabel_Settings"/>
     <addaction name="actionSubject_Mapping"/>
@@ -475,6 +476,11 @@
   <action name="actionSubject_Mapping">
    <property name="text">
     <string>Subject Mapping</string>
+   </property>
+  </action>
+  <action name="actionExport_Sensordata">
+   <property name="text">
+    <string>Export Sensordata</string>
    </property>
   </action>
  </widget>

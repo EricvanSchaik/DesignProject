@@ -12,6 +12,7 @@ from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
 
 import video_metadata as vm
 from data_import import sensor_data
+from data_export import export_data
 from datastorage.labelstorage import LabelManager
 from datastorage.camerainfo import CameraManager
 from datastorage.deviceoffsets import OffsetManager
@@ -21,6 +22,8 @@ from gui.label_settings_dialog import LabelSettingsDialog
 from gui.new_dialog import NewProject
 from gui.settings_dialog import SettingsDialog
 from gui.subject_dialog import SubjectTable
+from gui.export_dialog import ExportDialog
+from datastorage.subjectmapping import SubjectManager
 
 
 def add_time_strings(time1, time2):
@@ -51,7 +54,13 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         # Initialize the boolean that keeps track if the user is labeling with the right-mouse button.
         self.labeling = False
 
-        # Connect all the buttons to their appropriate helper functions.
+        # Initialize the datetime object that keeps track of the start of a sensor data file.
+        self.combidt = datetime(year=1970, month=1, day=1)
+
+        # Initialize the variable that keeps track of the current SensorData object.
+        self.sensordata = None
+
+        # Connect all the buttons, spin boxes, combo boxes and line edits to their appropriate helper functions.
         self.playButton.clicked.connect(self.play)
         self.actionOpen_video.triggered.connect(self.open_video)
         self.actionOpen_sensordata.triggered.connect(self.open_sensordata)
@@ -67,6 +76,7 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         self.pushButton_camera_ok.clicked.connect(self.add_camera)
         self.pushButton_camera_del.clicked.connect(self.delete_camera)
         self.actionSubject_Mapping.triggered.connect(self.open_subject_mapping)
+        self.actionExport_Sensordata.triggered.connect(self.open_export)
 
         # Connect the QMediaPlayer to the right widget.
         self.mediaplayer.setVideoOutput(self.widget)
@@ -97,14 +107,13 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         # Save the settings from the new project dialog window.
         self.settings = self.project_dialog.new_settings
 
-        self.label_storage = LabelManager(self.project_dialog.project_name)
-
-        self.combidt = datetime(year=1970, month=1, day=1)
-
-        self.sensordata = None
-
+        # Initialize the classes that retrieve information from the database.
         self.camera_manager = CameraManager()
         self.offset_manager = OffsetManager()
+        self.label_storage = LabelManager(self.project_dialog.project_name)
+        self.subject_mapping = SubjectManager(self.project_dialog.project_name)
+
+        # Add the known camera's to the camera combo box in the GUI.
         for camera in self.camera_manager.get_all_cameras():
             self.comboBox_camera.addItem(camera)
 
@@ -265,6 +274,18 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         subject_mapping = SubjectTable(self.project_dialog.project_name)
         subject_mapping.exec_()
         subject_mapping.show()
+
+    def open_export(self):
+        export = ExportDialog()
+        export.comboBox.addItems(self.subject_mapping.get_subjects())
+        export.exec_()
+        export.show()
+        if export.is_accepted and export.comboBox.currentText():
+            filename, _ = QFileDialog.getSaveFileName(self, "Save File", QDir.homePath())
+            try:
+                export_data.export(self.subject_mapping.get_dataframes_subject(export.comboBox.currentText()), filename)
+            except Exception as e:
+                QMessageBox.warning(self, 'Warning', str(e), QMessageBox.Cancel)
 
     def add_camera(self):
         if self.lineEdit_camera.text() and self.lineEdit_camera.text() not in self.camera_manager.get_all_cameras():

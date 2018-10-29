@@ -226,8 +226,11 @@ class Ui_VideoPlayer(object):
         self.actionLabel_Settings.setObjectName("actionLabel_Settings")
         self.actionSubject_Mapping = QtWidgets.QAction(VideoPlayer)
         self.actionSubject_Mapping.setObjectName("actionSubject_Mapping")
+        self.actionExport_Sensordata = QtWidgets.QAction(VideoPlayer)
+        self.actionExport_Sensordata.setObjectName("actionExport_Sensordata")
         self.menuFile.addAction(self.actionOpen_video)
         self.menuFile.addAction(self.actionOpen_sensordata)
+        self.menuFile.addAction(self.actionExport_Sensordata)
         self.menuFile.addAction(self.actionSettings)
         self.menuFile.addAction(self.actionLabel_Settings)
         self.menuFile.addAction(self.actionSubject_Mapping)
@@ -262,6 +265,7 @@ class Ui_VideoPlayer(object):
         self.actionSettings.setText(_translate("VideoPlayer", "Import Settings"))
         self.actionLabel_Settings.setText(_translate("VideoPlayer", "Label Settings"))
         self.actionSubject_Mapping.setText(_translate("VideoPlayer", "Subject Mapping"))
+        self.actionExport_Sensordata.setText(_translate("VideoPlayer", "Export Sensordata"))
 
 from PyQt5.QtMultimedia import QMediaPlayer
 from PyQt5.QtMultimediaWidgets import QVideoWidget
