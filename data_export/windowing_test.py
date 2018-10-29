@@ -99,9 +99,9 @@ def windowing3_test():
             w.STR_COLS: ['Ax', 'Ay', 'Az']
         }
     }
-    wrapped = wrapper(w.windowing3, df, funcs, 'Label', 'Timestamp', True)
-    print('mean: ', timeit(wrapped, number=1))
-    # return w.windowing3(df, funcs, 'Label', 'Timestamp')
+    # wrapped = wrapper(w.windowing3, df, funcs, 'Label', 'Timestamp', True)
+    # print('mean: ', timeit(wrapped, number=1))
+    return w.windowing3(df, funcs, 'Label', 'Timestamp')
 
 
 def nearest(items, pivot):
@@ -114,7 +114,7 @@ if __name__ == '__main__':
     # print(df[['Ax', 'Ay']])
     # print(df2[['Ax_mean', 'Ay_mean']])
     # print(df2.columns.values)
-    # print(windowing2_test())
-    windowing3_test()
+    print(windowing3_test())
+    # windowing3_test()
 
     # ed.export([df.drop(columns='Time')], '../data/export_test.csv')

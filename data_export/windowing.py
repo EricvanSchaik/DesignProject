@@ -225,8 +225,14 @@ def windowing3(df: pd.DataFrame, funcs: {}, label_col: str, timestamp_col: str):
 
         res.append(df_rolls)
 
+    res = pd.concat(res).set_index(timestamp_col)
+
+    # Add segment ID column
+    segment_ids = range(0, len(res))
+    res['segment_id'] = segment_ids
+
     # Concatenate DataFrames from list into one single DataFrame and return it
-    return pd.concat(res).set_index(timestamp_col)
+    return res
 
 
 # TODO: implement statistical functions
