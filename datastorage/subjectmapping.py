@@ -161,6 +161,12 @@ class SubjectManager:
         return [x[0] for x in self._cur.fetchall()]
 
     def get_dataframes_subject(self, subject_name: str) -> List[pd.DataFrame]:
+        """
+        Returns a list of pandas DataFrames of all the labeled sensor-data belonging to the subject
+
+        :param subject_name: subject name
+        :return: list of pandas DataFrames
+        """
         from datastorage.labelstorage import LabelManager
         from datastorage.settings import Settings
         self._cur.execute(sql_get_subject_data, [subject_name])

@@ -1,6 +1,7 @@
 from datetime import timedelta
 from datetime import datetime
 
+import os.path
 import matplotlib.animation
 import matplotlib.pyplot as plt
 from PyQt5 import QtCore
@@ -123,8 +124,16 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         A helper function that allows a user to open a video in the QMediaPlayer via the menu bar.
         :return:
         """
-        self.video_filename, _ = QFileDialog.getOpenFileName(self, "Open Video", QDir.homePath())
+        path = "" if self.settings.get_setting("last_videofile") is None else self.settings.get_setting("last_videofile")
+        if not os.path.isfile(path):
+            path = path.rsplit('/', 1)[0]
+            if not os.path.isdir(path):
+                path = QDir.homePath()
+
+        self.video_filename, _ = QFileDialog.getOpenFileName(self, "Open Video", path)
         if self.video_filename != '':
+            self.settings.set_setting("last_videofile", self.video_filename)
+
             self.mediaplayer.setMedia(QMediaContent(QUrl.fromLocalFile(self.video_filename)))
             self.mediaplayer.play()
             self.playButton.setEnabled(True)
@@ -139,8 +148,16 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         A helper function that allows a user to open a CSV file in the plotting canvas via the menu bar.
         :return:
         """
-        filename, _ = QFileDialog.getOpenFileName(self, "Open Sensor Data", QDir.homePath())
+        path = "" if self.settings.get_setting("last_datafile") is None else self.settings.get_setting("last_datafile")
+        if not os.path.isfile(path):
+            path = path.rsplit('/', 1)[0]
+            if not os.path.isdir(path):
+                path = QDir.homePath()
+
+        filename, _ = QFileDialog.getOpenFileName(self, "Open Sensor Data", path)
         if filename != '':
+            self.settings.set_setting("last_datafile", filename)
+
             self.sensordata = sensor_data.SensorData(filename, self.settings.settings_dict)
             self.data = self.sensordata.get_data()
 
