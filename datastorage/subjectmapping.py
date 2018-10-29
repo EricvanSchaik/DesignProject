@@ -1,7 +1,9 @@
 import sqlite3
 from datastorage import settings
 from datetime import datetime
-from typing import Any, List, Tuple
+from typing import Any, List
+from data_import.sensor_data import SensorData
+import pandas as pd
 
 sql_add_subject = "INSERT INTO subject_map (Name) VALUES (?)"
 sql_update_subject = "UPDATE subject_map SET Name = ? WHERE Name = ?"
@@ -12,6 +14,8 @@ sql_update_end_date = "UPDATE subject_map SET End_date = ? WHERE Name = ?"
 sql_add_column = "ALTER TABLE subject_map ADD COLUMN {} TEXT"
 sql_update_user_column = "UPDATE subject_map SET {} = ? WHERE Name = ?"
 sql_get_table = "SELECT Name, Sensor, Start_date, End_date{} FROM subject_map"
+sql_get_subject_data = "SELECT Sensor, Start_date, End_date FROM subject_map WHERE Name = ?"
+sql_get_subjects = "SELECT Name FROM subject_map"
 
 
 class SubjectManager:
@@ -20,6 +24,7 @@ class SubjectManager:
         """
         :param project_name: The name of the current project
         """
+        self.project_name = project_name
         self._conn = sqlite3.connect('projects/' + project_name + '/project_data.db',
                                      detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES)
         self._cur = self._conn.cursor()
@@ -145,6 +150,39 @@ class SubjectManager:
         col_map.pop(old, None)       # remove old name from the map
         self.settings.set_setting("subj_map", col_map)
         return True
+
+    def get_subjects(self) -> List[str]:
+        """
+        Returns a list of all subjects
+
+        :return: list of subject names
+        """
+        self._cur.execute(sql_get_subjects)
+        return [x[0] for x in self._cur.fetchall()]
+
+    def get_dataframes_subject(self, subject_name: str) -> List[pd.DataFrame]:
+        from datastorage.labelstorage import LabelManager
+        from datastorage.settings import Settings
+        self._cur.execute(sql_get_subject_data, [subject_name])
+        subject_data = self._cur.fetchall()
+
+        if len(subject_data) == 0:
+            return []
+
+        subject_data = subject_data[0]
+        lm = LabelManager(self.project_name)
+        paths = lm.get_file_paths(subject_data[0], subject_data[1], subject_data[2])
+        dataframes = []
+        settings = Settings(self.project_name).settings_dict
+        for path in paths:
+            sd = SensorData(path, settings)
+            time_col_name = sd.metadata['names'][0]  # making the assumption that the time column is always the first
+            sd.add_timestamp_column(time_col_name, "Timestamp")
+            end_datetime = datetime.fromisoformat(str(sd.get_data()['Timestamp'].iloc[-1]))
+            labels = lm.get_labels_between_dates(subject_data[0], sd.metadata['datetime'], end_datetime)
+            sd.add_labels(labels, "Label", "Timestamp")
+            dataframes.append(sd.get_data())
+        return dataframes
 
     def get_table(self):
         """
