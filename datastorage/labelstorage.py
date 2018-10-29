@@ -21,6 +21,8 @@ sql_get_labels_date = "SELECT Start_time, End_time, Label_name FROM labelData WH
 sql_get_labels_between_dates = "SELECT Start_time, End_time, Label_name FROM labelData WHERE (date(Start_time) " \
                                "BETWEEN ? AND ?) AND Sensor_id = ? ORDER BY Start_time ASC"
 sql_get_sensor_ids = "SELECT DISTINCT Sensor_id FROM labelData"
+sql_add_file = "INSERT INTO fileMapping(Filepath, Sensor_id, Filedate) VALUES (?,?,?)"
+sql_get_file_names = "SELECT Filepath FROM fileMapping WHERE Sensor_id = ? AND (Filedate BETWEEN ? AND ?)"
 
 
 class LabelManager:
@@ -40,6 +42,7 @@ class LabelManager:
         c.execute("CREATE TABLE labelType (Name TEXT PRIMARY KEY, Color TEXT, Description TEXT)")
         c.execute("CREATE TABLE labelData (Start_time TIMESTAMP, End_time TIMESTAMP, Label_name TEXT, Sensor_id TEXT, "
                   "PRIMARY KEY(Start_time, Sensor_id), FOREIGN KEY (Label_name) REFERENCES labelType(Name))")
+        c.execute("CREATE TABLE fileMapping (Filepath TEXT PRIMARY KEY, Sensor_id TEXT, Filedate TIMESTAMP)")
         self._conn.commit()
 
     def add_label_type(self, name: str, color: str, desc: str) -> bool:
@@ -140,7 +143,7 @@ class LabelManager:
 
     def get_label_types(self) -> List[Tuple[str, str, str]]:
         """
-        Returns all label types
+        Returns all label types.
 
         :return: List of tuples (label name, label color, label description) of all label types
         """
@@ -156,6 +159,39 @@ class LabelManager:
         """
         self._cur.execute(sql_get_labels, [sensor_id])
         return self._cur.fetchall()
+
+    def file_is_added(self, filename: str) -> bool:
+        """
+        Function for checking if a file is already added.
+
+        :param filename: file path
+        :return: boolean indicating if the file is already added or not
+        """
+        self._cur.execute("SELECT 1 FROM fileMapping WHERE Filepath = ?", [filename])
+        return len(self._cur.fetchall()) == 1
+
+    def add_file(self, filename: str, sensor_id: str, date: datetime) -> None:
+        """
+        Adds a new file mapping.
+
+        :param filename: file path
+        :param sensor_id: sensor id
+        :param date: date of the data-file
+        """
+        self._cur.execute(sql_add_file, (filename, sensor_id, date))
+        self._conn.commit()
+
+    def get_file_paths(self, sensor_id: str, start_date: datetime, end_date: datetime) -> List[str]:
+        """
+        Returns all file paths for a given sensor between two dates.
+
+        :param sensor_id: sensor id
+        :param start_date: start date
+        :param end_date: end date
+        :return: list of file paths
+        """
+        self._cur.execute(sql_get_file_names, (sensor_id, start_date, end_date))
+        return [x[0] for x in self._cur.fetchall()]
 
     def get_labels_date(self, sensor_id: str, date: date) -> List[Tuple[datetime, datetime, str]]:
         """
@@ -182,6 +218,11 @@ class LabelManager:
         return self._cur.fetchall()
 
     def get_sensor_ids(self) -> List[str]:
+        """
+        Returns a list of all sensor ids that have been used so far in this project.
+
+        :return: list of sensor ids
+        """
         self._cur.execute(sql_get_sensor_ids)
         return [x[0] for x in self._cur.fetchall()]
 
