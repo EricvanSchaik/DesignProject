@@ -23,6 +23,7 @@ from gui.new_dialog import NewProject
 from gui.settings_dialog import SettingsDialog
 from gui.subject_dialog import SubjectTable
 from gui.export_dialog import ExportDialog
+from gui.machine_learning_dialog import MachineLearningDialog
 from datastorage.subjectmapping import SubjectManager
 
 
@@ -77,6 +78,7 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         self.pushButton_camera_del.clicked.connect(self.delete_camera)
         self.actionSubject_Mapping.triggered.connect(self.open_subject_mapping)
         self.actionExport_Sensordata.triggered.connect(self.open_export)
+        self.actionMachine_Learning.triggered.connect(self.open_machine_learning)
 
         # Connect the QMediaPlayer to the right widget.
         self.mediaplayer.setVideoOutput(self.widget)
@@ -286,6 +288,12 @@ class GUI(QMainWindow, Ui_VideoPlayer):
                 export_data.export(self.subject_mapping.get_dataframes_subject(export.comboBox.currentText()), filename)
             except Exception as e:
                 QMessageBox.warning(self, 'Warning', str(e), QMessageBox.Cancel)
+
+    def open_machine_learning(self):
+        columns = [self.comboBox_plot.itemText(i) for i in range(self.comboBox_plot.count())]
+        dialog = MachineLearningDialog(columns)
+        dialog.exec_()
+        dialog.show()
 
     def add_camera(self):
         if self.lineEdit_camera.text() and self.lineEdit_camera.text() not in self.camera_manager.get_all_cameras():
