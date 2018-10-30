@@ -29,9 +29,6 @@ class SubjectManager:
                                      detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES)
         self._cur = self._conn.cursor()
         self.settings = settings.Settings(project_name)
-        if self.settings.get_setting("subj_map") is None:  # subj_map contains the mapping from column names chosen by
-            self.settings.set_setting("subj_map", {})      # the user, and the column name used in the database.
-            self.settings.set_setting("next_col", 0)       # next_col contains the number the next column should use.
 
     def create_table(self) -> None:
         """Method for creating the necessary subject mapping table."""
@@ -161,6 +158,12 @@ class SubjectManager:
         return [x[0] for x in self._cur.fetchall()]
 
     def get_dataframes_subject(self, subject_name: str) -> List[pd.DataFrame]:
+        """
+        Returns a list of pandas DataFrames of all the labeled sensor-data belonging to the subject
+
+        :param subject_name: subject name
+        :return: list of pandas DataFrames
+        """
         from datastorage.labelstorage import LabelManager
         from datastorage.settings import Settings
         self._cur.execute(sql_get_subject_data, [subject_name])
