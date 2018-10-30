@@ -157,12 +157,23 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         filename, _ = QFileDialog.getOpenFileName(self, "Open Sensor Data", path)
         if filename != '':
             self.settings.set_setting("last_datafile", filename)
+            self.formula_dict = dict()
 
             self.sensordata = sensor_data.SensorData(filename, self.settings.settings_dict)
+
+            stored_formulas = self.settings.get_setting("formulas")
+            for formula_name in stored_formulas:
+                try:
+                    self.sensordata.add_column_from_func(formula_name, stored_formulas[formula_name])
+                    self.formula_dict[formula_name] = stored_formulas[formula_name]
+                except:
+                    pass
+
             self.data = self.sensordata.get_data()
 
             for column in self.data.columns:
                 self.comboBox_plot.addItem(column)
+
             self.comboBox_plot.removeItem(0)
             self.current_plot = self.comboBox_plot.currentText()
 
@@ -358,6 +369,9 @@ class GUI(QMainWindow, Ui_VideoPlayer):
             self.data = self.sensordata.get_data()
             self.comboBox_plot.addItem(self.lineEdit_2.text())
             self.formula_dict[self.lineEdit_2.text()] = self.lineEdit.text()
+            stored_formulas = self.settings.get_setting("formulas")
+            stored_formulas[self.lineEdit_2.text()] = self.lineEdit.text()
+            self.settings.set_setting("formulas", stored_formulas)
             self.lineEdit.clear()
             self.lineEdit_2.clear()
         except:

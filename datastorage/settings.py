@@ -33,6 +33,9 @@ class Settings:
         self.project_name = project_name
         if is_new_project:
             self.save()
+            self.set_setting("subj_map", {})   # mapping from column name chosen by user and column name in database
+            self.set_setting("next_col", 0)    # next index to use in the database column for subject mapping
+            self.set_setting("formulas", {})  # user-made formulas. mapping from function name to regular expression
         else:
             self.load()
 
