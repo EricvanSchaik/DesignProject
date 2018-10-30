@@ -1,9 +1,9 @@
 import numpy as np
 import pandas as pd
-import scipy.stats as stats
 
 from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import GaussianNB
+from sklearn.metrics import f1_score
 
 from datastorage import labelstorage as ls
 from data_import import label_data as ld
@@ -32,7 +32,7 @@ class Classifier:
         :return: list of tuples: First element of tuple is predicted class, second element is a list of probabilities
             for each class.
         """
-        train_set, test_set = train_test_split(self.df, test_size=0.2)
+        train_set, test_set = train_test_split(self.df, test_size=0.5, random_state=0)
 
         self.classifier.fit(
             train_set[self.used_cols],
@@ -45,28 +45,12 @@ class Classifier:
         true_labels = list(test_set[self.label_col])
         res = []
 
-        for i in range(0, len(preds)):
-            if preds[i] != true_labels[i]:
-                probability = round(max(probs[i]), 2)
-                res.append([preds[i], true_labels[i], probability])
+        # for i in range(0, len(preds)):
+        #     # if preds[i] != true_labels[i]:
+        #         probability = round(max(probs[i]), 2)
+        #         res.append([preds[i], true_labels[i], probability])
 
-        # Calculate percentages
-        total = len(preds)
-        wrong = len(res)
-        wrong_labels = [i[0] for i in res]
-        wrong_probs_90 = [i[2] >= 0.9 for i in res].count(True)
-        wrong_grazing = wrong_labels.count('grazing')
-        wrong_walking_natural = wrong_labels.count('walking-natural')
-        wrong_head_shake = wrong_labels.count('head-shake')
-        wrong_running_natural = wrong_labels.count('running-natural')
-
-        print('%% wrong predictions: %f' % (wrong / total))
-        print('%% wrong predictions confidence >90%%: %f' % (wrong_probs_90 / wrong))
-        print('%% wrong grazing predictions: %f' % (wrong_grazing / wrong))
-        print('%% wrong walking-natural predictions: %f' % (wrong_walking_natural / wrong))
-        print('%% wrong head-shake predictions: %f' % (wrong_head_shake / wrong))
-        print('%% wrong running-natural predictions: %f' % (wrong_running_natural / wrong))
-        return res
+        return true_labels, preds
 
 
 if __name__ == '__main__':
@@ -85,7 +69,7 @@ if __name__ == '__main__':
     # Prepare the sensor data for use by classifier
     sensor_data.add_timestamp_column(TIME_COL, TIMESTAMP_COL)
     sensor_data.add_column_from_func('accel', 'sqrt(Ax^2 + Ay^2 + Az^2)')
-    sensor_data.add_column_from_func('gyro', 'sqrt(Gx^2 + Gy^2 + Gz^2')
+    sensor_data.add_column_from_func('gyro', 'sqrt(Gx^2 + Gy^2 + Gz^2)')
     sensor_data.add_labels(label_data.get_data(), LABEL_COL, TIMESTAMP_COL)
     data = sensor_data.get_data()
 
@@ -93,28 +77,20 @@ if __name__ == '__main__':
     data = data[data.Label != 'unknown']
 
     window_cols = ['accel', 'gyro']
-    # used_cols = ['accel_mean', 'accel_std', 'gyro_mean', 'gyro_std']
-    used_cols = ['accel_entropy', 'gyro_entropy']
+    used_cols = ['accel_mean', 'accel_std', 'gyro_mean', 'gyro_std']
 
     funcs = {
-        'mean': {
-            wd.STR_FUNC: np.mean,
-            wd.STR_COLS: ['accel']
-        },
-        'median': {
-            wd.STR_FUNC: np.median,
-            wd.STR_COLS: ['accel']
-        },
-        'std': {
-            wd.STR_FUNC: np.std,
-            wd.STR_COLS: ['accel']
-        }
+        'mean': np.mean,
+        'std': np.std,
     }
 
-    df = wd.windowing3(data, funcs, LABEL_COL, TIMESTAMP_COL)
-    # print(df)
+    df = wd.windowing2(data, window_cols, LABEL_COL, TIMESTAMP_COL, **funcs)
     clsf = Classifier(GaussianNB(), df, used_cols)
-    res = clsf.classify()
+    # res = clsf.classify()
 
-    for pred in res:
-        print(pred)
+    # for pred in res:
+    #     print(pred)
+
+    true, preds = clsf.classify()
+
+    print(f1_score(true, preds, average='micro'))
