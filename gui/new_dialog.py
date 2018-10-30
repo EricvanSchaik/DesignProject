@@ -37,7 +37,6 @@ class NewProject(QtWidgets.QDialog, Ui_NewProject):
             self.spinBox_sncol.setEnabled(False)
             self.spinBox_namesrow.setEnabled(False)
             self.lineEdit_comment.setEnabled(False)
-            self.lineEdit.setEnabled(False)
         else:
             self.comboBox_existing.setEnabled(False)
         self.time_row = 3
@@ -60,8 +59,6 @@ class NewProject(QtWidgets.QDialog, Ui_NewProject):
         self.spinBox_namesrow.valueChanged.connect(self.set_namesrow)
         self.comment = ";"
         self.lineEdit_comment.textChanged.connect(self.set_comment)
-        self.timestamp = "timestamp"
-        self.lineEdit.textChanged.connect(self.set_timestamp)
         self.spinBox_timerow.setValue(3)
         self.spinBox_timecol.setValue(3)
         self.spinBox_daterow.setValue(3)
@@ -87,7 +84,6 @@ class NewProject(QtWidgets.QDialog, Ui_NewProject):
             self.new_settings.set_setting("sn_col", self.sn_col)
             self.new_settings.set_setting("names_row", self.names_row)
             self.new_settings.set_setting("comment", self.comment)
-            self.new_settings.set_setting("timestamp", self.timestamp)
         self.new_settings = settings.Settings(self.project_name)
 
     def text_changed(self, new):
@@ -105,7 +101,6 @@ class NewProject(QtWidgets.QDialog, Ui_NewProject):
             self.spinBox_sncol.setEnabled(True)
             self.spinBox_namesrow.setEnabled(True)
             self.lineEdit_comment.setEnabled(True)
-            self.lineEdit.setEnabled(True)
 
             self.spinBox_timerow.setValue(3)
             self.spinBox_timecol.setValue(3)
@@ -131,7 +126,6 @@ class NewProject(QtWidgets.QDialog, Ui_NewProject):
                 self.spinBox_sncol.setEnabled(False)
                 self.spinBox_namesrow.setEnabled(False)
                 self.lineEdit_comment.setEnabled(False)
-                self.lineEdit.setEnabled(False)
             else:
                 self.project_name = ""
 
@@ -167,9 +161,6 @@ class NewProject(QtWidgets.QDialog, Ui_NewProject):
 
     def set_comment(self, new):
         self.comment = new
-
-    def set_timestamp(self, new):
-        self.timestamp = new
 
     def accept(self):
         if self.lineEdit_new.text() in [self.comboBox_existing.itemText(i) for i in range(
