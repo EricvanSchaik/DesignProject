@@ -96,7 +96,7 @@ class SubjectManager:
         new_col_nr = self.settings.get_setting("next_col")
         new_col_name = "c" + str(new_col_nr)
         col_map[name] = new_col_name
-        self._cur.execute(sql_add_column.format(new_col_name))
+        self._cur.execute(sql_add_column.format(new_col_name))  # add column to database with name "c" + the next number
         self._conn.commit()
         self.settings.set_setting("subj_map", col_map)
         self.settings.set_setting("next_col", new_col_nr + 1)
@@ -166,26 +166,27 @@ class SubjectManager:
         """
         from datastorage.labelstorage import LabelManager
         from datastorage.settings import Settings
-        self._cur.execute(sql_get_subject_data, [subject_name])
+        self._cur.execute(sql_get_subject_data, [subject_name])  # get the stored information for this subject
         subject_data = self._cur.fetchall()
 
-        if len(subject_data) == 0:
-            return []
+        if len(subject_data) == 0 or subject_data[0][0] is None:  # if subject doesn't exist or sensor hasn't been set,
+            return []                                             # return an empty list
 
         subject_data = subject_data[0]
         lm = LabelManager(self.project_name)
-        paths = lm.get_file_paths(subject_data[0], subject_data[1], subject_data[2])
-        dataframes = []
-        settings = Settings(self.project_name).settings_dict
+        paths = lm.get_file_paths(subject_data[0], subject_data[1], subject_data[2])  # get datafile paths for subject
+        data_frames = []
+        settings_dict = Settings(self.project_name).settings_dict
         for path in paths:
-            sd = SensorData(path, settings)
+            # for each file, load a DataFrame and add the labels to it
+            sd = SensorData(path, settings_dict)
             time_col_name = sd.metadata['names'][0]  # making the assumption that the time column is always the first
             sd.add_timestamp_column(time_col_name, "Timestamp")
             end_datetime = datetime.fromisoformat(str(sd.get_data()['Timestamp'].iloc[-1]))
             labels = lm.get_labels_between_dates(subject_data[0], sd.metadata['datetime'], end_datetime)
             sd.add_labels(labels, "Label", "Timestamp")
-            dataframes.append(sd.get_data())
-        return dataframes
+            data_frames.append(sd.get_data())
+        return data_frames
 
     def get_table(self):
         """
