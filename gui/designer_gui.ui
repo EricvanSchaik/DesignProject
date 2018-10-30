@@ -432,10 +432,6 @@
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionOpen_video">
-   <property name="icon">
-    <iconset>
-     <normaloff>resources/file_light-15-512.png</normaloff>resources/file_light-15-512.png</iconset>
-   </property>
    <property name="text">
     <string>Open Video</string>
    </property>
@@ -444,10 +440,6 @@
    </property>
   </action>
   <action name="actionExit">
-   <property name="icon">
-    <iconset>
-     <normaloff>resources/exit-512.png</normaloff>resources/exit-512.png</iconset>
-   </property>
    <property name="text">
     <string>Exit</string>
    </property>
@@ -456,10 +448,6 @@
    </property>
   </action>
   <action name="actionOpen_sensordata">
-   <property name="icon">
-    <iconset>
-     <normaloff>resources/Open-Folder-512.png</normaloff>resources/Open-Folder-512.png</iconset>
-   </property>
    <property name="text">
     <string>Open Sensordata</string>
    </property>
