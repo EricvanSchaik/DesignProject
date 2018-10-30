@@ -425,6 +425,7 @@
     <addaction name="actionSettings"/>
     <addaction name="actionLabel_Settings"/>
     <addaction name="actionSubject_Mapping"/>
+    <addaction name="actionMachine_Learning"/>
     <addaction name="actionExit"/>
    </widget>
    <addaction name="menuFile"/>
@@ -481,6 +482,11 @@
   <action name="actionExport_Sensordata">
    <property name="text">
     <string>Export Sensordata</string>
+   </property>
+  </action>
+  <action name="actionMachine_Learning">
+   <property name="text">
+    <string>Machine Learning</string>
    </property>
   </action>
  </widget>
