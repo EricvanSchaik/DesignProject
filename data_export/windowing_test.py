@@ -104,12 +104,20 @@ def windowing3_test():
     return w.windowing3(df, funcs, 'Label', 'Timestamp')
 
 
+def export_test():
+    df = test_sensor_data()
+    print("DataFrame constructed")
+
+    ed.export([df], 'Label', 'Timestamp', '../data/test_export.csv', [])
+
+
 def nearest(items, pivot):
     return min(items, key=lambda x: abs(x - pivot))
 
 
 if __name__ == '__main__':
-    df1 = windowing2_test()
-    df2 = windowing3_test()
+    # df1 = windowing2_test()
+    # df2 = windowing3_test()
+    export_test()
 
     # ed.export([df.drop(columns='Time')], '../data/export_test.csv')
