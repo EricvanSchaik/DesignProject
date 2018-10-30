@@ -123,19 +123,24 @@ class GUI(QMainWindow, Ui_VideoPlayer):
 
     def open_video(self):
         """
-        A helper function that allows a user to open a video in the QMediaPlayer via the menu bar.
+        A function that allows a user to open a video in the QMediaPlayer via the menu bar.
         :return:
         """
+        # Check if last used path is known.
         path = "" if self.settings.get_setting("last_videofile") is None else self.settings.get_setting("last_videofile")
         if not os.path.isfile(path):
             path = path.rsplit('/', 1)[0]
             if not os.path.isdir(path):
                 path = QDir.homePath()
 
+        # Get the user input from a dialog window.
         self.video_filename, _ = QFileDialog.getOpenFileName(self, "Open Video", path)
+
+        # Save the path for next time.
         if self.video_filename != '':
             self.settings.set_setting("last_videofile", self.video_filename)
 
+            # Play the video in the QMediaPlayer and activate the associated widgets.
             self.mediaplayer.setMedia(QMediaContent(QUrl.fromLocalFile(self.video_filename)))
             self.mediaplayer.play()
             self.playButton.setEnabled(True)
@@ -147,35 +152,45 @@ class GUI(QMainWindow, Ui_VideoPlayer):
 
     def open_sensordata(self):
         """
-        A helper function that allows a user to open a CSV file in the plotting canvas via the menu bar.
+        A function that allows a user to open a CSV file in the plotting canvas via the menu bar.
         :return:
         """
+        # Check if last used path is known.
         path = "" if self.settings.get_setting("last_datafile") is None else self.settings.get_setting("last_datafile")
         if not os.path.isfile(path):
             path = path.rsplit('/', 1)[0]
             if not os.path.isdir(path):
                 path = QDir.homePath()
 
+        # Get the user input from a dialog window.
         filename, _ = QFileDialog.getOpenFileName(self, "Open Sensor Data", path)
+
+        # Save the path for next time.
         if filename != '':
             self.settings.set_setting("last_datafile", filename)
+
+            # Reset the dictionary that maps function names to functions.
             self.formula_dict = dict()
 
+            # Retrieve the SensorData object that parses the sensor data file.
             self.sensordata = sensor_data.SensorData(filename, self.settings.settings_dict)
 
+            # Retrieve the formulas that are associated with this sensor data file, and store them in the dictionary.
             stored_formulas = self.settings.get_setting("formulas")
             for formula_name in stored_formulas:
                 try:
                     self.sensordata.add_column_from_func(formula_name, stored_formulas[formula_name])
                     self.formula_dict[formula_name] = stored_formulas[formula_name]
-                except:
-                    pass
+                except Exception as e:
+                    print(e)
 
+            # Retrieve the DataFrame with all the raw sensor data.
             self.data = self.sensordata.get_data()
 
+            # Add every column in the DataFrame to the possible Data Series that can be plotted, except for time,
+            # and plot the first one.
             for column in self.data.columns:
                 self.comboBox_plot.addItem(column)
-
             self.comboBox_plot.removeItem(0)
             self.current_plot = self.comboBox_plot.currentText()
 
