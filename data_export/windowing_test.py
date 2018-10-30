@@ -109,12 +109,7 @@ def nearest(items, pivot):
 
 
 if __name__ == '__main__':
-    # df = windowing_test()
-    # df2 = windowing2_test()
-    # print(df[['Ax', 'Ay']])
-    # print(df2[['Ax_mean', 'Ay_mean']])
-    # print(df2.columns.values)
-    print(windowing3_test())
-    # windowing3_test()
+    df1 = windowing2_test()
+    df2 = windowing3_test()
 
     # ed.export([df.drop(columns='Time')], '../data/export_test.csv')
