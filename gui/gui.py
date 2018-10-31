@@ -330,7 +330,8 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         if export.is_accepted and export.comboBox.currentText():
             filename, _ = QFileDialog.getSaveFileName(self, "Save File", QDir.homePath())
             try:
-                export_data.export(self.subject_mapping.get_dataframes_subject(export.comboBox.currentText()), filename)
+                export_data.export(self.subject_mapping.get_dataframes_subject(export.comboBox.currentText()), "Label",
+                                   "Timestamp", filename, [])
             except Exception as e:
                 QMessageBox.warning(self, 'Warning', str(e), QMessageBox.Cancel)
 
@@ -501,7 +502,7 @@ class GUI(QMainWindow, Ui_VideoPlayer):
     def draw_graph(self):
         self.dataplot.clear()
 
-        self.dataplot.plot(self.data[self.data.columns[0]], self.data[self.current_plot], ',-', linewidth=1, color='grey')
+        self.dataplot.plot(self.data[self.data.columns[0]], self.data[self.current_plot], ',-', linewidth=1, color='black')
         self.vertical_line = self.dataplot.axvline(x=0)
         self.vertical_line.set_color('red')
 
