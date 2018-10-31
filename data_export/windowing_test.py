@@ -10,6 +10,13 @@ from datetime import timedelta, datetime
 from data_export import export_data as ed
 
 
+def wrapper(func, *args, **kwargs):
+    def wrapped():
+        return func(*args, **kwargs)
+
+    return wrapped
+
+
 def test_sensor_data():
     sensor_data = sd.SensorData("../data/20180515_09-58_CCDC301661B33D7_sensor.csv", settings())
     file = open('../data/20180515_09-58_CCDC301661B33D7_labels.csv')
@@ -52,11 +59,6 @@ def windowing_test():
     df = test_sensor_data()
     print("DataFrame constructed")
 
-    def wrapper(func, *args, **kwargs):
-        def wrapped():
-            return func(*args, **kwargs)
-        return wrapped
-
     # wrapped = wrapper(w.windowing, df, 'Label', 'Timestamp')
     # print('.mean():', timeit(wrapped, number=1))
     # wrapped = wrapper(w.windowing, df, 'Label', 'Timestamp', w.mean)
@@ -70,11 +72,6 @@ def windowing2_test():
     df = test_sensor_data()
     print("DataFrame constructed")
 
-    def wrapper(func, *args, **kwargs):
-        def wrapped():
-            return func(*args, **kwargs)
-        return wrapped
-
     # wrapped = wrapper(w.windowing2, df, ['Ax', 'Ay', 'Az'], 'Label', 'Timestamp', mean=np.mean, std=np.std)
     # print('mean: ', timeit(wrapped, number=1))
     return w.windowing2(df, ['Ax', 'Ay', 'Az'], 'Label', 'Timestamp', mean=np.mean, std=np.std)
@@ -83,11 +80,6 @@ def windowing2_test():
 def windowing3_test():
     df = test_sensor_data()
     print("DataFrame constructed")
-
-    def wrapper(func, *args, **kwargs):
-        def wrapped():
-            return func(*args, **kwargs)
-        return wrapped
 
     funcs = {
         'mean': {
@@ -99,9 +91,34 @@ def windowing3_test():
             w.STR_COLS: ['Ax', 'Ay', 'Az']
         }
     }
-    # wrapped = wrapper(w.windowing3, df, funcs, 'Label', 'Timestamp', True)
-    # print('mean: ', timeit(wrapped, number=1))
+    wrapped = wrapper(w.windowing3, df, funcs, 'Label', 'Timestamp', True)
+    print('mean: ', timeit(wrapped, number=1))
     return w.windowing3(df, funcs, 'Label', 'Timestamp')
+
+
+def windowing2vs4():
+    df = test_sensor_data()
+    print('DataFrame constructed')
+
+    wrapped2 = wrapper(w.windowing2, df, ['Ax', 'Ay', 'Az'], 'Label', 'Timestamp', mean=np.mean, std=np.std)
+    wrapped4 = wrapper(w.windowing4, df, ['Ax', 'Ay', 'Az'], 'Label', 'Timestamp', mean=np.mean, std=np.std)
+
+    time2 = timeit(wrapped2, number=1)
+    time4 = timeit(wrapped4, number=1)
+
+    print('windowing2:', time2)
+    print('windowing4:', time4)
+
+
+def windowing5_test():
+    df = test_sensor_data()
+    print("DataFrame constructed")
+
+    # Time test
+    wrapped = wrapper(w.windowing5, df, ['Ax', 'Ay', 'Az'])
+    print('windowing5:', timeit(wrapped, number=1))
+
+    # return w.windowing5(df, ['Ax', 'Ay', 'Az'])
 
 
 def export_test():
@@ -119,5 +136,7 @@ if __name__ == '__main__':
     # df1 = windowing2_test()
     # df2 = windowing3_test()
     export_test()
+    # windowing2vs4()
+    # print(windowing5_test())
 
     # ed.export([df.drop(columns='Time')], '../data/export_test.csv')

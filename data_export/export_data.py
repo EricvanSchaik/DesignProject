@@ -19,9 +19,7 @@ def export(data: [], label_col: str, timestamp_col: str, file_path: str, comment
 
     # Window over data per DataFrame
     for df in data:
-        new_df = w.windowing2(df, collist, label_col, timestamp_col,
-                              mean=np.mean,
-                              std=np.std)
+        new_df = w.windowing5(df, collist, label_col, timestamp_col)
         res.append(new_df)
 
     # Turn list into one DataFrame
