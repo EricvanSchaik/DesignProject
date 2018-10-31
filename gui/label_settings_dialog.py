@@ -11,11 +11,11 @@ class LabelSettingsDialog(QtWidgets.QDialog, Ui_Dialog):
         self.setupUi(self)
         self.label_manager = label_manager
         self.accepted.connect(self.add_label)
-        self.is_accepted = False
+        self.settings_changed = False
         self.pushButton.clicked.connect(self.delete_label)
         self.comboBox.currentTextChanged.connect(self.label_changed)
         self.comboBox_2.currentTextChanged.connect(self.color_changed)
-        colors = ['blue', 'green', 'red', 'cyan', 'magenta', 'yellow', 'grey', 'black', 'white']
+        colors = ['blue', 'deepskyblue', 'cyan', 'green', 'lime', 'red', 'yellow', 'orange', 'magenta', 'grey', 'black']
         self.comboBox_2.addItems(colors)
         self.comboBox_3.addItems(colors)
         self.color_dict = dict()
@@ -26,11 +26,12 @@ class LabelSettingsDialog(QtWidgets.QDialog, Ui_Dialog):
             self.comboBox_2.setCurrentText(self.label_manager.get_label_types()[0][1])
 
     def add_label(self):
-        self.is_accepted = True
+        self.settings_changed = True
         if self.lineEdit.text():
             self.label_manager.add_label_type(self.lineEdit.text(), self.comboBox_3.currentText(), '')
 
     def delete_label(self):
+        self.settings_changed = True
         self.label_manager.delete_label_type(self.comboBox.currentText())
         self.comboBox.clear()
         for label in self.label_manager.get_label_types():
@@ -44,6 +45,7 @@ class LabelSettingsDialog(QtWidgets.QDialog, Ui_Dialog):
             self.comboBox_2.setCurrentText(self.color_dict[text])
 
     def color_changed(self, color):
+        self.settings_changed = True
         if self.comboBox.currentText():
             self.label_manager.update_label_color(self.comboBox.currentText(), color)
             self.color_dict[self.comboBox.currentText()] = color

@@ -314,7 +314,7 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         label_settings = LabelSettingsDialog(self.label_storage)
         label_settings.exec_()
         label_settings.show()
-        if label_settings.is_accepted:
+        if label_settings.settings_changed:
             self.draw_graph()
 
     def open_subject_mapping(self):
@@ -500,6 +500,8 @@ class GUI(QMainWindow, Ui_VideoPlayer):
                 pass
 
     def draw_graph(self):
+        if not self.sensordata:
+            return
         self.dataplot.clear()
 
         self.dataplot.plot(self.data[self.data.columns[0]], self.data[self.current_plot], ',-', linewidth=1, color='black')

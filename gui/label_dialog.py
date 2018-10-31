@@ -40,9 +40,10 @@ class LabelSpecs(QtWidgets.QDialog, Ui_LabelSpecs):
         self.label.label = label
 
     def send_label(self):
-        self.label_manager.add_label(datetime.fromtimestamp(self.label.start), datetime.fromtimestamp(
-            self.label.end), str(self.label.label), self.serial_number)
-        self.is_accepted = True
+        if not self.label.label == '':
+            self.label_manager.add_label(datetime.fromtimestamp(self.label.start), datetime.fromtimestamp(
+                self.label.end), str(self.label.label), self.serial_number)
+            self.is_accepted = True
 
 
 class Label:
