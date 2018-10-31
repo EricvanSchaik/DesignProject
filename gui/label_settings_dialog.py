@@ -15,7 +15,7 @@ class LabelSettingsDialog(QtWidgets.QDialog, Ui_Dialog):
         self.pushButton.clicked.connect(self.delete_label)
         self.comboBox.currentTextChanged.connect(self.label_changed)
         self.comboBox_2.currentTextChanged.connect(self.color_changed)
-        colors = ['blue', 'green', 'red', 'cyan', 'magenta', 'yellow', 'black', 'white']
+        colors = ['blue', 'green', 'red', 'cyan', 'magenta', 'yellow', 'grey', 'black', 'white']
         self.comboBox_2.addItems(colors)
         self.comboBox_3.addItems(colors)
         self.color_dict = dict()
