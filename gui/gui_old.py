@@ -200,7 +200,7 @@ class GUI(QMainWindow, Ui_VideoPlayer):
 
             self.ymin = self.data[self.current_plot].min()
             self.ymax = self.data[self.current_plot].max()
-            self.draw_graph()
+            self.reset_graph()
             self.dataplot.axis([10, 10, self.ymin, self.ymax])
             self.timer.timeout.connect(self.update_plot)
             self.timer.start(1)
@@ -315,7 +315,7 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         label_settings.exec_()
         label_settings.show()
         if label_settings.is_accepted:
-            self.draw_graph()
+            self.reset_graph()
 
     def open_subject_mapping(self):
         subject_mapping = SubjectTable(self.project_dialog.project_name)
@@ -386,7 +386,7 @@ class GUI(QMainWindow, Ui_VideoPlayer):
             self.label_current_formula.setText(self.formula_dict[self.comboBox_plot.currentText()])
         self.ymin = self.data[self.current_plot].min()
         self.ymax = self.data[self.current_plot].max()
-        self.draw_graph()
+        self.reset_graph()
 
     def new_plot(self):
         try:
@@ -428,7 +428,7 @@ class GUI(QMainWindow, Ui_VideoPlayer):
                         self.large_label.doubleSpinBox_end.setValue(event.xdata)
                     start = self.large_label.doubleSpinBox_start.value()
                     end = self.large_label.doubleSpinBox_end.value()
-                    for label in self.label_storage.get_labels_date(self.sensordata.metadata['sn'], self.sensordata.metadata['datetime'].date()):
+                    for label in self.label_storage.get_all_labels(self.sensordata.metadata['sn']):
                         label_start = (label[0] - self.sensordata.metadata['datetime']).total_seconds()
                         label_end = (label[1] - self.sensordata.metadata['datetime']).total_seconds()
                         if label_start < start < label_end and label_start < end < label_end:
@@ -445,16 +445,11 @@ class GUI(QMainWindow, Ui_VideoPlayer):
                                                      QMessageBox.Yes, QMessageBox.No)
                         if reply == QMessageBox.Yes:
                             self.label_storage.delete_label(delete_label[0], self.sensordata.metadata['sn'])
-                            # remove label highlight and text from plot
-                            self.label_highlights[(delete_label[0] - self.combidt).total_seconds()][0].remove()
-                            self.label_highlights[(delete_label[0] - self.combidt).total_seconds()][1].remove()
+                            self.reset_graph()
                     else:
                         self.large_label.exec_()
                     if self.large_label.is_accepted:
-                        new_label_start = (datetime.fromtimestamp(self.large_label.label.start) - self.combidt).total_seconds()
-                        new_label_end = (datetime.fromtimestamp(self.large_label.label.end) - self.combidt).total_seconds()
-                        self.add_label_highlight(new_label_start, new_label_end, self.large_label.label.label)
-                        self.canvas.draw()
+                        self.reset_graph()
                 self.labeling = not self.labeling
 
     def onrelease(self, event):
@@ -468,7 +463,7 @@ class GUI(QMainWindow, Ui_VideoPlayer):
                     self.new_label.doubleSpinBox_end.setValue(event.xdata)
                 start = self.new_label.doubleSpinBox_start.value()
                 end = self.new_label.doubleSpinBox_end.value()
-                for label in self.label_storage.get_labels_date(self.sensordata.metadata['sn'], self.sensordata.metadata['datetime'].date()):
+                for label in self.label_storage.get_all_labels(self.sensordata.metadata['sn']):
                     label_start = (label[0] - self.sensordata.metadata['datetime']).total_seconds()
                     label_end = (label[1] - self.sensordata.metadata['datetime']).total_seconds()
                     if label_start < start < label_end and label_start < end < label_end:
@@ -485,37 +480,44 @@ class GUI(QMainWindow, Ui_VideoPlayer):
                                                  QMessageBox.Yes, QMessageBox.No)
                     if reply == QMessageBox.Yes:
                         self.label_storage.delete_label(delete_label[0], self.sensordata.metadata['sn'])
-                        # remove label highlight and text from plot
-                        self.label_highlights[(delete_label[0] - self.combidt).total_seconds()][0].remove()
-                        self.label_highlights[(delete_label[0] - self.combidt).total_seconds()][1].remove()
+                        self.reset_graph()
                 else:
                     self.new_label.exec_()
                 if self.new_label.is_accepted:
-                    new_label_start = (datetime.fromtimestamp(self.new_label.label.start) - self.combidt).total_seconds()
-                    new_label_end = (datetime.fromtimestamp(self.new_label.label.end) - self.combidt).total_seconds()
-                    self.add_label_highlight(new_label_start, new_label_end, self.new_label.label.label)
-                    self.canvas.draw()
+                    self.reset_graph()
             elif event.button == 3:
                 pass
 
-    def draw_graph(self):
+    def reset_graph(self):
         self.dataplot.clear()
-
-        self.dataplot.plot(self.data[self.data.columns[0]], self.data[self.current_plot], ',-', linewidth=1, color='grey')
-        self.vertical_line = self.dataplot.axvline(x=0)
-        self.vertical_line.set_color('red')
 
         for label_type in self.label_storage.get_label_types():
             self.color_dict[label_type[0]] = label_type[1]
-        labels = self.label_storage.get_labels_date(self.sensordata.metadata['sn'], self.sensordata.metadata['datetime'].date())
-        self.label_highlights = {}
-        for label in labels:
-            label_start = (label[0] - self.sensordata.metadata['datetime']).total_seconds()
-            label_end = (label[1] - self.sensordata.metadata['datetime']).total_seconds()
-            self.add_label_highlight(label_start, label_end, label[2])
-        self.canvas.draw()
-
-    def add_label_highlight(self, label_start: float, label_end: float, label_type: str):
-        span = self.dataplot.axvspan(label_start, label_end, facecolor=self.color_dict[label_type], alpha=0.5)  # TODO: make alpha a setting?
-        text = self.dataplot.text((label_start + label_end) / 2, self.ymax * 0.75, label_type, horizontalalignment='center')
-        self.label_highlights[label_start] = (span, text)
+        labels = self.label_storage.get_all_labels(self.sensordata.metadata['sn'])
+        if labels:
+            for i in range(len(labels)):
+                label_start = (labels[i][0] - self.sensordata.metadata['datetime']).total_seconds()
+                label_end = (labels[i][1] - self.sensordata.metadata['datetime']).total_seconds()
+                subdata = self.data.where(label_start < self.data[self.data.columns[0]])
+                subdata = subdata.where(self.data[self.data.columns[0]] < label_end)
+                self.dataplot.plot(subdata[self.data.columns[0]], subdata[self.current_plot], ',-', linewidth=1, color=self.color_dict[
+                    labels[i][2]])
+                if not i:
+                    subdata = self.data.where(self.data[self.data.columns[0]] < label_start)
+                    self.dataplot.plot(subdata[self.data.columns[0]], subdata[self.current_plot], ',-', linewidth=1, color='grey')
+                if i == (len(labels) - 1):
+                    subdata = self.data.where(self.data[self.data.columns[0]] > label_end)
+                    self.dataplot.plot(subdata[self.data.columns[0]], subdata[self.current_plot], ',-', linewidth=1, color='grey')
+                else:
+                    subdata = self.data.where(self.data[self.data.columns[0]] > label_end)
+                    subdata = subdata.where(subdata[self.data.columns[0]] < (labels[i + 1][0] - self.sensordata.metadata[
+                        'datetime']).total_seconds())
+                    self.dataplot.plot(subdata[self.data.columns[0]], subdata[self.current_plot], ',-', linewidth=1, color='grey')
+        else:
+            self.dataplot.plot(self.data[self.data.columns[0]], self.data[self.current_plot], ',-', linewidth=1, color='grey')
+        self.vertical_line = self.dataplot.axvline(x=0)
+        self.vertical_line.set_color('red')
+        for label in self.label_storage.get_all_labels(self.sensordata.metadata['sn']):
+            self.dataplot.text(((label[0] - self.sensordata.metadata['datetime']).total_seconds() + (
+                (label[1] - self.sensordata.metadata['datetime']).total_seconds())) / 2,
+                               (self.ymax * (3 / 4)), label[2], horizontalalignment='center')

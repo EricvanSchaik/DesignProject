@@ -18,7 +18,7 @@ sql_get_labels = "SELECT Start_time, End_time, Label_name FROM labelData WHERE S
 sql_get_all_labels = "SELECT * FROM labelData ORDER BY Start_time ASC"
 sql_get_labels_date = "SELECT Start_time, End_time, Label_name FROM labelData WHERE date(Start_time) = ? AND " \
                       "Sensor_id = ? ORDER BY Start_time ASC"
-sql_get_labels_between_dates = "SELECT Start_time, End_time, Label_name FROM labelData WHERE (date(Start_time) " \
+sql_get_labels_between_dates = "SELECT Start_time, End_time, Label_name FROM labelData WHERE (Start_time " \
                                "BETWEEN ? AND ?) AND Sensor_id = ? ORDER BY Start_time ASC"
 sql_get_sensor_ids = "SELECT DISTINCT Sensor_id FROM labelData"
 sql_add_file = "INSERT INTO fileMapping(Filepath, Sensor_id, Filedate) VALUES (?,?,?)"
@@ -204,7 +204,7 @@ class LabelManager:
         self._cur.execute(sql_get_labels_date, (date, sensor_id))
         return self._cur.fetchall()
 
-    def get_labels_between_dates(self, sensor_id: str, start_date: date, end_date: date) \
+    def get_labels_between_dates(self, sensor_id: str, start_date: datetime, end_date: datetime) \
             -> List[Tuple[datetime, datetime, str]]:
         """
         Returns all the labels for a given sensor between the given dates.

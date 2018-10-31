@@ -421,19 +421,17 @@
     </property>
     <addaction name="actionOpen_video"/>
     <addaction name="actionOpen_sensordata"/>
+    <addaction name="actionExport_Sensordata"/>
     <addaction name="actionSettings"/>
     <addaction name="actionLabel_Settings"/>
     <addaction name="actionSubject_Mapping"/>
+    <addaction name="actionMachine_Learning"/>
     <addaction name="actionExit"/>
    </widget>
    <addaction name="menuFile"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionOpen_video">
-   <property name="icon">
-    <iconset>
-     <normaloff>resources/file_light-15-512.png</normaloff>resources/file_light-15-512.png</iconset>
-   </property>
    <property name="text">
     <string>Open Video</string>
    </property>
@@ -442,10 +440,6 @@
    </property>
   </action>
   <action name="actionExit">
-   <property name="icon">
-    <iconset>
-     <normaloff>resources/exit-512.png</normaloff>resources/exit-512.png</iconset>
-   </property>
    <property name="text">
     <string>Exit</string>
    </property>
@@ -454,10 +448,6 @@
    </property>
   </action>
   <action name="actionOpen_sensordata">
-   <property name="icon">
-    <iconset>
-     <normaloff>resources/Open-Folder-512.png</normaloff>resources/Open-Folder-512.png</iconset>
-   </property>
    <property name="text">
     <string>Open Sensordata</string>
    </property>
@@ -475,6 +465,16 @@
   <action name="actionSubject_Mapping">
    <property name="text">
     <string>Subject Mapping</string>
+   </property>
+  </action>
+  <action name="actionExport_Sensordata">
+   <property name="text">
+    <string>Export Sensordata</string>
+   </property>
+  </action>
+  <action name="actionMachine_Learning">
+   <property name="text">
+    <string>Machine Learning</string>
    </property>
   </action>
  </widget>
