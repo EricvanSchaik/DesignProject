@@ -1,6 +1,6 @@
 import pandas as pd
+
 from data_export import windowing as w
-import numpy as np
 
 
 def export(data: [], label_col: str, timestamp_col: str, file_path: str, comments: [str], comment=';'):
@@ -19,7 +19,7 @@ def export(data: [], label_col: str, timestamp_col: str, file_path: str, comment
 
     # Window over data per DataFrame
     for df in data:
-        new_df = w.windowing5(df, collist, label_col, timestamp_col)
+        new_df = w.windowing_fast(df, collist, label_col, timestamp_col)
         res.append(new_df)
 
     # Turn list into one DataFrame

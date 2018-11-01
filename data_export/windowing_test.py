@@ -74,7 +74,7 @@ def windowing2_test():
 
     # wrapped = wrapper(w.windowing2, df, ['Ax', 'Ay', 'Az'], 'Label', 'Timestamp', mean=np.mean, std=np.std)
     # print('mean: ', timeit(wrapped, number=1))
-    return w.windowing2(df, ['Ax', 'Ay', 'Az'], 'Label', 'Timestamp', mean=np.mean, std=np.std)
+    return w.windowing(df, ['Ax', 'Ay', 'Az'], 'Label', 'Timestamp', mean=np.mean, std=np.std)
 
 
 def windowing3_test():
@@ -100,7 +100,7 @@ def windowing2vs4():
     df = test_sensor_data()
     print('DataFrame constructed')
 
-    wrapped2 = wrapper(w.windowing2, df, ['Ax', 'Ay', 'Az'], 'Label', 'Timestamp', mean=np.mean, std=np.std)
+    wrapped2 = wrapper(w.windowing, df, ['Ax', 'Ay', 'Az'], 'Label', 'Timestamp', mean=np.mean, std=np.std)
     wrapped4 = wrapper(w.windowing4, df, ['Ax', 'Ay', 'Az'], 'Label', 'Timestamp', mean=np.mean, std=np.std)
 
     time2 = timeit(wrapped2, number=1)
@@ -114,8 +114,14 @@ def windowing5_test():
     df = test_sensor_data()
     print("DataFrame constructed")
 
+    # Get columns to be windowed over
+    collist = df.columns.tolist()
+    collist.remove('Label')
+    collist.remove('Timestamp')
+    collist.remove('Time')
+
     # Time test
-    wrapped = wrapper(w.windowing5, df, ['Ax', 'Ay', 'Az'])
+    wrapped = wrapper(w.windowing_fast, df, collist)
     print('windowing5:', timeit(wrapped, number=1))
 
     # return w.windowing5(df, ['Ax', 'Ay', 'Az'])
@@ -134,9 +140,6 @@ def nearest(items, pivot):
 
 if __name__ == '__main__':
     # df1 = windowing2_test()
-    # df2 = windowing3_test()
-    export_test()
+    # export_test()
     # windowing2vs4()
-    # print(windowing5_test())
-
-    # ed.export([df.drop(columns='Time')], '../data/export_test.csv')
+    windowing5_test()

@@ -84,7 +84,7 @@ if __name__ == '__main__':
         'std': np.std,
     }
 
-    df = wd.windowing2(data, window_cols, LABEL_COL, TIMESTAMP_COL, **funcs)
+    df = wd.windowing(data, window_cols, LABEL_COL, TIMESTAMP_COL, **funcs)
     clsf = Classifier(GaussianNB(), df, used_cols)
     # res = clsf.classify()
 

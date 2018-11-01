@@ -69,17 +69,17 @@ class SensorDataTestCase(unittest.TestCase):
 
     def test_add_column(self):
         self.sensor_data.add_column_from_func("Vector", "sqrt(Ax^2 + Ay^2 + Az^2)")
-        self.assertEqual(self.data["Vector"][0], 8.536469993305431,
+        self.assertEqual(self.sensor_data.get_data()["Vector"][0], 8.536469993305431,
                          "Vector incorrectly calculated")
 
     def test_metadata(self):
-        self.assertEqual(self.sensor_data.metadata['time'], "08:54:32.261\n",
+        self.assertEqual(self.sensor_data.metadata['time'], "08:54:32.261",
                          "Parsed time incorrectly")
         self.assertEqual(self.sensor_data.metadata['date'], "2018-05-15",
                          "Parsed date incorrectly")
         self.assertEqual(self.sensor_data.metadata['sr'], "200",
                          "Parsed sampling rate incorrectly")
-        self.assertEqual(self.sensor_data.metadata['sn'], "SN:CCDC3016AE9D6B4\n",
+        self.assertEqual(self.sensor_data.metadata['sn'], "SN:CCDC3016AE9D6B4",
                          "Parsed serial number incorrectly")
         self.assertEqual(self.sensor_data.metadata['names'][1], "Ax",
                          "Parsed names incorrectly")
