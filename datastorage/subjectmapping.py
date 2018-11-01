@@ -1,3 +1,4 @@
+import os.path
 import sqlite3
 from datastorage import settings
 from datetime import datetime
@@ -178,14 +179,15 @@ class SubjectManager:
         data_frames = []
         settings_dict = Settings(self.project_name).settings_dict
         for path in paths:
-            # for each file, load a DataFrame and add the labels to it
-            sd = SensorData(path, settings_dict)
-            time_col_name = sd.metadata['names'][0]  # making the assumption that the time column is always the first
-            sd.add_timestamp_column(time_col_name, "Timestamp")
-            end_datetime = datetime.fromisoformat(str(sd.get_data()['Timestamp'].iloc[-1]))
-            labels = lm.get_labels_between_dates(subject_data[0], sd.metadata['datetime'], end_datetime)
-            sd.add_labels(labels, "Label", "Timestamp")
-            data_frames.append(sd.get_data())
+            if os.path.isfile(path):
+                # for each file, load a DataFrame and add the labels to it
+                sd = SensorData(path, settings_dict)
+                time_col_name = sd.metadata['names'][0]  # making the assumption that the time column is always the first
+                sd.add_timestamp_column(time_col_name, "Timestamp")
+                end_datetime = datetime.fromisoformat(str(sd.get_data()['Timestamp'].iloc[-1]))
+                labels = lm.get_labels_between_dates(subject_data[0], sd.metadata['datetime'], end_datetime)
+                sd.add_labels(labels, "Label", "Timestamp")
+                data_frames.append(sd.get_data())
         return data_frames
 
     def get_table(self):
