@@ -20,7 +20,12 @@ class TestSubjects(unittest.TestCase):
 
     def test_add_subject(self):
         self.s.add_subject('subject')
-        self.assertEqual('subject', self.s._cur.execute('SELECT Name FROM subject_map').fetchone()[0])
+        self.assertIn('subject', self.s.get_subjects())
+        self.s.update_subject('subject', 'new_subject')
+        self.assertNotIn('subject', self.s.get_subjects())
+        self.assertIn('new_subject', self.s.get_subjects())
+        self.s.delete_subject('subject')
+        self.assertNotIn('subject', self.s.get_subjects())
 
     def test_update_subject_info(self):
         date = datetime.now()
