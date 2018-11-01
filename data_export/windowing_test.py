@@ -24,6 +24,8 @@ def test_sensor_data():
     next(labels)
     labels = sorted(labels, key=lambda row: row[0])
 
+    file.close()
+
     res = []
     for i in range(len(labels) - 1):
         res.append([labels[i][0], labels[i + 1][0], labels[i][1]])
@@ -47,7 +49,7 @@ def small_data_test():
 
     start = df['Timestamp'].iloc[0]
     pivot = start + timedelta(seconds=1)
-    cutoff = df.loc[df['Timestamp'] == nearest(df['Timestamp'].tolist(), pivot)]
+    cutoff = df.loc[df['Timestamp'] == w.nearest(df['Timestamp'].tolist(), pivot)]
     rps = cutoff.index[0] - df.index[0]
     print('rows per second:', rps)
 
@@ -59,58 +61,12 @@ def windowing_test():
     df = test_sensor_data()
     print("DataFrame constructed")
 
-    # wrapped = wrapper(w.windowing, df, 'Label', 'Timestamp')
-    # print('.mean():', timeit(wrapped, number=1))
-    # wrapped = wrapper(w.windowing, df, 'Label', 'Timestamp', w.mean)
-    # print('Apply:', timeit(wrapped, number=1))
-
-    res = w.windowing(df, 'Label', 'Timestamp')
-    return res
-
-
-def windowing2_test():
-    df = test_sensor_data()
-    print("DataFrame constructed")
-
-    # wrapped = wrapper(w.windowing2, df, ['Ax', 'Ay', 'Az'], 'Label', 'Timestamp', mean=np.mean, std=np.std)
+    # wrapped = wrapper(w.windowing, df, ['Ax', 'Ay', 'Az'], 'Label', 'Timestamp', mean=np.mean, std=np.std)
     # print('mean: ', timeit(wrapped, number=1))
     return w.windowing(df, ['Ax', 'Ay', 'Az'], 'Label', 'Timestamp', mean=np.mean, std=np.std)
 
 
-def windowing3_test():
-    df = test_sensor_data()
-    print("DataFrame constructed")
-
-    funcs = {
-        'mean': {
-            w.STR_FUNC: np.mean,
-            w.STR_COLS: ['Ax', 'Ay', 'Az']
-        },
-        'std': {
-            w.STR_FUNC: np.std,
-            w.STR_COLS: ['Ax', 'Ay', 'Az']
-        }
-    }
-    wrapped = wrapper(w.windowing3, df, funcs, 'Label', 'Timestamp', True)
-    print('mean: ', timeit(wrapped, number=1))
-    return w.windowing3(df, funcs, 'Label', 'Timestamp')
-
-
-def windowing2vs4():
-    df = test_sensor_data()
-    print('DataFrame constructed')
-
-    wrapped2 = wrapper(w.windowing, df, ['Ax', 'Ay', 'Az'], 'Label', 'Timestamp', mean=np.mean, std=np.std)
-    wrapped4 = wrapper(w.windowing4, df, ['Ax', 'Ay', 'Az'], 'Label', 'Timestamp', mean=np.mean, std=np.std)
-
-    time2 = timeit(wrapped2, number=1)
-    time4 = timeit(wrapped4, number=1)
-
-    print('windowing2:', time2)
-    print('windowing4:', time4)
-
-
-def windowing5_test():
+def windowing_fast_test():
     df = test_sensor_data()
     print("DataFrame constructed")
 
@@ -122,9 +78,9 @@ def windowing5_test():
 
     # Time test
     wrapped = wrapper(w.windowing_fast, df, collist)
-    print('windowing5:', timeit(wrapped, number=1))
+    print('windowing_fast:', timeit(wrapped, number=1))
 
-    # return w.windowing5(df, ['Ax', 'Ay', 'Az'])
+    # return w.windowing_fast(df, ['Ax', 'Ay', 'Az'])
 
 
 def export_test():
@@ -134,12 +90,7 @@ def export_test():
     ed.export([df], 'Label', 'Timestamp', '../data/test_export.csv', [])
 
 
-def nearest(items, pivot):
-    return min(items, key=lambda x: abs(x - pivot))
-
-
 if __name__ == '__main__':
-    # df1 = windowing2_test()
+    # df1 = windowing_test()
     # export_test()
-    # windowing2vs4()
-    windowing5_test()
+    windowing_fast_test()
