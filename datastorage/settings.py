@@ -39,13 +39,13 @@ class Settings:
             self.load()
 
     def load(self) -> None:
-        """Loads the saved values back into this class from a file"""
+        """Loads the saved setting dictionary back into this class from a file"""
         f = open(self._get_path(), 'rb')
         self.settings_dict = pickle.load(f)
         f.close()
 
     def save(self) -> None:
-        """Saves the values inside this class to a file"""
+        """Saves the current settings dictionary to a file"""
         f = open(self._get_path(), 'wb')
         pickle.dump(self.settings_dict, f)
         f.close()

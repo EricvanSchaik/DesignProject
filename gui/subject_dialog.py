@@ -56,7 +56,7 @@ class SubjectTable(QtWidgets.QDialog, Ui_Subject_table):
         self.delColumnButton.clicked.connect(self.delete_column)
         self.tableWidget.cellChanged.connect(self.update_string)
 
-    def add_row(self):
+    def add_row(self) -> None:
         text, accepted = QInputDialog.getText(self, "Enter new subject name", "Subject name:", QLineEdit.Normal, "")
         if accepted:
             if text == '':
@@ -92,7 +92,7 @@ class SubjectTable(QtWidgets.QDialog, Ui_Subject_table):
 
             self.tableWidget.blockSignals(False)
 
-    def add_col(self):
+    def add_col(self) -> None:
         text, accepted = QInputDialog.getText(self, "Enter new column name", "Column name:", QLineEdit.Normal, "")
         if accepted:
             if text == '':
@@ -107,7 +107,7 @@ class SubjectTable(QtWidgets.QDialog, Ui_Subject_table):
             self.subject_manager.add_column(text)
             self.col_names.append(text)
 
-    def delete_row(self):
+    def delete_row(self) -> None:
         if len(self.subject_names) == 0:
             self.show_warning("There is no subject that can be removed")
             return
@@ -120,7 +120,7 @@ class SubjectTable(QtWidgets.QDialog, Ui_Subject_table):
             self.subject_names.remove(subject)
             self.tableWidget.removeRow(row)
 
-    def delete_column(self):
+    def delete_column(self) -> None:
         if len(self.col_names) == 4:  # there are 4 standard columns (subject name, sensor id, start date, end date)
             self.show_warning("There is no column that can be removed")
             return
@@ -134,7 +134,7 @@ class SubjectTable(QtWidgets.QDialog, Ui_Subject_table):
             self.col_names.remove(col_name)
             self.tableWidget.removeColumn(column)
 
-    def update_string(self, row, col):
+    def update_string(self, row: int, col: int) -> None:
         # called by edit of a text cell, either subject name column or a user-made column
         subject = self.subject_names[row]
         new_value = self.tableWidget.item(row, col).text()
@@ -152,7 +152,7 @@ class SubjectTable(QtWidgets.QDialog, Ui_Subject_table):
             col_name = self.col_names[col]
             self.subject_manager.update_user_column(col_name, subject, new_value)
 
-    def update_sensor_id(self, sensor_id):
+    def update_sensor_id(self, sensor_id: str) -> None:
         row = self.tableWidget.currentRow()  # get the row of the changed sensor id
         combo_box = self.tableWidget.cellWidget(row, self.tableWidget.currentColumn())
         if "" in combo_box.model().stringList():  # blank option no longer necessary because a sensor was just selected
@@ -160,7 +160,7 @@ class SubjectTable(QtWidgets.QDialog, Ui_Subject_table):
         subject = self.subject_names[row]
         self.subject_manager.update_sensor(subject, sensor_id)
 
-    def update_date(self, date: QDate):
+    def update_date(self, date: QDate) -> None:
         row = self.tableWidget.currentRow()
         col = self.tableWidget.currentColumn()
         subject = self.subject_names[row]
@@ -170,5 +170,5 @@ class SubjectTable(QtWidgets.QDialog, Ui_Subject_table):
         else:  # end date
             self.subject_manager.update_end_date(subject, new_date)
 
-    def show_warning(self, message: str):
+    def show_warning(self, message: str) -> None:
         QMessageBox.warning(self, 'Warning', message, QMessageBox.Cancel)

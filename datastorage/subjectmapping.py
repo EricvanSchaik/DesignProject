@@ -2,7 +2,7 @@ import os.path
 import sqlite3
 from datastorage import settings
 from datetime import datetime
-from typing import Any, List
+from typing import Any, List, Tuple
 from data_import.sensor_data import SensorData
 import pandas as pd
 
@@ -47,10 +47,21 @@ class SubjectManager:
         self._conn.commit()
 
     def update_subject(self, name_old: str, name_new: str) -> None:
+        """
+        Changes the name of a subject.
+
+        :param name_old: name that should be changed
+        :param name_new: name that it should be changed to
+        """
         self._cur.execute(sql_update_subject, (name_new, name_old))
         self._conn.commit()
 
     def delete_subject(self, name: str) -> None:
+        """
+        Removes a subject from the table.
+
+        :param name: name of the subject to remove
+        """
         self._cur.execute(sql_delete_subject, [name])
         self._conn.commit()
 
@@ -103,7 +114,7 @@ class SubjectManager:
         self.settings.set_setting("next_col", new_col_nr + 1)
         return True
 
-    def delete_column(self, name: str):
+    def delete_column(self, name: str) -> None:
         """
         Deletes a column from the table if it exists. (The column is not deleted from the actual database,
         it is just not visible anymore via this class.)
