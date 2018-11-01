@@ -20,7 +20,7 @@ sql_get_labels_date = "SELECT Start_time, End_time, Label_name FROM labelData WH
                       "Sensor_id = ? ORDER BY Start_time ASC"
 sql_get_labels_between_dates = "SELECT Start_time, End_time, Label_name FROM labelData WHERE (Start_time " \
                                "BETWEEN ? AND ?) AND Sensor_id = ? ORDER BY Start_time ASC"
-sql_get_sensor_ids = "SELECT DISTINCT Sensor_id FROM labelData"
+sql_get_sensor_ids = "SELECT DISTINCT Sensor_id FROM fileMapping"
 sql_add_file = "INSERT INTO fileMapping(Filepath, Sensor_id, Filedate) VALUES (?,?,?)"
 sql_get_file_names = "SELECT Filepath FROM fileMapping WHERE Sensor_id = ? AND (Filedate BETWEEN ? AND ?)"
 
