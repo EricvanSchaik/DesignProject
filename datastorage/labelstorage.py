@@ -227,25 +227,25 @@ class LabelManager:
         return [x[0] for x in self._cur.fetchall()]
 
     # TODO: update export location?
-    def export_labels_all(self) -> None:
-        """
-        Exports all labels for this project to 1 .csv file
-        """
-        with open('projects/' + self.project_name + '/all_labels_' + self.project_name + '.csv', 'w', newline='') as csvfile:
-            filewriter = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
-            filewriter.writerow(['Start_time', 'End_time', 'label', 'sensorID'])
-            for row in self._cur.execute(sql_get_all_labels).fetchall():
-                filewriter.writerow([row[0], row[1], row[2], row[3]])
-
-    def export_labels_sensor_date(self, sensor: str, date: date) -> None:
-        """
-        Exports the labels for a given sensor on a given date to a .csv file
-
-        :param sensor: the sensor ID of the sensor
-        :param date: the date of the labels to export
-        """
-        with open('projects/' + self.project_name + '/' + str(date) + '_' + sensor + '.csv', 'w', newline='') as csvfile:
-            filewriter = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
-            filewriter.writerow(['Start_time', 'End_time', 'label', 'sensorID'])
-            for row in self._cur.execute(sql_get_labels_date, (date, sensor)).fetchall():
-                filewriter.writerow([row[0], row[1], row[2]])
+    # def export_labels_all(self) -> None:
+    #     """
+    #     Exports all labels for this project to 1 .csv file
+    #     """
+    #     with open('projects/' + self.project_name + '/all_labels_' + self.project_name + '.csv', 'w', newline='') as csvfile:
+    #         filewriter = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+    #         filewriter.writerow(['Start_time', 'End_time', 'label', 'sensorID'])
+    #         for row in self._cur.execute(sql_get_all_labels).fetchall():
+    #             filewriter.writerow([row[0], row[1], row[2], row[3]])
+    #
+    # def export_labels_sensor_date(self, sensor: str, date: date) -> None:
+    #     """
+    #     Exports the labels for a given sensor on a given date to a .csv file
+    #
+    #     :param sensor: the sensor ID of the sensor
+    #     :param date: the date of the labels to export
+    #     """
+    #     with open('projects/' + self.project_name + '/' + str(date) + '_' + sensor + '.csv', 'w', newline='') as csvfile:
+    #         filewriter = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+    #         filewriter.writerow(['Start_time', 'End_time', 'label', 'sensorID'])
+    #         for row in self._cur.execute(sql_get_labels_date, (date, sensor)).fetchall():
+    #             filewriter.writerow([row[0], row[1], row[2]])

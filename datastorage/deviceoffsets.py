@@ -39,7 +39,7 @@ class OffsetManager:
         if len(results) != 0:
             return results[0]
 
-        # otherwise check again without date and return the average or 0 if no offset is known at all
+        # otherwise check again without date and return the average, or 0 if no offset is known at all
         c.execute(sql_queryNoDate, (cam_id, sens_id))
         results = [x[0] for x in c.fetchall()]
 
@@ -49,7 +49,7 @@ class OffsetManager:
             self._conn.commit()
             return 0
 
-        # Camera-Sensor combination unknown; add to table with average offset
+        # Camera-Sensor combination known; add to table with average offset and requested date
         avg = mean(results)
         c.execute(sql_insertOffset, (cam_id, sens_id, avg, date))
         self._conn.commit()
