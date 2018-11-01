@@ -9,6 +9,7 @@ def export(data: [], label_col: str, timestamp_col: str, file_path: str, comment
     for c in comments:
         # TODO: determine whether '\n' needs to be added at the end of the line
         f.write(comment + c)
+    f.close()
 
     res = []
 

@@ -3,11 +3,6 @@ from datetime import timedelta
 import pandas as pd
 
 
-STR_FUNC = 'function'
-STR_FUNCS = 'functions'
-STR_COLS = 'columns'
-
-
 def split_df(df, col):
     """
     Splits a data frame into multiple data frames based on the given column; if the column value
@@ -83,40 +78,59 @@ def windowing(df: pd.DataFrame, cols: [str], label_col: str, timestamp_col: str,
         pivot = df[timestamp_col].iloc[0] + timedelta(seconds=1)
         cutoff = df.loc[df[timestamp_col] == nearest(df[timestamp_col].tolist(), pivot)]
 
-        # Determine rows per second of DataFrame
+        # Determine rows per second of DataFrame (how many rows fit in 1 second)
         rps = cutoff.index[0] - df.index[0]
 
         for col in cols:
+            # Get a DataFrame with only selected column and timestamp column
             df_col = df[[col, timestamp_col]]
 
             if funcs:
                 for func_name, func in funcs.items():
+                    # Determine new column name (based on function)
                     new_col = '%s_%s' % (col, func_name)
 
+                    # Roll over column and apply function
                     df_roll = df_col.rolling(window='2s', on=timestamp_col).apply(func, raw=True)
+
+                    # Rename column to the new name
                     df_roll = df_roll.rename(columns={col: new_col})
+
+                    # Select 2 second windows with 1 second overlap from rolled DataFrame
                     df_roll = df_roll[rps*2 - 1::rps]
 
+                    # Add DataFrame to rolling list
                     df_rolls.append(df_roll)
             else:
                 # Use the mean as the standard function
+                # Determine new column name
                 new_col = '%s_%s' % (col, 'mean')
 
+                # Roll over column and apply mean function
                 df_roll = df_col.rolling(window='2s', on=timestamp_col).mean()
+
+                # Rename column to the new name
                 df_roll = df_roll.rename(columns={col: new_col})
+
+                # Select 2 second windows with 1 second overlap from rolled DataFrame
                 df_roll = df_roll[rps * 2 - 1::rps]
 
+                # Add DataFrame to rolling list
                 df_rolls.append(df_roll)
 
+        # Get timestamps after rolling
         timestamps = df_rolls[0][timestamp_col]
 
+        # Remove timestamp column for every DataFrame in order to prevent duplicates
         for df_roll in df_rolls:
             df_roll.drop(timestamp_col, axis=1, inplace=True)
 
+        # Concatenate all DataFrames (on columns) and re-add the label and timestamp columns
         df_rolls = pd.concat(df_rolls, axis=1)
         df_rolls[label_col] = label
         df_rolls[timestamp_col] = timestamps
 
+        # Append rolled DataFrame to result list
         res.append(df_rolls)
 
     # Concatenate DataFrames from list into one single DataFrame and return it
@@ -161,6 +175,7 @@ def windowing_fast(df: pd.DataFrame, cols: [str], label_col='Label', timestamp_c
             roll = df_col.rolling(window='2s', on=timestamp_col)
 
             # Apply built-in rolling functions
+            # and take 2 second windows with 1 second overlap
 
             # Mean
             df_roll = roll.mean()
@@ -219,14 +234,16 @@ def windowing_fast(df: pd.DataFrame, cols: [str], label_col='Label', timestamp_c
         # Get timestamps from rolling
         timestamps = df_rolls[0][timestamp_col]
 
-        # Drop timestamp column to prevent duplicates
+        # Remove timestamp column for every DataFrame in order to prevent duplicates
         for df_roll in df_rolls:
             df_roll.drop(timestamp_col, axis=1, inplace=True)
 
+        # Concatenate all DataFrames (on columns) and re-add the label and timestamp columns
         df_rolls = pd.concat(df_rolls, axis=1)
         df_rolls[label_col] = label
         df_rolls[timestamp_col] = timestamps
 
+        # Append rolled DataFrame to result list
         res.append(df_rolls)
 
     # Concatenate DataFrames from list into one single DataFrame and return it
