@@ -1,13 +1,13 @@
 import re
 from datetime import datetime
 
-import numpy as np
 import pandas as pd
 
 import parse_function.custom_function_parser as parser
 from data_import import sensor as sens, column_metadata as cm
 from data_import.import_exception import ImportException
 from parse_function.parse_exception import ParseException
+from machine_learning.classifier import CLASSIFIER_NAN
 
 
 def parse_header_option(file, row_nr, col_nr):
@@ -96,7 +96,13 @@ class SensorData:
         self.col_metadata = dict()
 
         # Parse metadata and data
-        self._data = self.parse(settings)
+        self._settings = settings
+        self._data = self.parse(self._settings)
+
+    def __copy__(self):
+        newone = type(self)(self.file_path, self._settings)
+        newone.__dict__.update(self.__dict__)
+        return newone
 
     def parse(self, settings):
         """
@@ -212,7 +218,6 @@ class SensorData:
         :param time_unit: The time unit of the time column.
         """
         self._data[timestamp_col] = pd.to_timedelta(self._data[time_col], unit=time_unit) + self.metadata['datetime']
-        # TODO: The parameters 'time_col' and 'timestamp_col' should not have to be passed manually but should beretrieved from the SensorData object
 
     def add_labels(self, label_data: [], label_col: str, timestamp_col: str):
         START_TIME_INDEX = 0
@@ -220,7 +225,7 @@ class SensorData:
         LABEL_INDEX = 2
 
         # Add Label column to the DataFrame and initialize it to NaN
-        self._data[label_col] = np.nan
+        self._data[label_col] = CLASSIFIER_NAN
 
         for label_entry in label_data:
             start_time = label_entry[START_TIME_INDEX]
@@ -232,6 +237,3 @@ class SensorData:
                 (self._data[timestamp_col] >= start_time) & (self._data[timestamp_col] < stop_time),
                 label_col
             ] = label
-
-        # Drop rows where the label is NaN (no label data available)
-        self._data = self._data.dropna(subset=[label_col])

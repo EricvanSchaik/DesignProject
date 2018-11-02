@@ -9,4 +9,3 @@ if __name__ == '__main__':
     project = gui.GUI()
     project.show()
     sys.exit(app.exec_())
-

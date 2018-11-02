@@ -13,21 +13,33 @@ class LabelData:
     STOP_TIME_INDEX = 1
     LABEL_INDEX = 2
 
-    def __init__(self, sensor_id: str, label_manager: LabelManager):
+    def __init__(self, label_manager: LabelManager, sensor_id: str=None):
         self._sensor_id = sensor_id
         self._label_manager = label_manager
-        self._data = self.fill_from_db()
+        self._data = None
 
-    def fill_from_db(self):
+        if self._sensor_id:
+            self._data = self.get_from_db()
+
+    def get_from_db(self):
+        if not self._sensor_id:
+            raise Exception('self._sensor_id is None')
+
         return self._label_manager.get_all_labels(self._sensor_id)
 
     def get_data(self):
+        if not self._data:
+            self._data = self.get_from_db()
+
         return self._data
 
     def get_sensor_id(self):
         return self._sensor_id
 
     def set_sensor_id(self, sensor_id: str):
+        if self._sensor_id:
+            raise Exception('self._sensor_id has already been set')
+
         self._sensor_id = sensor_id
 
     def add_data(self, labels: [[]]):
@@ -36,10 +48,13 @@ class LabelData:
 
         :param labels: A list of labels to put in the database
         """
+        if not self._sensor_id:
+            raise ValueError('self._sensor_id is None')
+
         for label in labels:
             self._label_manager.add_label(label[self.START_TIME_INDEX], label[self.STOP_TIME_INDEX],
                                           label[self.LABEL_INDEX], self._sensor_id)
-        self._data = self.fill_from_db()
+        self._data = self.get_from_db()
 
 
 if __name__ == '__main__':
@@ -48,7 +63,7 @@ if __name__ == '__main__':
     sensor_id = 'CCDC301661B33D7'
 
     lbm = LabelManager(project_name)
-    lbd = LabelData(sensor_id, lbm)
+    lbd = LabelData(lbm, sensor_id)
 
     # Set up label file reader
     labels = csv.reader(labels_file)
