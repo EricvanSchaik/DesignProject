@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'designer_labelsettings.ui'
+# Form implementation generated from reading ui file '.\designer_labelsettings.ui'
 #
-# Created by: PyQt5 UI code generator 5.11.2
+# Created by: PyQt5 UI code generator 5.11.3
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -11,14 +11,14 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
-        Dialog.resize(400, 300)
+        Dialog.resize(428, 300)
         self.buttonBox = QtWidgets.QDialogButtonBox(Dialog)
-        self.buttonBox.setGeometry(QtCore.QRect(30, 240, 341, 32))
+        self.buttonBox.setGeometry(QtCore.QRect(70, 260, 341, 32))
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
         self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
         self.buttonBox.setObjectName("buttonBox")
         self.verticalLayoutWidget = QtWidgets.QWidget(Dialog)
-        self.verticalLayoutWidget.setGeometry(QtCore.QRect(20, 20, 361, 211))
+        self.verticalLayoutWidget.setGeometry(QtCore.QRect(20, 20, 391, 231))
         self.verticalLayoutWidget.setObjectName("verticalLayoutWidget")
         self.verticalLayout = QtWidgets.QVBoxLayout(self.verticalLayoutWidget)
         self.verticalLayout.setContentsMargins(0, 0, 0, 0)
@@ -58,6 +58,9 @@ class Ui_Dialog(object):
         self.verticalLayout_3.addWidget(self.comboBox_2)
         self.horizontalLayout.addLayout(self.verticalLayout_3)
         self.verticalLayout.addLayout(self.horizontalLayout)
+        self.pushButton = QtWidgets.QPushButton(self.verticalLayoutWidget)
+        self.pushButton.setObjectName("pushButton")
+        self.verticalLayout.addWidget(self.pushButton)
         self.horizontalLayout_3 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_3.setObjectName("horizontalLayout_3")
         self.label_3 = QtWidgets.QLabel(self.verticalLayoutWidget)
@@ -70,9 +73,21 @@ class Ui_Dialog(object):
         self.comboBox_3.setObjectName("comboBox_3")
         self.horizontalLayout_3.addWidget(self.comboBox_3)
         self.verticalLayout.addLayout(self.horizontalLayout_3)
-        self.pushButton = QtWidgets.QPushButton(self.verticalLayoutWidget)
-        self.pushButton.setObjectName("pushButton")
-        self.verticalLayout.addWidget(self.pushButton)
+        self.gridLayout = QtWidgets.QGridLayout()
+        self.gridLayout.setObjectName("gridLayout")
+        self.opacity_box = QtWidgets.QDoubleSpinBox(self.verticalLayoutWidget)
+        self.opacity_box.setDecimals(0)
+        self.opacity_box.setMinimum(0.0)
+        self.opacity_box.setMaximum(100.0)
+        self.opacity_box.setProperty("value", 50.0)
+        self.opacity_box.setObjectName("opacity_box")
+        self.gridLayout.addWidget(self.opacity_box, 0, 1, 1, 1)
+        self.label_4 = QtWidgets.QLabel(self.verticalLayoutWidget)
+        self.label_4.setObjectName("label_4")
+        self.gridLayout.addWidget(self.label_4, 0, 0, 1, 1)
+        spacerItem = QtWidgets.QSpacerItem(50, 20, QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Minimum)
+        self.gridLayout.addItem(spacerItem, 0, 2, 1, 1)
+        self.verticalLayout.addLayout(self.gridLayout)
 
         self.retranslateUi(Dialog)
         self.buttonBox.accepted.connect(Dialog.accept)
@@ -84,6 +99,7 @@ class Ui_Dialog(object):
         Dialog.setWindowTitle(_translate("Dialog", "Dialog"))
         self.label.setText(_translate("Dialog", "Labels"))
         self.label_2.setText(_translate("Dialog", "Color"))
-        self.label_3.setText(_translate("Dialog", "Add label:"))
         self.pushButton.setText(_translate("Dialog", "Delete label"))
+        self.label_3.setText(_translate("Dialog", "Add label:"))
+        self.label_4.setText(_translate("Dialog", "Label color intensity (%):"))
 
