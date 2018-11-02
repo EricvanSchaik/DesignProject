@@ -1,9 +1,8 @@
+import datetime
 import numpy as np
 import pandas as pd
 
-from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import GaussianNB
-from sklearn.metrics import f1_score
 
 from datastorage import labelstorage as ls
 from data_import import label_data as ld
@@ -12,45 +11,91 @@ from data_import import sensor_data_test as sdt
 from data_export import windowing as wd
 
 
-class Classifier:
+CLASSIFIER_NAN = 'NaN'
 
-    def __init__(self, classifier, df: pd.DataFrame, used_cols: [str], label_col: str='Label', timestamp_col: str='Timestamp'):
+PRED_TIME_INDEX = 0
+PRED_LABEL_INDEX = 1
+PRED_PROBABILITY_INDEX = 2
+
+PRED_PROB_THRESHOLD = 0.9
+PRED_AMOUNT_THRESHOLD = 2
+
+
+def make_predictions(preds: []):
+    temp = []
+    res = []
+
+    for i in range(0, len(preds) - 1):
+        pred = preds[i]
+        next = preds[i + 1]
+
+        temp.append(pred)
+
+        if pred[PRED_LABEL_INDEX] != next[PRED_LABEL_INDEX]:
+            avg_prob = sum(x[PRED_PROBABILITY_INDEX] for x in temp) / len(temp)
+
+            if avg_prob >= PRED_PROB_THRESHOLD and len(temp) >= PRED_AMOUNT_THRESHOLD:
+                res.append({
+                    'begin': temp[0][PRED_TIME_INDEX],
+                    'end': temp[len(temp) - 1][PRED_TIME_INDEX],
+                    'label': temp[0][PRED_LABEL_INDEX],
+                    'avg_probability': avg_prob
+                })
+
+            temp = []
+
+    return res
+
+
+class Classifier:
+    def __init__(self, classifier=None, df: pd.DataFrame=None, features: [str]=None, label_col: str= 'Label',
+                 timestamp_col: str='Timestamp'):
         self.classifier = classifier
         self.df = df
-        self.used_cols = used_cols
+        self.features = features
         self.label_col = label_col
         self.timestamp_col = timestamp_col
+
+    def set_classifier(self, classifier):
+        self.classifier = classifier
+
+    def set_df(self, df):
+        self.df = df
+
+    def set_features(self, features):
+        self.features = features
 
     def classify(self):
         """
         Makes class predictions for datasets.
-
-        :param data: The dataset to classify
-        :param used_features: The features that should be used by the classifier
-        :param ground_truth: Current classifications that have been provided by the user. If a row has not been
-            classified yet, then the row contains None.
-        :return: list of tuples: First element of tuple is predicted class, second element is a list of probabilities
-            for each class.
         """
-        train_set, test_set = train_test_split(self.df, test_size=0.5, random_state=0)
+        if self.classifier is None:
+            raise ValueError('self.classifier is None')
+        if self.df is None:
+            raise ValueError('self.df is None')
+        if self.features is None:
+            raise ValueError('self.features is None')
+
+        train_set = self.df[self.df[self.label_col] != CLASSIFIER_NAN]
+        test_set = self.df[self.df[self.label_col] == CLASSIFIER_NAN]
+
+        test_set_timestamps = list(test_set.index.strftime('%Y-%m-%d %H:%M:%S.%f'))
 
         self.classifier.fit(
-            train_set[self.used_cols],
+            train_set[self.features],
             train_set[self.label_col]
         )
 
-        preds = self.classifier.predict(test_set[self.used_cols])
-        probs = self.classifier.predict_proba(test_set[self.used_cols])
+        preds = self.classifier.predict(test_set[self.features])
+        probs = self.classifier.predict_proba(test_set[self.features])
 
-        true_labels = list(test_set[self.label_col])
         res = []
 
-        # for i in range(0, len(preds)):
-        #     # if preds[i] != true_labels[i]:
-        #         probability = round(max(probs[i]), 2)
-        #         res.append([preds[i], true_labels[i], probability])
+        for i in range(0, len(preds)):
+            probability = max(probs[i])
+            res.append([test_set_timestamps[i], preds[i], probability])
 
-        return true_labels, preds
+        return res
 
 
 if __name__ == '__main__':
@@ -64,7 +109,7 @@ if __name__ == '__main__':
 
     sensor_data = sd.SensorData(SENSOR_FILE, sdt.test_settings())
     label_manager = ls.LabelManager(PROJECT_DIR)
-    label_data = ld.LabelData(SENSOR_ID, label_manager)
+    label_data = ld.LabelData(label_manager, SENSOR_ID)
 
     # Prepare the sensor data for use by classifier
     sensor_data.add_timestamp_column(TIME_COL, TIMESTAMP_COL)
@@ -77,20 +122,19 @@ if __name__ == '__main__':
     data = data[data.Label != 'unknown']
 
     window_cols = ['accel', 'gyro']
-    used_cols = ['accel_mean', 'accel_std', 'gyro_mean', 'gyro_std']
-
+    used_cols = []
     funcs = {
         'mean': np.mean,
+        'median': np.median,
         'std': np.std,
     }
 
+    for func in funcs:
+        for col in window_cols:
+            used_cols.append('%s_%s' % (col, func))
+
     df = wd.windowing(data, window_cols, LABEL_COL, TIMESTAMP_COL, **funcs)
     clsf = Classifier(GaussianNB(), df, used_cols)
-    # res = clsf.classify()
+    res = clsf.classify()
 
-    # for pred in res:
-    #     print(pred)
-
-    true, preds = clsf.classify()
-
-    print(f1_score(true, preds, average='micro'))
+    print(make_predictions(res))

@@ -1,31 +1,40 @@
-from datetime import timedelta
-from datetime import datetime
-
 import os.path
+from datetime import datetime
+from datetime import timedelta
+
 import matplotlib.animation
 import matplotlib.pyplot as plt
+import numpy as np
 from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5.QtCore import QUrl, QDir
 from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
 from PyQt5.QtWidgets import QMainWindow, QFileDialog, QMessageBox
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
+from sklearn.naive_bayes import GaussianNB
 
 import video_metadata as vm
+from data_export import export_data, windowing as wd
 from data_import import sensor_data
-from data_export import export_data
-from datastorage.labelstorage import LabelManager
+from data_import.label_data import LabelData
 from datastorage.camerainfo import CameraManager
 from datastorage.deviceoffsets import OffsetManager
+from datastorage.labelstorage import LabelManager
+from datastorage.subjectmapping import SubjectManager
 from gui.designer_gui import Ui_VideoPlayer
+from gui.export_dialog import ExportDialog
 from gui.label_dialog import LabelSpecs
 from gui.label_settings_dialog import LabelSettingsDialog
+from gui.machine_learning_dialog import MachineLearningDialog
 from gui.new_dialog import NewProject
 from gui.settings_dialog import SettingsDialog
 from gui.subject_dialog import SubjectTable
-from gui.export_dialog import ExportDialog
-from gui.machine_learning_dialog import MachineLearningDialog
-from datastorage.subjectmapping import SubjectManager
+from machine_learning.classifier import Classifier, make_predictions
+
+
+LABEL_COL = 'Label'
+TIME_COL = 'Time'
+TIMESTAMP_COL = 'Timestamp'
 
 
 def add_time_strings(time1, time2):
@@ -61,6 +70,9 @@ class GUI(QMainWindow, Ui_VideoPlayer):
 
         # Initialize the variable that keeps track of the current SensorData object.
         self.sensordata = None
+
+        # Used for retrieving and storing labels
+        self.sensor_id = None
 
         # Connect all the buttons, spin boxes, combo boxes and line edits to their appropriate helper functions.
         self.playButton.clicked.connect(self.play)
@@ -114,11 +126,18 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         self.camera_manager = CameraManager()
         self.offset_manager = OffsetManager()
         self.label_storage = LabelManager(self.project_dialog.project_name)
+        self.label_data = LabelData(self.label_storage)
         self.subject_mapping = SubjectManager(self.project_dialog.project_name)
 
         # Add the known camera's to the camera combo box in the GUI.
         for camera in self.camera_manager.get_all_cameras():
             self.comboBox_camera.addItem(camera)
+
+        # Machine learning fields
+        self.ml_dataframe = None
+        self.ml_classifier_engine = GaussianNB()
+        self.ml_used_columns = []
+        self.ml_classifier = Classifier(self.ml_classifier_engine)
 
 
     def open_video(self):
@@ -174,6 +193,7 @@ class GUI(QMainWindow, Ui_VideoPlayer):
 
             # Retrieve the SensorData object that parses the sensor data file.
             self.sensordata = sensor_data.SensorData(filename, self.settings.settings_dict)
+            self.sensor_id = self.sensordata.metadata['sn']
 
             # Retrieve the formulas that are associated with this sensor data file, and store them in the dictionary.
             stored_formulas = self.settings.get_setting("formulas")
@@ -336,10 +356,50 @@ class GUI(QMainWindow, Ui_VideoPlayer):
                 QMessageBox.warning(self, 'Warning', str(e), QMessageBox.Cancel)
 
     def open_machine_learning(self):
+
         columns = [self.comboBox_plot.itemText(i) for i in range(self.comboBox_plot.count())]
         dialog = MachineLearningDialog(columns)
         dialog.exec_()
         dialog.show()
+
+        self.ml_used_columns = []
+        funcs = {
+            'mean': np.mean,
+            'std': np.std
+        }
+        features = []
+
+        if dialog.is_accepted and dialog.radioButton.isChecked():
+            for column in columns:
+                if dialog.column_dict[column]:
+                    self.ml_used_columns.append(column)
+
+                    for func in funcs:
+                        features.append(column + '_' + func)
+
+            if self.label_data.get_sensor_id() is None:
+                if self.sensor_id is None:
+                    raise Exception('self.sensor_id is None')
+
+                self.label_data.set_sensor_id(self.sensor_id)
+
+            self.ml_dataframe = self.sensordata.__copy__()
+            self.ml_dataframe.add_timestamp_column(TIME_COL, TIMESTAMP_COL)
+            self.ml_dataframe.add_labels(self.label_data.get_data(), LABEL_COL, TIMESTAMP_COL)
+            raw_data = self.ml_dataframe.get_data()
+
+            # Remove data points where label is unknown
+            raw_data = raw_data[raw_data[LABEL_COL] != 'unknown']
+
+            self.ml_dataframe = wd.windowing(raw_data, self.ml_used_columns, LABEL_COL, TIMESTAMP_COL, **funcs)
+            self.ml_classifier.set_df(self.ml_dataframe)
+            self.ml_classifier.set_features(features)
+            res = self.ml_classifier.classify()
+
+            for x in res:
+                print(x)
+
+            print(make_predictions(res))
 
     def add_camera(self):
         if self.lineEdit_camera.text() and self.lineEdit_camera.text() not in self.camera_manager.get_all_cameras():
