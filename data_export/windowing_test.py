@@ -87,10 +87,13 @@ def export_test():
     df = test_sensor_data()
     print("DataFrame constructed")
 
-    ed.export([df], 'Label', 'Timestamp', '../data/test_export.csv', [])
+    c1 = 'First 5000 rows of test DataFrame are windowed'
+    c2 = 'This is a simple test comment'
+
+    ed.export([df.head(5000)], 'Label', 'Timestamp', '../data/test_export.csv', [c1, c2])
 
 
 if __name__ == '__main__':
     # df1 = windowing_test()
-    # export_test()
-    windowing_fast_test()
+    export_test()
+    # windowing_fast_test()
