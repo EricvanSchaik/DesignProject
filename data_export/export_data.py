@@ -1,16 +1,11 @@
 import pandas as pd
+import os
 
 from data_export import windowing as w
 
 
 def export(data: [], label_col: str, timestamp_col: str, file_path: str, comments: [str], comment=';'):
-    # Write comments to a file and use that as start file for 'to_csv'
-    f = open(file_path, 'a')
-    for c in comments:
-        # TODO: determine whether '\n' needs to be added at the end of the line
-        f.write(comment + c)
-    f.close()
-
+    # Initialise result list
     res = []
 
     # Get list of columns to be windowed over
@@ -26,5 +21,17 @@ def export(data: [], label_col: str, timestamp_col: str, file_path: str, comment
     # Turn list into one DataFrame
     df = pd.concat(res)
 
-    # Write DataFrame to a csv file
-    df.to_csv(file_path)
+    # Remove file if it exists
+    if os.path.exists(file_path):
+        os.remove(file_path)
+
+    # Write comments to a file and use that as start file for 'to_csv'
+    f = open(file_path, 'a')
+    for c in comments:
+        f.write(comment + c + '\n')
+
+    # Write DataFrame to the file
+    df.to_csv(f)
+
+    # Close the file
+    f.close()
