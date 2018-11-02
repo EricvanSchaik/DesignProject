@@ -7,9 +7,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 from PyQt5 import QtCore
 from PyQt5 import QtGui
-from PyQt5.QtCore import QUrl, QDir
+from PyQt5.QtCore import QUrl, QDir, Qt
+from PyQt5.QtGui import QKeySequence
 from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
-from PyQt5.QtWidgets import QMainWindow, QFileDialog, QMessageBox
+from PyQt5.QtWidgets import QMainWindow, QFileDialog, QMessageBox, QShortcut
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
 from sklearn.naive_bayes import GaussianNB
 
@@ -74,8 +75,16 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         # Used for retrieving and storing labels
         self.sensor_id = None
 
+        # create key shortcuts
+        self.shortcut_plus_10s = QShortcut(QKeySequence(QKeySequence.MoveToNextChar), self)
+        self.shortcut_minus_10s = QShortcut(QKeySequence(QKeySequence.MoveToPreviousChar), self)
+        self.shortcut_pause = QShortcut(Qt.Key_Space, self)
+
         # Connect all the buttons, spin boxes, combo boxes and line edits to their appropriate helper functions.
         self.playButton.clicked.connect(self.play)
+        self.shortcut_pause.activated.connect(self.play)
+        self.shortcut_plus_10s.activated.connect(self.video_plus_10s)
+        self.shortcut_minus_10s.activated.connect(self.video_minus_10s)
         self.actionOpen_video.triggered.connect(self.open_video)
         self.actionOpen_sensordata.triggered.connect(self.open_sensordata)
         self.pushButton_label.clicked.connect(self.open_label)
@@ -138,7 +147,6 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         self.ml_classifier_engine = GaussianNB()
         self.ml_used_columns = []
         self.ml_classifier = Classifier(self.ml_classifier_engine)
-
 
     def open_video(self):
         """
@@ -247,6 +255,12 @@ class GUI(QMainWindow, Ui_VideoPlayer):
             self.mediaplayer.play()
             icon.addPixmap(QtGui.QPixmap("resources/pause-512.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
             self.playButton.setIcon(icon)
+
+    def video_plus_10s(self):
+        self.mediaplayer.setPosition(self.mediaplayer.position() + 10000)
+
+    def video_minus_10s(self):
+        self.mediaplayer.setPosition(self.mediaplayer.position() - 10000)
 
     def position_changed(self, position):
         """
