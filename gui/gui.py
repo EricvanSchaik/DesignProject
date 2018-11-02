@@ -245,6 +245,8 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         A helper function that makes sure the play button pauses or plays the video, and switches the pause/play icons.
         :return:
         """
+        if self.mediaplayer.media().isNull():
+            return
         if self.mediaplayer.state() == QMediaPlayer.PlayingState:
             icon = QtGui.QIcon()
             self.mediaplayer.pause()
@@ -257,10 +259,12 @@ class GUI(QMainWindow, Ui_VideoPlayer):
             self.playButton.setIcon(icon)
 
     def video_plus_10s(self):
-        self.mediaplayer.setPosition(self.mediaplayer.position() + 10000)
+        if not self.mediaplayer.media().isNull():
+            self.mediaplayer.setPosition(self.mediaplayer.position() + 10000)
 
     def video_minus_10s(self):
-        self.mediaplayer.setPosition(self.mediaplayer.position() - 10000)
+        if not self.mediaplayer.media().isNull():
+            self.mediaplayer.setPosition(self.mediaplayer.position() - 10000)
 
     def position_changed(self, position):
         """
