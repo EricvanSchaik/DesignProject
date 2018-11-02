@@ -75,9 +75,9 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         # Used for retrieving and storing labels
         self.sensor_id = None
 
-        # create key shortcuts
-        self.shortcut_plus_10s = QShortcut(QKeySequence(QKeySequence.MoveToNextChar), self)
-        self.shortcut_minus_10s = QShortcut(QKeySequence(QKeySequence.MoveToPreviousChar), self)
+        # create video key shortcuts
+        self.shortcut_plus_10s = QShortcut(Qt.Key_Right, self)
+        self.shortcut_minus_10s = QShortcut(Qt.Key_Left, self)
         self.shortcut_pause = QShortcut(Qt.Key_Space, self)
 
         # Connect all the buttons, spin boxes, combo boxes and line edits to their appropriate helper functions.
@@ -95,6 +95,7 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         self.lineEdit.returnPressed.connect(self.new_plot)
         self.doubleSpinBox_offset.valueChanged.connect(self.change_offset)
         self.doubleSpinBox_speed.valueChanged.connect(self.change_speed)
+        self.plot_width_box.valueChanged.connect(self.change_plot_width)
         self.comboBox_plot.activated.connect(self.change_plot)
         self.pushButton_camera_ok.clicked.connect(self.add_camera)
         self.pushButton_camera_del.clicked.connect(self.delete_camera)
@@ -130,6 +131,10 @@ class GUI(QMainWindow, Ui_VideoPlayer):
 
         # Save the settings from the new project dialog window.
         self.settings = self.project_dialog.new_settings
+
+        # Load the stored width that the data-plot should have
+        self.plot_width = self.settings.get_setting("plot_width")
+        self.plot_width_box.setValue(self.plot_width)
 
         # Initialize the classes that retrieve information from the database.
         self.camera_manager = CameraManager()
@@ -229,7 +234,7 @@ class GUI(QMainWindow, Ui_VideoPlayer):
             self.ymin = self.data[self.current_plot].min()
             self.ymax = self.data[self.current_plot].max()
             self.draw_graph()
-            self.dataplot.axis([10, 10, self.ymin, self.ymax])
+            self.dataplot.axis([-(self.plot_width / 2), self.plot_width / 2, self.ymin, self.ymax])
             self.timer.timeout.connect(self.update_plot)
             self.timer.start(1)
             self.canvas.draw()
@@ -259,10 +264,16 @@ class GUI(QMainWindow, Ui_VideoPlayer):
             self.playButton.setIcon(icon)
 
     def video_plus_10s(self):
+        """
+        Sets the position of the video player 10 seconds forward
+        """
         if not self.mediaplayer.media().isNull():
             self.mediaplayer.setPosition(self.mediaplayer.position() + 10000)
 
     def video_minus_10s(self):
+        """
+        Sets the position of the video player 10 seconds backward
+        """
         if not self.mediaplayer.media().isNull():
             self.mediaplayer.setPosition(self.mediaplayer.position() - 10000)
 
@@ -278,13 +289,19 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         self.label_time.setText(str(add_time_strings(self.ms_to_time(position), vm.datetime_with_tz_to_string(
             vm.parse_start_time_from_file(self.video_filename), '%H:%M:%S'))))
 
+    def change_plot_width(self, value):
+        self.settings.set_setting("plot_width", value)
+        self.plot_width = value
+        if self.sensordata:
+            self.update_plot()
+
     def update_plot(self):
         """
         Every millisecond the timer triggers this function, which should update the plot to the current time.
         :return:
         """
-        xmin = -10 + (self.mediaplayer.position() / 1000) - self.doubleSpinBox_offset.value()
-        xmax = 10 + (self.mediaplayer.position() / 1000) - self.doubleSpinBox_offset.value()
+        xmin = -(self.plot_width / 2) + (self.mediaplayer.position() / 1000) - self.doubleSpinBox_offset.value()
+        xmax = (self.plot_width / 2) + (self.mediaplayer.position() / 1000) - self.doubleSpinBox_offset.value()
         self.dataplot.axis([xmin, xmax, self.ymin, self.ymax])
         self.vertical_line.set_xdata((xmin + xmax) / 2)
         self.canvas.draw()
@@ -463,6 +480,8 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         self.current_plot = self.comboBox_plot.currentText()
         if self.comboBox_plot.currentText() in self.formula_dict:
             self.label_current_formula.setText(self.formula_dict[self.comboBox_plot.currentText()])
+        else:
+            self.label_current_formula.clear()
         self.ymin = self.data[self.current_plot].min()
         self.ymax = self.data[self.current_plot].max()
         self.draw_graph()
