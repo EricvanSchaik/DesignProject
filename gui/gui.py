@@ -120,7 +120,6 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         for camera in self.camera_manager.get_all_cameras():
             self.comboBox_camera.addItem(camera)
 
-
     def open_video(self):
         """
         A function that allows a user to open a video in the QMediaPlayer via the menu bar.
@@ -311,7 +310,7 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         settings.show()
 
     def open_label_settings(self):
-        label_settings = LabelSettingsDialog(self.label_storage)
+        label_settings = LabelSettingsDialog(self.label_storage, self.settings)
         label_settings.exec_()
         label_settings.show()
         if label_settings.settings_changed:
@@ -519,6 +518,7 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         self.canvas.draw()
 
     def add_label_highlight(self, label_start: float, label_end: float, label_type: str):
-        span = self.dataplot.axvspan(label_start, label_end, facecolor=self.color_dict[label_type], alpha=0.5)  # TODO: make alpha a setting?
+        alpha = self.settings.get_setting("label_opacity") / 100
+        span = self.dataplot.axvspan(label_start, label_end, facecolor=self.color_dict[label_type], alpha=alpha)
         text = self.dataplot.text((label_start + label_end) / 2, self.ymax * 0.75, label_type, horizontalalignment='center')
         self.label_highlights[label_start] = (span, text)
