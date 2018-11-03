@@ -224,6 +224,7 @@ class GUI(QMainWindow, Ui_VideoPlayer):
 
             # Add every column in the DataFrame to the possible Data Series that can be plotted, except for time,
             # and plot the first one.
+            self.comboBox_plot.clear()
             for column in self.data.columns:
                 self.comboBox_plot.addItem(column)
             self.comboBox_plot.removeItem(0)
@@ -455,7 +456,7 @@ class GUI(QMainWindow, Ui_VideoPlayer):
                                                                               self.sensordata.metadata['date']))
 
     def change_offset(self):
-        if self.comboBox_camera.currentText():
+        if self.comboBox_camera.currentText() and self.sensordata:
             self.offset_manager.set_offset(self.comboBox_camera.currentText(), self.sensordata.metadata['sn'],
                                            self.doubleSpinBox_offset.value(), self.sensordata.metadata['date'])
 
