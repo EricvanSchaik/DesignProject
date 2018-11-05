@@ -19,7 +19,7 @@ class MachineLearningDialog(QtWidgets.QDialog, Ui_Dialog):
 
     def activate(self):
         self.is_accepted = True
-        self.close()
+        self.accept()
 
     def add_column(self, event):
         self.column_dict[self.comboBox.currentText()] = event

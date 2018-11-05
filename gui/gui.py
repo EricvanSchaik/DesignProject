@@ -8,9 +8,8 @@ import numpy as np
 from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5.QtCore import QUrl, QDir, Qt
-from PyQt5.QtGui import QKeySequence
 from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
-from PyQt5.QtWidgets import QMainWindow, QFileDialog, QMessageBox, QShortcut
+from PyQt5.QtWidgets import QMainWindow, QFileDialog, QMessageBox, QShortcut, QDialog
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
 from sklearn.naive_bayes import GaussianNB
 
@@ -263,13 +262,11 @@ class GUI(QMainWindow, Ui_VideoPlayer):
             self.mediaplayer.pause()
             icon.addPixmap(QtGui.QPixmap("resources/1600.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
             self.playButton.setIcon(icon)
-            self.timer.stop()
         else:
             icon = QtGui.QIcon()
             self.mediaplayer.play()
             icon.addPixmap(QtGui.QPixmap("resources/pause-512.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
             self.playButton.setIcon(icon)
-            self.timer.start(25)
 
     def video_plus_10s(self):
         """
@@ -293,7 +290,7 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         :return:
         """
         if self.loop is not None and position >= self.loop[1]:
-            position = self.loop[0]
+            position = self.loop[0] if self.loop[0] >= 0 else 0
             self.mediaplayer.setPosition(position)
         self.horizontalSlider.setValue(position)
         self.label_duration.setText(self.ms_to_time(position))
@@ -402,14 +399,9 @@ class GUI(QMainWindow, Ui_VideoPlayer):
                 QMessageBox.warning(self, 'Warning', str(e), QMessageBox.Cancel)
 
     def open_machine_learning(self):
-        if self.mediaplayer.media().isNull():
-            QMessageBox.warning(self, 'Warning', "Please open a video first.", QMessageBox.Cancel)
-            return
-
         columns = [self.comboBox_plot.itemText(i) for i in range(self.comboBox_plot.count())]
         dialog = MachineLearningDialog(columns)
-        dialog.exec_()
-        dialog.show()
+        dialog.exec()
 
         self.ml_used_columns = []
         funcs = {
@@ -443,6 +435,13 @@ class GUI(QMainWindow, Ui_VideoPlayer):
 
                 self.label_data.set_sensor_id(self.sensor_id)
 
+            # show a window to tell the user that the classifier is running
+            working_msg = QDialog()
+            working_msg.setWindowTitle("Loading...")
+            working_msg.resize(200, 0)
+            working_msg.open()
+
+            # run the classifier
             self.ml_dataframe = self.sensordata.__copy__()
             self.ml_dataframe.add_timestamp_column(TIME_COL, TIMESTAMP_COL)
             self.ml_dataframe.add_labels(self.label_data.get_data(), LABEL_COL, TIMESTAMP_COL)
@@ -455,6 +454,9 @@ class GUI(QMainWindow, Ui_VideoPlayer):
             self.ml_classifier.set_df(self.ml_dataframe)
             self.ml_classifier.set_features(features)
             res = self.ml_classifier.classify()
+
+            # close the info window
+            working_msg.close()
 
             # start video if it is paused
             if self.mediaplayer.state() == QMediaPlayer.PausedState:
@@ -469,8 +471,15 @@ class GUI(QMainWindow, Ui_VideoPlayer):
 
                 # add highlight to data-plot and play video in a loop
                 span, text = self.add_suggestion_highlight(start, end, label)
-                self.loop = (int(start * 1000), int(end * 1000))
-                self.mediaplayer.setPosition(start * 1000)
+                self.loop = (int((start + self.doubleSpinBox_offset.value()) * 1000),
+                             int((end + self.doubleSpinBox_offset.value()) * 1000))
+                if not self.mediaplayer.media().isNull():
+                    # if a video is opened set video position to start of the suggested label
+                    self.mediaplayer.setPosition(self.loop[0])
+                else:
+                    # no video; stop updating-timer and move plot to start of the suggested label
+                    self.timer.stop()
+                    self.update_plot(position=start + self.doubleSpinBox_offset.value())
 
                 # ask user to accept or reject the suggested label
                 msg = QMessageBox()
@@ -501,7 +510,11 @@ class GUI(QMainWindow, Ui_VideoPlayer):
                     self.canvas.draw()
 
             # reset the video-player and data-plot to the original position and pause the video
-            self.mediaplayer.setPosition(original_position)
+            if not self.mediaplayer.media().isNull():
+                self.mediaplayer.setPosition(original_position)
+            else:
+                # no video was playing, restart the updating-timer
+                self.timer.start(25)
             self.update_plot(position=original_position / 1000)
             self.play()
 
