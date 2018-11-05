@@ -171,6 +171,8 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         # Save the path for next time.
         if self.video_filename != '':
             self.settings.set_setting("last_videofile", self.video_filename)
+            self.video_start_time = vm.datetime_with_tz_to_string(vm.parse_start_time_from_file(self.video_filename)
+                                                                  , '%H:%M:%S')
 
             # Play the video in the QMediaPlayer and activate the associated widgets.
             self.mediaplayer.setMedia(QMediaContent(QUrl.fromLocalFile(self.video_filename)))
@@ -222,6 +224,7 @@ class GUI(QMainWindow, Ui_VideoPlayer):
 
             # Add every column in the DataFrame to the possible Data Series that can be plotted, except for time,
             # and plot the first one.
+            self.comboBox_plot.clear()
             for column in self.data.columns:
                 self.comboBox_plot.addItem(column)
             self.comboBox_plot.removeItem(0)
@@ -236,7 +239,7 @@ class GUI(QMainWindow, Ui_VideoPlayer):
             self.draw_graph()
             self.dataplot.axis([-(self.plot_width / 2), self.plot_width / 2, self.ymin, self.ymax])
             self.timer.timeout.connect(self.update_plot)
-            self.timer.start(1)
+            self.timer.start(25)
             self.canvas.draw()
             if self.comboBox_camera.currentText():
                 self.doubleSpinBox_offset.setValue(self.offset_manager.get_offset(self.comboBox_camera.currentText(),
@@ -286,8 +289,7 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         """
         self.horizontalSlider.setValue(position)
         self.label_duration.setText(self.ms_to_time(position))
-        self.label_time.setText(str(add_time_strings(self.ms_to_time(position), vm.datetime_with_tz_to_string(
-            vm.parse_start_time_from_file(self.video_filename), '%H:%M:%S'))))
+        self.label_time.setText(str(add_time_strings(self.ms_to_time(position), self.video_start_time)))
 
     def change_plot_width(self, value):
         self.settings.set_setting("plot_width", value)
@@ -454,7 +456,7 @@ class GUI(QMainWindow, Ui_VideoPlayer):
                                                                               self.sensordata.metadata['date']))
 
     def change_offset(self):
-        if self.comboBox_camera.currentText():
+        if self.comboBox_camera.currentText() and self.sensordata:
             self.offset_manager.set_offset(self.comboBox_camera.currentText(), self.sensordata.metadata['sn'],
                                            self.doubleSpinBox_offset.value(), self.sensordata.metadata['date'])
 
