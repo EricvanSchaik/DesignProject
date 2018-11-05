@@ -444,7 +444,9 @@ class GUI(QMainWindow, Ui_VideoPlayer):
             # run the classifier
             self.ml_dataframe = self.sensordata.__copy__()
             self.ml_dataframe.add_timestamp_column(TIME_COL, TIMESTAMP_COL)
-            self.ml_dataframe.add_labels(self.label_data.get_data(), LABEL_COL, TIMESTAMP_COL)
+            labels = self.label_storage.get_labels_date(self.sensordata.metadata['sn'],
+                                                        self.sensordata.metadata['datetime'].date())
+            self.ml_dataframe.add_labels(labels, LABEL_COL, TIMESTAMP_COL)
             raw_data = self.ml_dataframe.get_data()
 
             # Remove data points where label is unknown
