@@ -1,10 +1,7 @@
+from datetime import datetime, timedelta
 from timeit import timeit
-import random
-
-import pandas as pd
 
 from data_import import sensor_data as sd
-from datetime import datetime, timedelta
 
 
 def test_settings():
@@ -46,11 +43,11 @@ def wrapper(func, *args, **kwargs):
     return wrapped
 
 
-def parse_time_test():
+def sensor_data_time_test():
     # Time test for creating a SensorData object and parsing a file (including metadata)
     # about 1.3472 seconds
     wrapped = wrapper(sd.SensorData, "../data/DATA-001.CSV", test_settings())
-    print("parse_time_test() average of 5:", timeit(wrapped, number=5) / 5)
+    print("parse_time_test() average of 10:", timeit(wrapped, number=10) / 10)
 
 
 def add_column_time_test():
@@ -58,18 +55,13 @@ def add_column_time_test():
     # about 0.0129 seconds
     sensor_data = sd.SensorData("../data/DATA-001.CSV", test_settings())
     wrapped = wrapper(sensor_data.add_column_from_func, "Vector", "sqrt(Ax^2 + Ay^2 + Az^2)")
-    print("add_column_time_test() average of 5:", timeit(wrapped, number=5) / 5)
+    print("add_column_time_test() average of 10:", timeit(wrapped, number=10) / 10)
 
 
 def add_column_test():
     sens_data = sd.SensorData("../data/DATA-001.CSV", test_settings())
     sens_data.add_column_from_func("Vector", "sqrt(Ax^2 + Ay^2 + Az^2)")
-    print(sens_data.data[['Ax', 'Ay', 'Az', 'Vector']])
-
-
-def time_conversion_test():
-    sens_data = sd.SensorData("../data/DATA-001.CSV", test_settings())
-    print(sens_data.data[['Time', 'Ax', 'Ay', 'Az']])
+    print(sens_data.get_data()[['Ax', 'Ay', 'Az', 'Vector']])
 
 
 def datetime_test():
@@ -82,5 +74,5 @@ def datetime_test():
 
 
 if __name__ == '__main__':
-    # time_conversion_test()
-    add_column_test()
+    sensor_data_time_test()
+    add_column_time_test()

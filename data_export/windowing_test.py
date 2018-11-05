@@ -61,9 +61,17 @@ def windowing_test():
     df = test_sensor_data()
     print("DataFrame constructed")
 
-    # wrapped = wrapper(w.windowing, df, ['Ax', 'Ay', 'Az'], 'Label', 'Timestamp', mean=np.mean, std=np.std)
-    # print('mean: ', timeit(wrapped, number=1))
-    return w.windowing(df, ['Ax', 'Ay', 'Az'], 'Label', 'Timestamp', mean=np.mean, std=np.std)
+    # Get columns to be windowed over
+    collist = df.columns.tolist()
+    collist.remove('Label')
+    collist.remove('Timestamp')
+    collist.remove('Time')
+
+    n = 10
+    wrapped = wrapper(w.windowing, df.head(6000), collist, 'Label', 'Timestamp',
+                      mean=np.mean, std=np.std, max=np.max, min=np.min)
+    print('windowing average of %s:' % n, timeit(wrapped, number=n) / n)
+    # return w.windowing(df, ['Ax', 'Ay', 'Az'], 'Label', 'Timestamp', mean=np.mean, std=np.std)
 
 
 def windowing_fast_test():
@@ -77,8 +85,9 @@ def windowing_fast_test():
     collist.remove('Time')
 
     # Time test
-    wrapped = wrapper(w.windowing_fast, df, collist)
-    print('windowing_fast:', timeit(wrapped, number=1))
+    n = 10
+    wrapped = wrapper(w.windowing_fast, df.head(6000), collist)
+    print('windowing_fast average of %s:' % n, timeit(wrapped, number=n) / n)
 
     # return w.windowing_fast(df, ['Ax', 'Ay', 'Az'])
 
@@ -94,6 +103,6 @@ def export_test():
 
 
 if __name__ == '__main__':
-    # df1 = windowing_test()
-    export_test()
-    # windowing_fast_test()
+    # export_test()
+    windowing_test()
+    windowing_fast_test()
