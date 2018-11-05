@@ -11,24 +11,15 @@ class MachineLearningDialog(QtWidgets.QDialog, Ui_Dialog):
         self.column_dict = dict()
         for column in columns:
             self.column_dict[column] = False
-        self.accepted.connect(self.activate)
-        self.radioButton.toggled.connect(self.switch)
+        self.runButton.clicked.connect(self.activate)
+        self.cancelButton.clicked.connect(self.close)
         self.checkBox.toggled.connect(self.add_column)
         self.comboBox.currentTextChanged.connect(self.switch_column)
-        self.comboBox.setEnabled(False)
-        self.checkBox.setEnabled(False)
         self.comboBox.addItems(columns)
 
     def activate(self):
         self.is_accepted = True
-
-    def switch(self, event):
-        if event:
-            self.comboBox.setEnabled(True)
-            self.checkBox.setEnabled(True)
-        else:
-            self.comboBox.setEnabled(False)
-            self.checkBox.setEnabled(False)
+        self.close()
 
     def add_column(self, event):
         self.column_dict[self.comboBox.currentText()] = event
