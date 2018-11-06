@@ -359,10 +359,9 @@ class GUI(QMainWindow, Ui_VideoPlayer):
             dialog.exec_()
             dialog.show()
             if dialog.is_accepted:
-                self.dataplot.text((((datetime.fromtimestamp(dialog.label.start) - self.sensordata.metadata['datetime']).total_seconds())
-                                + ((datetime.fromtimestamp(dialog.label.end) - self.sensordata.metadata[
-                        'datetime']).total_seconds())) / 2,
-                               self.ymax * (3 / 4), dialog.label.label)
+                start = (datetime.fromtimestamp(dialog.label.start) - self.sensordata.metadata['datetime']).total_seconds()
+                end = (datetime.fromtimestamp(dialog.label.end) - self.sensordata.metadata['datetime']).total_seconds()
+                self.add_label_highlight(start, end, dialog.label.label)
 
     def open_settings(self):
         """
