@@ -27,9 +27,10 @@ MINUS           : '-';
 POWER           : '^';
 LBRACKET        : '(';
 RBRACKET        : ')';
+UNDERSCORE      : '_';
 
 /* Tokens with content */
-VAR             : LETTER (LETTER | DIGIT)*;
+VAR             : LETTER (LETTER | DIGIT | UNDERSCORE)*;
 NUM             : DIGIT+ ([.,] DIGIT+)?;
 
 fragment LETTER : [A-Za-z];
