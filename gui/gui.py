@@ -8,9 +8,8 @@ import numpy as np
 from PyQt5 import QtCore
 from PyQt5 import QtGui
 from PyQt5.QtCore import QUrl, QDir, Qt
-from PyQt5.QtGui import QKeySequence
 from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
-from PyQt5.QtWidgets import QMainWindow, QFileDialog, QMessageBox, QShortcut
+from PyQt5.QtWidgets import QMainWindow, QFileDialog, QMessageBox, QShortcut, QDialog
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
 from sklearn.naive_bayes import GaussianNB
 
@@ -123,6 +122,9 @@ class GUI(QMainWindow, Ui_VideoPlayer):
 
         # Initialize a timer that makes sure that the sensor data plays smoothly.
         self.timer = QtCore.QTimer(self)
+
+        # Variable that stores start and stop time of a loop that the video-player should play
+        self.loop = None
 
         # Before showing the full GUI, a dialog window needs to be prompted where the user can choose between an
         # existing project and a new project, in which case the settings need to be specified.
@@ -287,6 +289,9 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         :param position: The position of the video.
         :return:
         """
+        if self.loop is not None and position >= self.loop[1]:
+            position = self.loop[0] if self.loop[0] >= 0 else 0
+            self.mediaplayer.setPosition(position)
         self.horizontalSlider.setValue(position)
         self.label_duration.setText(self.ms_to_time(position))
         self.label_time.setText(str(add_time_strings(self.ms_to_time(position), self.video_start_time)))
@@ -297,13 +302,14 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         if self.sensordata:
             self.update_plot()
 
-    def update_plot(self):
+    def update_plot(self, position=-1.0):
         """
         Every millisecond the timer triggers this function, which should update the plot to the current time.
         :return:
         """
-        xmin = -(self.plot_width / 2) + (self.mediaplayer.position() / 1000) - self.doubleSpinBox_offset.value()
-        xmax = (self.plot_width / 2) + (self.mediaplayer.position() / 1000) - self.doubleSpinBox_offset.value()
+        new_position = (self.mediaplayer.position() / 1000) if position == -1.0 else position
+        xmin = -(self.plot_width / 2) + new_position - self.doubleSpinBox_offset.value()
+        xmax = (self.plot_width / 2) + new_position - self.doubleSpinBox_offset.value()
         self.dataplot.axis([xmin, xmax, self.ymin, self.ymax])
         self.vertical_line.set_xdata((xmin + xmax) / 2)
         self.canvas.draw()
@@ -353,10 +359,9 @@ class GUI(QMainWindow, Ui_VideoPlayer):
             dialog.exec_()
             dialog.show()
             if dialog.is_accepted:
-                self.dataplot.text((((datetime.fromtimestamp(dialog.label.start) - self.sensordata.metadata['datetime']).total_seconds())
-                                + ((datetime.fromtimestamp(dialog.label.end) - self.sensordata.metadata[
-                        'datetime']).total_seconds())) / 2,
-                               self.ymax * (3 / 4), dialog.label.label)
+                start = (datetime.fromtimestamp(dialog.label.start) - self.sensordata.metadata['datetime']).total_seconds()
+                end = (datetime.fromtimestamp(dialog.label.end) - self.sensordata.metadata['datetime']).total_seconds()
+                self.add_label_highlight(start, end, dialog.label.label)
 
     def open_settings(self):
         """
@@ -393,11 +398,9 @@ class GUI(QMainWindow, Ui_VideoPlayer):
                 QMessageBox.warning(self, 'Warning', str(e), QMessageBox.Cancel)
 
     def open_machine_learning(self):
-
         columns = [self.comboBox_plot.itemText(i) for i in range(self.comboBox_plot.count())]
         dialog = MachineLearningDialog(columns)
-        dialog.exec_()
-        dialog.show()
+        dialog.exec()
 
         self.ml_used_columns = []
         funcs = {
@@ -406,13 +409,24 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         }
         features = []
 
-        if dialog.is_accepted and dialog.radioButton.isChecked():
+        if dialog.is_accepted:
+            # save current position in the video
+            original_position = self.mediaplayer.position()
+
+            at_least_1_column = False
+            # for each selected column, add new column names to the lists for machine learning
             for column in columns:
                 if dialog.column_dict[column]:
+                    at_least_1_column = True
                     self.ml_used_columns.append(column)
 
                     for func in funcs:
                         features.append(column + '_' + func)
+
+            # Show warning if user has selected no columns
+            if not at_least_1_column:
+                QMessageBox.warning(self, 'Warning', "At least one column needs to be selected.", QMessageBox.Cancel)
+                return
 
             if self.label_data.get_sensor_id() is None:
                 if self.sensor_id is None:
@@ -420,9 +434,18 @@ class GUI(QMainWindow, Ui_VideoPlayer):
 
                 self.label_data.set_sensor_id(self.sensor_id)
 
+            # show a window to tell the user that the classifier is running
+            working_msg = QDialog()
+            working_msg.setWindowTitle("Loading...")
+            working_msg.resize(200, 0)
+            working_msg.open()
+
+            # run the classifier
             self.ml_dataframe = self.sensordata.__copy__()
             self.ml_dataframe.add_timestamp_column(TIME_COL, TIMESTAMP_COL)
-            self.ml_dataframe.add_labels(self.label_data.get_data(), LABEL_COL, TIMESTAMP_COL)
+            labels = self.label_storage.get_labels_date(self.sensordata.metadata['sn'],
+                                                        self.sensordata.metadata['datetime'].date())
+            self.ml_dataframe.add_labels(labels, LABEL_COL, TIMESTAMP_COL)
             raw_data = self.ml_dataframe.get_data()
 
             # Remove data points where label is unknown
@@ -433,10 +456,68 @@ class GUI(QMainWindow, Ui_VideoPlayer):
             self.ml_classifier.set_features(features)
             res = self.ml_classifier.classify()
 
-            for x in res:
-                print(x)
+            # close the info window
+            working_msg.close()
 
-            print(make_predictions(res))
+            # start video if it is paused
+            if self.mediaplayer.state() == QMediaPlayer.PausedState:
+                self.play()
+
+            for prediction in make_predictions(res):
+                label, start_dt, end_dt = prediction['label'], datetime.fromisoformat(prediction['begin']), \
+                                          datetime.fromisoformat(prediction['end'])
+                # convert datetime times to time in seconds, which is used on the x-axis of the data-plot
+                start = (start_dt - self.combidt).total_seconds()
+                end = (end_dt - self.combidt).total_seconds()
+
+                # add highlight to data-plot and play video in a loop
+                span, text = self.add_suggestion_highlight(start, end, label)
+                self.loop = (int((start + self.doubleSpinBox_offset.value()) * 1000),
+                             int((end + self.doubleSpinBox_offset.value()) * 1000))
+                if not self.mediaplayer.media().isNull():
+                    # if a video is opened set video position to start of the suggested label
+                    self.mediaplayer.setPosition(self.loop[0])
+                else:
+                    # no video; stop updating-timer and move plot to start of the suggested label
+                    self.timer.stop()
+                    self.update_plot(position=start + self.doubleSpinBox_offset.value())
+
+                # ask user to accept or reject the suggested label
+                msg = QMessageBox()
+                msg.setIcon(QMessageBox.Question)
+                msg.setWindowTitle("Label suggestion")
+                msg.setText("The classifier suggests the following label:")
+                msg.setInformativeText("Label: {}\nLabel start: {}\nLabel end: {}\n\n"
+                                       "Do you want to accept this suggestion?"
+                                       .format(label, self.ms_to_time(int(start * 1000)),
+                                               self.ms_to_time(int(end * 1000))))
+                msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+                stop_button = msg.addButton("Stop suggestions", QMessageBox.ActionRole)
+                response = msg.exec_()
+
+                # user has given a response, stop the loop and remove highlight
+                self.loop = None
+                span.remove()
+                text.remove()
+
+                # user clicked the "Stop suggestions" button
+                if msg.clickedButton() == stop_button:
+                    break
+
+                # user accepted the current suggestion, add it to the database and make a new highlight
+                if response == QMessageBox.Yes:
+                    self.label_storage.add_label(start_dt, end_dt, label, self.sensor_id)
+                    self.add_label_highlight(start, end, label)
+                    self.canvas.draw()
+
+            # reset the video-player and data-plot to the original position and pause the video
+            if not self.mediaplayer.media().isNull():
+                self.mediaplayer.setPosition(original_position)
+            else:
+                # no video was playing, restart the updating-timer
+                self.timer.start(25)
+            self.update_plot(position=original_position / 1000)
+            self.play()
 
     def add_camera(self):
         if self.lineEdit_camera.text() and self.lineEdit_camera.text() not in self.camera_manager.get_all_cameras():
@@ -622,3 +703,9 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         span = self.dataplot.axvspan(label_start, label_end, facecolor=self.color_dict[label_type], alpha=alpha)
         text = self.dataplot.text((label_start + label_end) / 2, self.ymax * 0.75, label_type, horizontalalignment='center')
         self.label_highlights[label_start] = (span, text)
+
+    def add_suggestion_highlight(self, start: float, end: float, label: str):
+        span = self.dataplot.axvspan(start, end, facecolor="gold", alpha=0.4)
+        text = self.dataplot.text((start + end) / 2, self.ymax * 0.5, "Suggested label:\n" + label, horizontalalignment='center')
+        self.canvas.draw()
+        return span, text
