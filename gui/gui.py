@@ -232,14 +232,19 @@ class GUI(QMainWindow, Ui_VideoPlayer):
             self.comboBox_plot.removeItem(0)
             self.current_plot = self.comboBox_plot.currentText()
 
+            # Save the starting time of the sensordata in a DateTime object.
             self.combidt = self.sensordata.metadata['datetime']
+
+            # Reset the figure and add a new subplot to it.
             self.figure.clear()
             self.dataplot = self.figure.add_subplot(111)
 
+            # Determine the length of the y-axis and plot the graph with the specified width.
             self.ymin = self.data[self.current_plot].min()
             self.ymax = self.data[self.current_plot].max()
             self.draw_graph()
             self.dataplot.axis([-(self.plot_width / 2), self.plot_width / 2, self.ymin, self.ymax])
+
             self.timer.timeout.connect(self.update_plot)
             self.timer.start(25)
             self.canvas.draw()
