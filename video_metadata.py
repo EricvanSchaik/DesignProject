@@ -115,15 +115,3 @@ def rename_file_to_start_time(file_path):
     creation_time_string = datetime_with_tz_to_string(creation_time, '%Y%m%d_%H-%M-%S')
 
     os.rename(file_path, '{}/{}.{}'.format(directory, creation_time_string, file_extension))
-
-
-# test_files = ["D:/Google Drive/Studie/TI/Module 11/Design Project/Data/Measurements Ede/7-8-2017/Converted "
-#               "Videos/Hero 3/GP040378.mp4"]
-
-# rename_file_to_start_time('C:/Users/denni/Videos/test.mp4')
-
-# for f in test_files:
-#     print(parse_frame_rate_from_file(f))
-#     print(parse_start_time_from_file(f))
-#     print(parse_duration_from_file(f))
-#     print(calculate_stop_time_from_file(f))
