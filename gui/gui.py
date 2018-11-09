@@ -245,20 +245,24 @@ class GUI(QMainWindow, Ui_VideoPlayer):
             self.draw_graph()
             self.dataplot.axis([-(self.plot_width / 2), self.plot_width / 2, self.ymin, self.ymax])
 
+            # Start the timer that makes the graph scroll smoothly.
             self.timer.timeout.connect(self.update_plot)
             self.timer.start(25)
+
+            # Draw the graph, set the value of the offset spinbox in the GUI to the correct value.
             self.canvas.draw()
             if self.comboBox_camera.currentText():
                 self.doubleSpinBox_offset.setValue(self.offset_manager.get_offset(self.comboBox_camera.currentText(),
                                                                             self.sensordata.metadata['sn'],
                                                                             self.sensordata.metadata['date']))
+
+            # Check if the sensordata file is already in the label database, if not add it.
             if not self.label_storage.file_is_added(filename):
                 self.label_storage.add_file(filename, self.sensordata.metadata['sn'], self.combidt)
 
     def play(self):
         """
-        A helper function that makes sure the play button pauses or plays the video, and switches the pause/play icons.
-        :return:
+        Makes sure the play button pauses or plays the video, and switches the pause/play icons.
         """
         if self.mediaplayer.media().isNull():
             return
@@ -292,7 +296,6 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         Every time QMediaPlayer generates the event that indicates that the video output has changed (which is
         continually if you play a video), this function updates the slider.
         :param position: The position of the video.
-        :return:
         """
         if self.loop is not None and position >= self.loop[1]:
             position = self.loop[0] if self.loop[0] >= 0 else 0
@@ -309,8 +312,7 @@ class GUI(QMainWindow, Ui_VideoPlayer):
 
     def update_plot(self, position=-1.0):
         """
-        Every millisecond the timer triggers this function, which should update the plot to the current time.
-        :return:
+        Every time the timer calls this function, the axis of the graph is updated.
         """
         new_position = (self.mediaplayer.position() / 1000) if position == -1.0 else position
         xmin = -(self.plot_width / 2) + new_position - self.doubleSpinBox_offset.value()
@@ -323,7 +325,6 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         """
         Every time the user uses the slider, this function updates the QMediaPlayer position.
         :param position: The position as indicated by the slider.
-        :return:
         """
         self.mediaplayer.setPosition(position)
 
@@ -332,13 +333,12 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         Every time the duration of the video in QMediaPlayer changes (which should be every time you open a new
         video), this function updates the range of the slider.
         :param duration: The duration of the (new) video.
-        :return:
         """
         self.horizontalSlider.setRange(0, duration)
 
     def ms_to_time(self, duration):
         """
-        A helper function that translates a certain amount of milliseconds to a readable HH:MM:SS string.
+        Translates a certain amount of milliseconds to a readable HH:MM:SS string.
         :param duration: The number of milliseconds that corresponds to the position of the video.
         :return: A readable string that corresponds to duration in the format HH:MM:SS.
         """
@@ -353,8 +353,7 @@ class GUI(QMainWindow, Ui_VideoPlayer):
 
     def open_label(self):
         """
-        Helper function that opens the label dialog window.
-        :return:
+        Opens the label dialog window.
         """
         if not self.sensordata:
             QMessageBox.information(self, 'Warning', "You need to import sensordata first.", QMessageBox.Ok)
@@ -370,14 +369,16 @@ class GUI(QMainWindow, Ui_VideoPlayer):
 
     def open_settings(self):
         """
-        Helper function that opens the settings dialog window.
-        :return:
+        Opens the settings dialog window.
         """
         settings = SettingsDialog(self.settings)
         settings.exec_()
         settings.show()
 
     def open_label_settings(self):
+        """
+        Opens the label settings dialog window.
+        """
         label_settings = LabelSettingsDialog(self.label_storage, self.settings)
         label_settings.exec_()
         label_settings.show()
@@ -385,11 +386,17 @@ class GUI(QMainWindow, Ui_VideoPlayer):
             self.draw_graph()
 
     def open_subject_mapping(self):
+        """
+        Opens the subject mapping dialog window.
+        """
         subject_mapping = SubjectTable(self.project_dialog.project_name)
         subject_mapping.exec_()
         subject_mapping.show()
 
     def open_export(self):
+        """
+        Opens the export dialog window, and if a subject and a file location and name are chosen, exports the data accordingly.
+        """
         export = ExportDialog()
         export.comboBox.addItems(self.subject_mapping.get_subjects())
         export.exec_()
@@ -403,6 +410,10 @@ class GUI(QMainWindow, Ui_VideoPlayer):
                 QMessageBox.warning(self, 'Warning', str(e), QMessageBox.Cancel)
 
     def open_machine_learning(self):
+        """
+        Opens the machine learning dialog window.
+        :return:
+        """
         columns = [self.comboBox_plot.itemText(i) for i in range(self.comboBox_plot.count())]
         dialog = MachineLearningDialog(columns)
         dialog.exec()
@@ -525,6 +536,9 @@ class GUI(QMainWindow, Ui_VideoPlayer):
             self.play()
 
     def add_camera(self):
+        """
+        Adds a camera to the database and to the combobox in the GUI.
+        """
         if self.lineEdit_camera.text() and self.lineEdit_camera.text() not in self.camera_manager.get_all_cameras():
             self.camera_manager.add_camera(self.lineEdit_camera.text())
             self.comboBox_camera.addItem(self.lineEdit_camera.text())
@@ -536,17 +550,26 @@ class GUI(QMainWindow, Ui_VideoPlayer):
                                                                             self.sensordata.metadata['date']))
 
     def change_camera(self):
+        """
+        If the user chooses a different camera, this function retrieves the right offset with the sensordata.
+        """
         if self.comboBox_camera.currentText() and self.sensordata:
             self.doubleSpinBox_offset.setValue(self.offset_manager.get_offset(self.comboBox_camera.currentText(),
                                                                               self.sensordata.metadata['sn'],
                                                                               self.sensordata.metadata['date']))
 
     def change_offset(self):
+        """
+        If the user changes the offset, this function sends it to the database.
+        """
         if self.comboBox_camera.currentText() and self.sensordata:
             self.offset_manager.set_offset(self.comboBox_camera.currentText(), self.sensordata.metadata['sn'],
                                            self.doubleSpinBox_offset.value(), self.sensordata.metadata['date'])
 
     def delete_camera(self):
+        """
+        Deletes the current camera.
+        """
         if self.comboBox_camera.currentText():
             reply = QMessageBox.question(self, 'Message', "Are you sure you want to delete the current camera?",
                                          QMessageBox.Yes, QMessageBox.No)
@@ -565,6 +588,9 @@ class GUI(QMainWindow, Ui_VideoPlayer):
                     self.doubleSpinBox_offset.setValue(0)
 
     def change_plot(self):
+        """
+        If the user changes the variable on the y-axis, this function changes the label if necessary and redraws the plot.
+        """
         self.current_plot = self.comboBox_plot.currentText()
         if self.comboBox_plot.currentText() in self.formula_dict:
             self.label_current_formula.setText(self.formula_dict[self.comboBox_plot.currentText()])
@@ -575,6 +601,9 @@ class GUI(QMainWindow, Ui_VideoPlayer):
         self.draw_graph()
 
     def new_plot(self):
+        """
+        Adds a function to the DataFrame as new column.
+        """
         try:
             if not self.lineEdit_2.text():
                 raise Exception
@@ -592,19 +621,31 @@ class GUI(QMainWindow, Ui_VideoPlayer):
                                 QMessageBox.Cancel)
 
     def change_speed(self):
+        """
+        Changes the playback rate of the video.
+        """
         self.mediaplayer.setPlaybackRate(self.doubleSpinBox_speed.value())
 
     def onclick(self, event):
+        """
+        Handles the labeling by clicking on the graph.
+        :param event: Specifies what event triggered this function.
+        """
         if self.sensordata:
+            # If the left mouse button is used, start a new labeling dialog with the right starting time and
+            # wait for the onrelease function.
             if event.button == 1:
                 self.new_label = LabelSpecs(self.project_dialog.project_name, self.sensordata.metadata['sn'],
                                             self.label_storage, self.combidt.timestamp())
                 self.new_label.doubleSpinBox_start.setValue(event.xdata)
+            # If the right mouse button is used, check if this is the first or second time.
             elif event.button == 3:
                 if not self.labeling:
                     self.large_label = LabelSpecs(self.project_dialog.project_name, self.sensordata.metadata['sn'],
                                                   self.label_storage, self.combidt.timestamp())
                     self.large_label.doubleSpinBox_start.setValue(event.xdata)
+                # If it is the second time, check if the user wants to delete the label or if the label should start
+                # or end at the start or end of another label.
                 else:
                     deleting = False
                     if event.xdata < self.large_label.doubleSpinBox_start.value():
@@ -644,7 +685,13 @@ class GUI(QMainWindow, Ui_VideoPlayer):
                 self.labeling = not self.labeling
 
     def onrelease(self, event):
+        """
+        Handles the labeling by clicking, but is only triggered when the user releases the mouse button.
+        :param event: Specifies the event that triggers this function.
+        """
         if self.sensordata:
+            # If the left mouse button is released, delete or label the right area, similar to the latter
+            # part of onclick.
             if event.button == 1:
                 deleting = False
                 if event.xdata < self.new_label.doubleSpinBox_start.value():
@@ -685,6 +732,9 @@ class GUI(QMainWindow, Ui_VideoPlayer):
                 pass
 
     def draw_graph(self):
+        """
+        Redraws the graph with the right colors, labels, etc.
+        """
         if not self.sensordata:
             return
         self.dataplot.clear()
