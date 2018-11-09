@@ -14,6 +14,12 @@ class LabelData:
     LABEL_INDEX = 2
 
     def __init__(self, label_manager: LabelManager, sensor_id: str=None):
+        """
+        This class can be used to retrieve and add labels from/to the database.
+
+        :param label_manager: LabelManager instance
+        :param sensor_id: The sensor ID
+        """
         self._sensor_id = sensor_id
         self._label_manager = label_manager
         self._data = None
